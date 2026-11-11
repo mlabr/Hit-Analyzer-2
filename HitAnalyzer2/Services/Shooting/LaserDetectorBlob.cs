@@ -10,26 +10,12 @@ namespace HitAnalyzer2.Services.Shooting
             if (frame.Empty())
                 return null;
 
-            using var intensity = new Mat();
-            Mat pixels = frame;
-            if (frame.Type() == MatType.CV_8UC3 || frame.Type() == MatType.CV_8UC4)
-            {
-                using var channel = new Mat();
-                Cv2.ExtractChannel(frame, intensity, 0);
-                for (int index = 1; index < 3; index++)
-                {
-                    Cv2.ExtractChannel(frame, channel, index);
-                    Cv2.Max(intensity, channel, intensity);
-                }
-                pixels = intensity;
-            }
-            else if (frame.Type() != MatType.CV_8UC1)
-            {
+            MatType type = frame.Type();
+            if (type != MatType.CV_8UC1 && type != MatType.CV_8UC3 && type != MatType.CV_8UC4)
                 return null;
-            }
 
             using var mask = new Mat();
-            Cv2.InRange(pixels, Scalar.All(intensityThreshold), Scalar.All(byte.MaxValue), mask);
+            LaserIntensity.CreateMask(frame, mask, intensityThreshold);
             if (Cv2.CountNonZero(mask) < minimumHitAreaPixels)
                 return null;
 

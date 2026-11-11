@@ -16,7 +16,7 @@
   },
   "Evaluation": {
     "Method": "Blob",
-    "DetectionSensitivity": 1,
+    "DetectionSensitivity": 99,
     "MinimumHitAreaPixels": null
   }
 }
