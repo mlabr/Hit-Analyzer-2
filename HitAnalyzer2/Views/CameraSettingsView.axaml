@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HitAnalyzer2.ViewModels"
+             x:Class="HitAnalyzer2.Views.CameraSettingsView"
+             x:DataType="vm:CameraSettingsViewModel">
+
+    <UserControl.Resources>
+        <GridLength x:Key="SliderPreContentMargin">2</GridLength>
+        <GridLength x:Key="SliderPostContentMargin">2</GridLength>
+        <x:Double x:Key="SliderHorizontalHeight">24</x:Double>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Slider.compact">
+            <Setter Property="Height" Value="24" />
+        </Style>
+        <Style Selector="NumericUpDown.compact">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="Padding" Value="5,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="8">
+        <TextBlock Text="Nastavení kamery" FontWeight="SemiBold" />
+        <ComboBox PlaceholderText="Vyberte kameru" HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding Cameras}" SelectedItem="{Binding SelectedCamera, Mode=TwoWay}"
+                  IsEnabled="{Binding !IsDiscoveringCameras}"
+                  AutomationProperties.Name="Výběr kamery" />
+        <ComboBox PlaceholderText="{Binding CameraModePlaceholder}" HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding CameraModes}" SelectedItem="{Binding SelectedCameraMode, Mode=TwoWay}"
+                  IsEnabled="{Binding CanSelectCameraMode}"
+                  AutomationProperties.Name="Výběr rozlišení a FPS" />
+        <ComboBox HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding CameraFlipOptions}" SelectedItem="{Binding SelectedCameraFlip, Mode=TwoWay}"
+                  AutomationProperties.Name="Převrácení obrazu kamery" />
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Text="Jas obrazu (%)" />
+            <Slider Grid.Row="1" Classes="compact"
+                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
+                    Value="{Binding CameraBrightnessPercent, Mode=TwoWay}"
+                    VerticalAlignment="Center" AutomationProperties.Name="Jas obrazu v procentech" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+                           ShowButtonSpinner="False"
+                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
+                           Value="{Binding CameraBrightnessPercent, Mode=TwoWay}"
+                           AutomationProperties.Name="Ruční zadání jasu v procentech" />
+        </Grid>
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Text="Kontrast obrazu (%)" />
+            <Slider Grid.Row="1" Classes="compact"
+                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
+                    Value="{Binding CameraContrastPercent, Mode=TwoWay}"
+                    VerticalAlignment="Center" AutomationProperties.Name="Kontrast obrazu v procentech" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+                           ShowButtonSpinner="False"
+                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
+                           Value="{Binding CameraContrastPercent, Mode=TwoWay}"
+                           AutomationProperties.Name="Ruční zadání kontrastu v procentech" />
+        </Grid>
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Text="Sytost barev (%)" />
+            <Slider Grid.Row="1" Classes="compact"
+                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
+                    Value="{Binding CameraSaturationPercent, Mode=TwoWay}"
+                    VerticalAlignment="Center" AutomationProperties.Name="Sytost barev v procentech" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+                           ShowButtonSpinner="False"
+                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
+                           Value="{Binding CameraSaturationPercent, Mode=TwoWay}"
+                           AutomationProperties.Name="Ruční zadání sytosti barev v procentech" />
+        </Grid>
+        <Button Content="Obnovit kamery" Command="{Binding RefreshCamerasCommand}"
+                IsEnabled="{Binding !IsDiscoveringCameras}" />
+        <Button Content="Uložit nastavení kamery" Command="{Binding SaveCameraSettingsCommand}" />
+        <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
+                   IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+
+</UserControl>

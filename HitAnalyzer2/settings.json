@@ -1,0 +1,22 @@
+{
+  "Camera": {
+    "DeviceId": "\\\\?\\usb#vid_328f\u0026pid_006d\u0026mi_00#6\u002634c3077b\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceIndex": null,
+    "Mode": {
+      "Width": 1280,
+      "Height": 720,
+      "FpsNumerator": 30,
+      "FpsDenominator": 1,
+      "Format": "3231564e-0000-0010-8000-00aa00389b71"
+    },
+    "Flip": "X",
+    "BrightnessPercent": 50,
+    "ContrastPercent": 50,
+    "SaturationPercent": 50
+  },
+  "Evaluation": {
+    "Method": "Simple",
+    "DetectionSensitivity": 1,
+    "MinimumHitAreaPixels": null
+  }
+}

@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HitAnalyzer2.ViewModels"
+             x:Class="HitAnalyzer2.Views.DetectionSettingsView"
+             x:DataType="vm:DetectionSettingsViewModel">
+    <StackPanel Spacing="8">
+        <ComboBox HorizontalAlignment="Stretch"
+                  AutomationProperties.Name="Metoda detekce"
+                  ItemsSource="{Binding Methods}"
+                  SelectedItem="{Binding SelectedMethod, Mode=TwoWay}" />
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Text="Citlivost detekce" />
+            <Slider Grid.Row="1" Minimum="1" Maximum="99" TickFrequency="1" SmallChange="1"
+                    IsSnapToTickEnabled="True" VerticalAlignment="Center"
+                    Value="{Binding DetectionSensitivity, Mode=TwoWay}"
+                    AutomationProperties.Name="Citlivost detekce" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" MinWidth="56" Minimum="1" Maximum="99" Increment="1"
+                           ShowButtonSpinner="False" ClipValueToMinMax="True"
+                           ParsingNumberStyle="Integer" FormatString="0"
+                           Value="{Binding DetectionSensitivity, Mode=TwoWay}"
+                           AutomationProperties.Name="Ruční zadání citlivosti detekce" />
+        </Grid>
+        <Button Content="Uložit nastavení detekce" Command="{Binding SaveDetectionSettingsCommand}" />
+        <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
+                   IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+</UserControl>

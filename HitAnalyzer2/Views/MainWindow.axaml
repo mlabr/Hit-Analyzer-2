@@ -1,0 +1,49 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:HitAnalyzer2.ViewModels"
+        xmlns:views="using:HitAnalyzer2.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="HitAnalyzer2.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Width="800" Height="450" MinWidth="450"
+        Title="HitAnalyzer2">
+
+    <Grid RowDefinitions="Auto,*">
+        <Menu x:Name="SettingsMenu">
+            <MenuItem Header="_Shooting" Click="ShowShootingSettings" />
+            <MenuItem Header="_Camera" Click="ShowCameraSettings" />
+            <MenuItem Header="_Detection" Click="ShowDetectionSettings" />
+            <MenuItem Header="_Target" Click="ShowTargetSettings" />
+            <MenuItem Header="_Weapon" Click="ShowWeaponSettings" />
+        </Menu>
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+            <Grid x:Name="CameraPreview">
+                <Image x:Name="PreviewImage" Source="{Binding CameraPreview.WebcamImage}" Stretch="Uniform"
+                       StretchDirection="DownOnly" />
+                <TextBlock Text="{Binding CameraPreview.StatusMessage}" TextWrapping="Wrap" Margin="16"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding CameraPreview.FpsText}" Foreground="LightGreen" Background="#80000000"
+                           Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                           IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </Grid>
+            <Border x:Name="SettingsPanel" Grid.Column="1" Width="280" BorderThickness="1,0,0,0"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                <ScrollViewer Padding="12" HorizontalScrollBarVisibility="Disabled">
+                    <Grid>
+                        <views:CameraSettingsView x:Name="CameraSettings" IsVisible="False"
+                                                  DataContext="{Binding CameraSettings}" />
+                        <views:DetectionSettingsView x:Name="DetectionSettings" IsVisible="False"
+                                                     DataContext="{Binding DetectionSettings}" />
+                        <views:ShootingSettingsView x:Name="ShootingSettings" 
+                                                    DataContext="{Binding ShootingSettings}" />
+                        <TextBlock x:Name="SettingsPlaceholder" TextWrapping="Wrap" IsVisible="False" />
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+
+</Window>
