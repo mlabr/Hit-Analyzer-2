@@ -11,10 +11,10 @@ namespace HitAnalyzer2.Services.Video
 		private static readonly Scalar Cyan = new(255,255, 0, 255);
 
 
-		internal static void Draw(Mat frame, Mat preview, int sensitivity)
+        internal static void Draw(Mat preview, int sensitivity)
         {
             using var mask = new Mat();
-            LaserIntensity.CreateMask(frame, mask, LaserIntensity.ThresholdFromSensitivity(sensitivity));
+            LaserIntensity.CreateMask(preview, mask, LaserIntensity.ThresholdFromSensitivity(sensitivity));
 
             // Dilating with a filled circle stamps a 5 px dot at every matching pixel.
             const int diameter = DotRadius * 2 + 1;

@@ -1,4 +1,3 @@
-using HitAnalyzer2.Services.Shooting;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -8,8 +7,8 @@ using System.Threading.Tasks;
 namespace HitAnalyzer2.Services.Video
 {
     internal sealed class CameraCaptureSession(
-        Func<Mat, LaserPosition?, double?, CancellationToken, Task> showFrame,
-        Action clearPreview, Action<string?> showStatus, Func<Mat, long, LaserPosition?> processFrame)
+        Func<Mat, long, double?, CancellationToken, Task> processFrame,
+        Action clearPreview, Action<string?> showStatus)
     {
         private static readonly TimeSpan CaptureStopTimeout = TimeSpan.FromSeconds(1);
         private const string CameraStillStopping = "Ovladač kamery stále ukončuje snímání. Zkuste to znovu později.";
@@ -166,8 +165,7 @@ namespace HitAnalyzer2.Services.Video
                     (frame, capturedAt, fps) =>
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        var position = processFrame(frame, capturedAt);
-                        return showFrame(frame, position, fps, cancellationToken);
+                        return processFrame(frame, capturedAt, fps, cancellationToken);
                     }, cancellationToken, flip);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

@@ -9,6 +9,8 @@ namespace HitAnalyzer2.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        private readonly Func<Mat, long, LaserPosition?> _detectHit;
+
         public CameraSettingsViewModel CameraSettings { get; }
         public CameraPreviewViewModel CameraPreview { get; } = new();
         public DetectionSettingsViewModel DetectionSettings { get; }
@@ -18,11 +20,11 @@ namespace HitAnalyzer2.ViewModels
             Func<Mat, long, LaserPosition?> processFrame)
         {
             DetectionSettings = detectionSettings;
+            _detectHit = processFrame;
             var captureSession = new CameraCaptureSession(
-                ShowCameraFrameAsync,
+                ProcessCameraFrameAsync,
                 CameraPreview.ClearPreview,
-                message => CameraPreview.StatusMessage = message,
-                processFrame);
+                message => CameraPreview.StatusMessage = message);
 
             CameraSettings = new CameraSettingsViewModel(settings, captureSession);
         }
@@ -31,10 +33,29 @@ namespace HitAnalyzer2.ViewModels
 
         internal Task StopCameraAsync() => CameraSettings.StopCameraAsync();
 
-        private Task ShowCameraFrameAsync(Mat frame, LaserPosition? position, double? fps,
-            CancellationToken cancellationToken) =>
-            CameraPreview.ShowFrameAsync(frame, position, fps, CameraSettings.CameraBrightnessPercent,
-                CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent,
-                DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null, cancellationToken);
+        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double? fps,
+            CancellationToken cancellationToken)
+        {
+            using var output = new Mat();
+            var pixels = PreviewFrameProcessor.Process(frame, output, CameraSettings.CameraBrightnessPercent,
+                CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent);
+            cancellationToken.ThrowIfCancellationRequested();
+            var position = _detectHit(pixels, capturedAt);
+            int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
+
+            if (ReferenceEquals(pixels, frame) && (position.HasValue || flareSensitivity.HasValue))
+            {
+                frame.CopyTo(output);
+                pixels = output;
+            }
+
+            if (flareSensitivity is { } sensitivity)
+                FlareRenderer.Draw(pixels, sensitivity);
+
+            if (position is { } hit)
+                HitRenderer.Draw(pixels, hit);
+
+            await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
+        }
     }
 }
