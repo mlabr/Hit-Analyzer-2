@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HitAnalyzer2.ViewModels"
+             x:Class="HitAnalyzer2.Views.WeaponSettingsView"
+             x:DataType="vm:WeaponSettingsViewModel">
+    <StackPanel Spacing="8">
+        <TextBlock Text="Interval mezi zásahy (ms)" />
+        <NumericUpDown Minimum="100" Maximum="5000" Increment="1" ShowButtonSpinner="False"
+                       ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
+                       Value="{Binding NexDetectionInterval, Mode=TwoWay}"
+                       AutomationProperties.Name="Interval mezi zásahy v milisekundách" />
+    </StackPanel>
+</UserControl>

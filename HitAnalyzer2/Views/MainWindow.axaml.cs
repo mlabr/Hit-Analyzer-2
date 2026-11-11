@@ -44,13 +44,14 @@ namespace HitAnalyzer2.Views
             ShowSettings(SettingsPlaceholder, "Nastavení terče zatím není k dispozici.");
 
         private void ShowWeaponSettings(object? sender, RoutedEventArgs e) =>
-            ShowSettings(SettingsPlaceholder, "Nastavení zbraně zatím není k dispozici.");
+            ShowSettings(WeaponSettings);
 
         private void ShowSettings(Control view, string? placeholder = null)
         {
 			ShootingSettings.IsVisible = view == ShootingSettings;
 			CameraSettings.IsVisible = view == CameraSettings;
             DetectionSettings.IsVisible = view == DetectionSettings;
+            WeaponSettings.IsVisible = view == WeaponSettings;
             
             SettingsPlaceholder.Text = placeholder;
             SettingsPlaceholder.IsVisible = view == SettingsPlaceholder;

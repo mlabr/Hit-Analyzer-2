@@ -37,6 +37,8 @@
                                                   DataContext="{Binding CameraSettings}" />
                         <views:DetectionSettingsView x:Name="DetectionSettings" IsVisible="False"
                                                      DataContext="{Binding DetectionSettings}" />
+                        <views:WeaponSettingsView x:Name="WeaponSettings" IsVisible="False"
+                                                  DataContext="{Binding WeaponSettings}" />
                         <views:ShootingSettingsView x:Name="ShootingSettings" 
                                                     DataContext="{Binding ShootingSettings}" />
                         <TextBlock x:Name="SettingsPlaceholder" TextWrapping="Wrap" IsVisible="False" />

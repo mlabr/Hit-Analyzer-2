@@ -10,18 +10,20 @@ namespace HitAnalyzer2.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        private readonly Func<Mat, long, LaserPosition?> _detectHit;
+        private readonly Func<Mat, long, LaserPosition?> _processFrame;
 
         public CameraSettingsViewModel CameraSettings { get; }
         public CameraPreviewViewModel CameraPreview { get; } = new();
         public DetectionSettingsViewModel DetectionSettings { get; }
         public ShootingSettingsViewModel ShootingSettings { get; } = new();
+        public WeaponSettingsViewModel WeaponSettings { get; }
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
-            Func<Mat, long, LaserPosition?> processFrame)
+            WeaponSettingsViewModel weaponSettings, Func<Mat, long, LaserPosition?> processFrame)
         {
             DetectionSettings = detectionSettings;
-            _detectHit = processFrame;
+            WeaponSettings = weaponSettings;
+            _processFrame = processFrame;
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
                 CameraPreview.ClearPreview,
@@ -41,10 +43,10 @@ namespace HitAnalyzer2.ViewModels
             var pixels = PreviewFrameProcessor.Process(frame, output, CameraSettings.CameraBrightnessPercent,
                 CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent);
             cancellationToken.ThrowIfCancellationRequested();
-            var position = _detectHit(pixels, capturedAt);
+            var lastHit = _processFrame(pixels, capturedAt);
             int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
 
-            if (ReferenceEquals(pixels, frame) && (position.HasValue || flareSensitivity.HasValue))
+            if (ReferenceEquals(pixels, frame) && (lastHit.HasValue || flareSensitivity.HasValue))
             {
                 frame.CopyTo(output);
                 pixels = output;
@@ -53,7 +55,7 @@ namespace HitAnalyzer2.ViewModels
             if (flareSensitivity is { } sensitivity)
                 FlareDetectionOverlay.Draw(pixels, sensitivity);
 
-            if (position is { } hit)
+            if (lastHit is { } hit)
                 HitRenderer.Draw(pixels, hit);
 
             await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
