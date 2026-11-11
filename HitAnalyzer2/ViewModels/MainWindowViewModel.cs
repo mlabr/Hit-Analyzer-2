@@ -10,20 +10,21 @@ namespace HitAnalyzer2.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        private readonly Func<Mat, long, LaserPosition?> _processFrame;
+        private readonly ShootingSessionService _shootingSession;
 
         public CameraSettingsViewModel CameraSettings { get; }
         public CameraPreviewViewModel CameraPreview { get; } = new();
         public DetectionSettingsViewModel DetectionSettings { get; }
-        public ShootingSettingsViewModel ShootingSettings { get; } = new();
+        public ShootingSettingsViewModel ShootingSettings { get; }
         public WeaponSettingsViewModel WeaponSettings { get; }
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
-            WeaponSettingsViewModel weaponSettings, Func<Mat, long, LaserPosition?> processFrame)
+            WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession)
         {
             DetectionSettings = detectionSettings;
             WeaponSettings = weaponSettings;
-            _processFrame = processFrame;
+            _shootingSession = shootingSession;
+            ShootingSettings = new ShootingSettingsViewModel(shootingSession);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
                 CameraPreview.ClearPreview,
@@ -43,7 +44,7 @@ namespace HitAnalyzer2.ViewModels
             var pixels = PreviewFrameProcessor.Process(frame, output, CameraSettings.CameraBrightnessPercent,
                 CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent);
             cancellationToken.ThrowIfCancellationRequested();
-            var lastHit = _processFrame(pixels, capturedAt);
+            var lastHit = _shootingSession.ProcessFrame(pixels, capturedAt);
             int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
 
             if (ReferenceEquals(pixels, frame) && (lastHit.HasValue || flareSensitivity.HasValue))

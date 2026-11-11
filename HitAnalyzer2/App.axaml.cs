@@ -39,7 +39,7 @@ namespace HitAnalyzer2
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
-                        shootingSession.ProcessFrame),
+                        shootingSession),
                 };
             }
 

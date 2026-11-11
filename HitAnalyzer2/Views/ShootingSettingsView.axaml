@@ -1,9 +1,13 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:HitAnalyzer2.ViewModels"
+             xmlns:views="using:HitAnalyzer2.Views"
              x:Class="HitAnalyzer2.Views.ShootingSettingsView"
              x:DataType="vm:ShootingSettingsViewModel">
 
-    <TextBlock Text="Nastavení střelby" FontWeight="SemiBold" />
+    <StackPanel Spacing="16">
+        <TextBlock Text="Nastavení střelby" FontWeight="SemiBold" />
+        <views:HitCounterView />
+    </StackPanel>
 
 </UserControl>

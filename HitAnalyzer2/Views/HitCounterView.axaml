@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HitAnalyzer2.ViewModels"
+             x:Class="HitAnalyzer2.Views.HitCounterView"
+             x:DataType="vm:ShootingSettingsViewModel">
+
+    <StackPanel Spacing="4">
+        <TextBlock Text="Detekované zásahy" />
+        <TextBlock Text="{Binding HitCount}" FontSize="32" FontWeight="SemiBold" />
+    </StackPanel>
+
+</UserControl>
