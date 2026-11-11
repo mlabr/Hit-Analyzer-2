@@ -1,3 +1,4 @@
+using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
@@ -13,7 +14,12 @@ namespace HitAnalyzer2
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = true,
-            Converters = { new JsonStringEnumConverter<FlipMode>(), new JsonStringEnumConverter<DetectionMethod>() }
+            Converters =
+            {
+                new JsonStringEnumConverter<FlipMode>(),
+                new JsonStringEnumConverter<DetectionMethod>(),
+                new JsonStringEnumConverter<HitTrigger>()
+            }
         };
 
         private readonly string _path;
@@ -91,6 +97,19 @@ namespace HitAnalyzer2
             }
         }
 
+        public void SaveWeapon(HitTrigger trigger, int interval)
+        {
+            lock (_saveGate)
+            {
+                var settings = _current with
+                {
+                    Weapon = _current.Weapon with { Trigger = trigger, NexDetectionInterval = interval }
+                };
+                Write(settings, overwrite: true);
+                _current = settings;
+            }
+        }
+
         private void CreateDefaults()
         {
             try
@@ -123,8 +142,8 @@ namespace HitAnalyzer2
 
         private static void Validate(AppSettings? settings)
         {
-            if (settings is not { Camera: { } camera, Detection: { } detection })
-                throw new JsonException("Chybí nastavení kamery nebo detekce.");
+            if (settings is not { Camera: { } camera, Detection: { } detection, Weapon: { } weapon })
+                throw new JsonException("Chybí nastavení kamery, detekce nebo zbraně.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
                 || camera.BrightnessPercent is < 0 or > 100
@@ -138,6 +157,11 @@ namespace HitAnalyzer2
                 || detection.DetectionSensitivity is < 1 or > 99
                 || detection.MinimumHitAreaPixels is <= 0)
                 throw new JsonException("Neplatné parametry detekce.");
+
+            if (!Enum.IsDefined(weapon.Trigger)
+                || weapon.NexDetectionInterval is < ShootingSessionService.MinimumDetectionInterval
+                    or > ShootingSessionService.MaximumDetectionInterval)
+                throw new JsonException("Neplatné nastavení zbraně.");
         }
     }
 }

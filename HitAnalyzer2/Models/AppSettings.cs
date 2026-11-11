@@ -1,3 +1,4 @@
+using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
@@ -10,6 +11,13 @@ namespace HitAnalyzer2
     {
         public CameraSettings Camera { get; init; } = new();
         public DetectionSettings Detection { get; init; } = new();
+        public WeaponSettings Weapon { get; init; } = new();
+    }
+
+    internal sealed record WeaponSettings
+    {
+        public HitTrigger Trigger { get; init; } = HitTrigger.FirstSpot;
+        public int NexDetectionInterval { get; init; } = ShootingSessionService.MinimumDetectionInterval;
     }
 
     internal sealed record CameraSettings

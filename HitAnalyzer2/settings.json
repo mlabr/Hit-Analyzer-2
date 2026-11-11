@@ -19,5 +19,9 @@
     "DetectionSensitivity": 66,
     "MinimumHitAreaPixels": null,
     "ShowFlares": false
+  },
+  "Weapon": {
+    "Trigger": "FirstSpot",
+    "NexDetectionInterval": 100
   }
 }

@@ -15,6 +15,8 @@ namespace HitAnalyzer2.Services.Shooting
         private volatile ILaserDetector _laserDetector = laserDetector;
         private volatile int _nextDetectionInterval = MinimumDetectionInterval;
         private LaserPosition? _lastHit;
+        private HitTrigger _trigger = HitTrigger.FirstSpot;
+        private bool _spotWasVisible;
 
         private TimeSpan NextDetectionTimeStamp { get; set; }
 
@@ -22,6 +24,15 @@ namespace HitAnalyzer2.Services.Shooting
         internal event Action<LaserPosition?, TimeSpan>? LaserPositionEvaluated;
 
         internal void SetLaserDetector(ILaserDetector detector) => _laserDetector = detector;
+
+        internal void SetTrigger(HitTrigger trigger)
+        {
+            lock (_hitGate)
+            {
+                _trigger = trigger;
+                _spotWasVisible = false;
+            }
+        }
 
         internal int NexDetectionInterval
         {
@@ -36,7 +47,9 @@ namespace HitAnalyzer2.Services.Shooting
             LaserPosition? lastHit;
             lock (_hitGate)
             {
-                if (elapsed >= NextDetectionTimeStamp && _laserDetector.Detect(frame) is { } position)
+                bool intervalElapsed = elapsed >= NextDetectionTimeStamp;
+                if ((intervalElapsed || _trigger == HitTrigger.NewSpot)
+                    && GetTriggeredPosition(frame, intervalElapsed) is { } position)
                 {
                     registeredHit = position with { Time = elapsed };
                     _lastHit = registeredHit;
@@ -51,6 +64,18 @@ namespace HitAnalyzer2.Services.Shooting
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
             return lastHit;
+        }
+
+        private LaserPosition? GetTriggeredPosition(Mat frame, bool intervalElapsed)
+        {
+            LaserPosition? position = _laserDetector.Detect(frame);
+            if (_trigger == HitTrigger.FirstSpot)
+                return position;
+
+            // Observe every frame so a spot that appeared during the interval is not a new spot afterward.
+            bool appeared = position.HasValue && !_spotWasVisible;
+            _spotWasVisible = position.HasValue;
+            return appeared && intervalElapsed ? position : null;
         }
     }
 }

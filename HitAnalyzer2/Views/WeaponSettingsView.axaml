@@ -4,10 +4,17 @@
              x:Class="HitAnalyzer2.Views.WeaponSettingsView"
              x:DataType="vm:WeaponSettingsViewModel">
     <StackPanel Spacing="8">
+        <TextBlock Text="Typ spouště" />
+        <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Typ spouště"
+                  ItemsSource="{Binding Triggers}"
+                  SelectedItem="{Binding SelectedTrigger, Mode=TwoWay}" />
         <TextBlock Text="Interval mezi zásahy (ms)" />
         <NumericUpDown Minimum="100" Maximum="5000" Increment="1" ShowButtonSpinner="False"
                        ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
                        Value="{Binding NexDetectionInterval, Mode=TwoWay}"
                        AutomationProperties.Name="Interval mezi zásahy v milisekundách" />
+        <Button Content="Uložit nastavení zbraně" Command="{Binding SaveWeaponSettingsCommand}" />
+        <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
+                   IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </StackPanel>
 </UserControl>
