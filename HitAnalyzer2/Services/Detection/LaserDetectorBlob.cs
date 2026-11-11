@@ -1,6 +1,6 @@
 using OpenCvSharp;
 
-namespace HitAnalyzer2.Services.Shooting
+namespace HitAnalyzer2.Services.Detection
 {
     internal sealed class LaserDetectorBlob(
         int intensityThreshold, int minimumHitAreaPixels) : ILaserDetector

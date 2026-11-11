@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.ViewModels;
 using HitAnalyzer2.Views;

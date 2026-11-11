@@ -1,4 +1,5 @@
 using OpenCvSharp;
+using HitAnalyzer2.Services.Detection;
 using System;
 
 namespace HitAnalyzer2.Services.Shooting

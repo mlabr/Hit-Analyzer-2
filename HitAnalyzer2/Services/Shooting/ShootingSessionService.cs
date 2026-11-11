@@ -2,6 +2,8 @@ using OpenCvSharp;
 using System;
 using System.Diagnostics;
 
+using HitAnalyzer2.Services.Detection;
+
 namespace HitAnalyzer2.Services.Shooting
 {
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, long startedAt)
