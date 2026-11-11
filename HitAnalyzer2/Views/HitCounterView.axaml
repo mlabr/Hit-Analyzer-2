@@ -7,6 +7,7 @@
     <StackPanel Spacing="4">
         <TextBlock Text="Detekované zásahy" />
         <TextBlock Text="{Binding HitCount}" FontSize="32" FontWeight="SemiBold" />
+        <Button Content="Vynulovat počítadlo" Command="{Binding ResetHitCountCommand}" />
     </StackPanel>
 
 </UserControl>

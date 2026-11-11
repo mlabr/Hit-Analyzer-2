@@ -1,5 +1,6 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Services.Shooting;
 
 namespace HitAnalyzer2.ViewModels
@@ -17,5 +18,8 @@ namespace HitAnalyzer2.ViewModels
                     Dispatcher.UIThread.Post(() => HitCount++);
             };
         }
+
+        [RelayCommand]
+        private void ResetHitCount() => HitCount = 0;
     }
 }
