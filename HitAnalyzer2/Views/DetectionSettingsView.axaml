@@ -20,6 +20,7 @@
                            Value="{Binding DetectionSensitivity, Mode=TwoWay}"
                            AutomationProperties.Name="Ruční zadání citlivosti detekce" />
         </Grid>
+        <CheckBox Content="Show flares" IsChecked="{Binding ShowFlares, Mode=TwoWay}" />
         <Button Content="Uložit nastavení detekce" Command="{Binding SaveDetectionSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

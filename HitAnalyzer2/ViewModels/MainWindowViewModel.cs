@@ -34,6 +34,7 @@ namespace HitAnalyzer2.ViewModels
         private Task ShowCameraFrameAsync(Mat frame, LaserPosition? position, double? fps,
             CancellationToken cancellationToken) =>
             CameraPreview.ShowFrameAsync(frame, position, fps, CameraSettings.CameraBrightnessPercent,
-                CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent, cancellationToken);
+                CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent,
+                DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null, cancellationToken);
     }
 }

@@ -23,7 +23,8 @@ namespace HitAnalyzer2.ViewModels
         private string? fpsText;
 
         internal async Task ShowFrameAsync(Mat frame, LaserPosition? position, double? fps,
-            int brightnessPercent, int contrastPercent, int saturationPercent, CancellationToken cancellationToken)
+            int brightnessPercent, int contrastPercent, int saturationPercent, int? flareSensitivity,
+            CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
@@ -33,16 +34,17 @@ namespace HitAnalyzer2.ViewModels
             {
                 var pixels = PreviewFrameProcessor.Process(frame, output,
                     brightnessPercent, contrastPercent, saturationPercent);
-                if (position is { } hit)
+                if (ReferenceEquals(pixels, frame) && (position.HasValue || flareSensitivity.HasValue))
                 {
-                    if (ReferenceEquals(pixels, frame))
-                    {
-                        frame.CopyTo(output);
-                        pixels = output;
-                    }
-
-                    HitRenderer.Draw(pixels, hit);
+                    frame.CopyTo(output);
+                    pixels = output;
                 }
+
+                if (flareSensitivity is { } sensitivity)
+                    FlareRenderer.Draw(frame, pixels, sensitivity);
+
+                if (position is { } hit)
+                    HitRenderer.Draw(pixels, hit);
 
                 bitmap = new WriteableBitmap(PixelFormat.Bgra8888, AlphaFormat.Opaque, pixels.Data,
                     new PixelSize(pixels.Width, pixels.Height), new Vector(96, 96), checked((int)pixels.Step()));

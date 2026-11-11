@@ -30,6 +30,9 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private string? settingsMessage;
 
+        [ObservableProperty]
+        private bool showFlares;
+
         public int DetectionSensitivity
         {
             get => _detectionSensitivity;
