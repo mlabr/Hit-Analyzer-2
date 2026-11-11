@@ -17,8 +17,9 @@ namespace HitAnalyzer2.ViewModels
         {
             _settings = settings;
             _applyDetection = applyDetection;
-            selectedMethod = settings.Current.Evaluation.Method;
-            _detectionSensitivity = settings.Current.Evaluation.DetectionSensitivity;
+            selectedMethod = settings.Current.Detection.Method;
+            _detectionSensitivity = settings.Current.Detection.DetectionSensitivity;
+            showFlares = settings.Current.Detection.ShowFlares;
             settingsMessage = settings.LoadError;
         }
 
@@ -44,6 +45,7 @@ namespace HitAnalyzer2.ViewModels
         }
 
         partial void OnSelectedMethodChanged(DetectionMethod value) => ApplyDetection();
+        partial void OnShowFlaresChanged(bool value) => SettingsMessage = null;
 
         private void ApplyDetection()
         {
@@ -56,7 +58,7 @@ namespace HitAnalyzer2.ViewModels
         {
             try
             {
-                _settings.SaveDetection(SelectedMethod, DetectionSensitivity);
+                _settings.SaveDetection(SelectedMethod, DetectionSensitivity, ShowFlares);
                 SettingsMessage = "Nastavení detekce uloženo.";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)

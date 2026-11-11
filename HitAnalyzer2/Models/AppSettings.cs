@@ -9,7 +9,7 @@ namespace HitAnalyzer2
     internal sealed record AppSettings
     {
         public CameraSettings Camera { get; init; } = new();
-        public EvaluationSettings Evaluation { get; init; } = new();
+        public DetectionSettings Detection { get; init; } = new();
     }
 
     internal sealed record CameraSettings
@@ -29,7 +29,7 @@ namespace HitAnalyzer2
         Blob
     }
 
-    internal sealed record EvaluationSettings
+    internal sealed record DetectionSettings
     {
         private const int DefaultDetectionSensitivity = 12;
         private int? _detectionSensitivity;
@@ -62,5 +62,6 @@ namespace HitAnalyzer2
         }
 
         public int? MinimumHitAreaPixels { get; init; }
+        public bool ShowFlares { get; init; }
     }
 }

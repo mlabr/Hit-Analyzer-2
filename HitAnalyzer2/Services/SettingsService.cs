@@ -3,6 +3,7 @@ using OpenCvSharp;
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace HitAnalyzer2
@@ -28,7 +29,15 @@ namespace HitAnalyzer2
                     CreateDefaults();
 
                 using var stream = File.OpenRead(_path);
-                var settings = JsonSerializer.Deserialize<AppSettings>(stream, JsonOptions);
+                var json = JsonNode.Parse(stream);
+                if (json is JsonObject config && !config.ContainsKey(nameof(AppSettings.Detection))
+                    && config.TryGetPropertyValue("Evaluation", out var legacyDetection))
+                {
+                    config.Remove("Evaluation");
+                    config[nameof(AppSettings.Detection)] = legacyDetection;
+                }
+
+                var settings = json.Deserialize<AppSettings>(JsonOptions);
                 Validate(settings);
                 _current = settings!;
             }
@@ -64,13 +73,18 @@ namespace HitAnalyzer2
             }
         }
 
-        public void SaveDetection(DetectionMethod method, int sensitivity)
+        public void SaveDetection(DetectionMethod method, int sensitivity, bool showFlares)
         {
             lock (_saveGate)
             {
                 var settings = _current with
                 {
-                    Evaluation = _current.Evaluation with { Method = method, DetectionSensitivity = sensitivity }
+                    Detection = _current.Detection with
+                    {
+                        Method = method,
+                        DetectionSensitivity = sensitivity,
+                        ShowFlares = showFlares
+                    }
                 };
                 Write(settings, overwrite: true);
                 _current = settings;
@@ -109,8 +123,8 @@ namespace HitAnalyzer2
 
         private static void Validate(AppSettings? settings)
         {
-            if (settings is not { Camera: { } camera, Evaluation: { } evaluation })
-                throw new JsonException("Chybí nastavení kamery nebo vyhodnocování.");
+            if (settings is not { Camera: { } camera, Detection: { } detection })
+                throw new JsonException("Chybí nastavení kamery nebo detekce.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
                 || camera.BrightnessPercent is < 0 or > 100
@@ -120,10 +134,10 @@ namespace HitAnalyzer2
                     || mode.FpsNumerator == 0 || mode.FpsDenominator == 0))
                 throw new JsonException("Neplatné nastavení kamery.");
 
-            if (!Enum.IsDefined(evaluation.Method)
-                || evaluation.DetectionSensitivity is < 1 or > 99
-                || evaluation.MinimumHitAreaPixels is <= 0)
-                throw new JsonException("Neplatné parametry vyhodnocování.");
+            if (!Enum.IsDefined(detection.Method)
+                || detection.DetectionSensitivity is < 1 or > 99
+                || detection.MinimumHitAreaPixels is <= 0)
+                throw new JsonException("Neplatné parametry detekce.");
         }
     }
 }

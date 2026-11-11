@@ -21,17 +21,17 @@ namespace HitAnalyzer2
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var settings = new SettingsService(GetSettingsPath(AppContext.BaseDirectory));
-                var evaluation = settings.Current.Evaluation;
+                var detection = settings.Current.Detection;
                 ILaserDetector CreateDetector(DetectionMethod method, int sensitivity)
                 {
                     int threshold = LaserIntensity.ThresholdFromSensitivity(sensitivity);
                     return method == DetectionMethod.Simple
                         ? new LaserDetectorSimple(threshold)
-                        : new LaserDetectorBlob(threshold, evaluation.MinimumHitAreaPixels ?? 1);
+                        : new LaserDetectorBlob(threshold, detection.MinimumHitAreaPixels ?? 1);
                 }
 
                 var shootingSession = new ShootingSessionService(
-                    CreateDetector(evaluation.Method, evaluation.DetectionSensitivity));
+                    CreateDetector(detection.Method, detection.DetectionSensitivity), Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 desktop.MainWindow = new MainWindow

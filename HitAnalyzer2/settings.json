@@ -10,13 +10,14 @@
       "Format": "47504a4d-0000-0010-8000-00aa00389b71"
     },
     "Flip": "X",
-    "BrightnessPercent": 50,
-    "ContrastPercent": 50,
-    "SaturationPercent": 50
+    "BrightnessPercent": 26,
+    "ContrastPercent": 100,
+    "SaturationPercent": 0
   },
-  "Evaluation": {
-    "Method": "Blob",
-    "DetectionSensitivity": 1,
-    "MinimumHitAreaPixels": null
+  "Detection": {
+    "Method": "Simple",
+    "DetectionSensitivity": 66,
+    "MinimumHitAreaPixels": null,
+    "ShowFlares": false
   }
 }

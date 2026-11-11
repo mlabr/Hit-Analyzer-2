@@ -4,9 +4,8 @@ using System.Diagnostics;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal sealed class ShootingSessionService(ILaserDetector laserDetector)
+    internal sealed class ShootingSessionService(ILaserDetector laserDetector, long startedAt)
     {
-        private readonly long _startedAt = Stopwatch.GetTimestamp();
         private volatile ILaserDetector _laserDetector = laserDetector;
 
         // Raised on the capture thread, once per processed frame.
@@ -17,7 +16,11 @@ namespace HitAnalyzer2.Services.Shooting
         internal LaserPosition? ProcessFrame(Mat frame, long capturedAt)
         {
             LaserPosition? position = _laserDetector.Detect(frame);
-            LaserPositionEvaluated?.Invoke(position, Stopwatch.GetElapsedTime(_startedAt, capturedAt));
+            TimeSpan elapsed = Stopwatch.GetElapsedTime(startedAt, capturedAt);
+            if (position is { } hit)
+                position = hit with { Time = elapsed };
+
+            LaserPositionEvaluated?.Invoke(position, elapsed);
 
             if(position != null)
             {
