@@ -38,6 +38,9 @@
         <ComboBox HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CameraFlipOptions}" SelectedItem="{Binding SelectedCameraFlip, Mode=TwoWay}"
                   AutomationProperties.Name="Camera View Flip" />
+        <Button Content="Refresh webcams" Command="{Binding RefreshCamerasCommand}"
+                 IsEnabled="{Binding !IsDiscoveringCameras}" />
+      
         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
             <TextBlock Grid.ColumnSpan="2" Text="Brightness (%)" />
             <Slider Grid.Row="1" Classes="compact"
@@ -74,8 +77,7 @@
                            Value="{Binding CameraSaturationPercent, Mode=TwoWay}"
                            AutomationProperties.Name="Manual Saturation input" />
         </Grid>
-        <Button Content="Refresh webcams" Command="{Binding RefreshCamerasCommand}"
-                IsEnabled="{Binding !IsDiscoveringCameras}" />
+        
         <Button Content="Save webcam settings" Command="{Binding SaveCameraSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
