@@ -1,5 +1,4 @@
 using OpenCvSharp;
-using HitAnalyzer2.Services.Detection;
 using System;
 
 namespace HitAnalyzer2.Services.Shooting
@@ -9,7 +8,7 @@ namespace HitAnalyzer2.Services.Shooting
         private const double MarkerSizeRatio = 0.05;
         private static readonly Scalar MarkerColor = new(0, 255, 0, 255);
 
-        internal static void Draw(Mat preview, LaserPosition position)
+        internal static void Draw(Mat preview, AimPosition position)
         {
             int x = (int)Math.Round(position.X);
             int y = (int)Math.Round(position.Y);

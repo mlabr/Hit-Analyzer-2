@@ -6,7 +6,7 @@ using HitAnalyzer2.Services.Detection;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal sealed class ShootingSessionService(ILaserDetector laserDetector, long startedAt)
+    internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimHandler aimHandler, long startedAt)
     {
         internal const int MinimumDetectionInterval = 100;
         internal const int MaximumDetectionInterval = 5000;
@@ -14,7 +14,7 @@ namespace HitAnalyzer2.Services.Shooting
         private readonly object _hitGate = new();
         private volatile ILaserDetector _laserDetector = laserDetector;
         private volatile int _nextDetectionInterval = MinimumDetectionInterval;
-        private LaserPosition? _lastHit;
+        private AimPosition? _lastHit;
         private HitTrigger _trigger = HitTrigger.FirstSpot;
         private bool _spotWasVisible;
 
@@ -40,11 +40,11 @@ namespace HitAnalyzer2.Services.Shooting
             set => _nextDetectionInterval = Math.Clamp(value, MinimumDetectionInterval, MaximumDetectionInterval);
         }
 
-        internal LaserPosition? ProcessFrame(Mat frame, long capturedAt)
+        internal AimPosition? ProcessFrame(Mat frame, long capturedAt)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(startedAt, capturedAt);
             LaserPosition? registeredHit = null;
-            LaserPosition? lastHit;
+            AimPosition? lastHit;
             lock (_hitGate)
             {
                 bool intervalElapsed = elapsed >= NextDetectionTimeStamp;
@@ -52,7 +52,7 @@ namespace HitAnalyzer2.Services.Shooting
                     && GetTriggeredPosition(frame, intervalElapsed) is { } position)
                 {
                     registeredHit = position with { Time = elapsed };
-                    _lastHit = registeredHit;
+                    _lastHit = aimHandler.GetAimPosition(registeredHit.Value);
                     NextDetectionTimeStamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
                 }
                 lastHit = _lastHit;

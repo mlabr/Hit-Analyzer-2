@@ -31,8 +31,9 @@ namespace HitAnalyzer2
                         : new LaserDetectorBlob(threshold, detection.MinimumHitAreaPixels ?? 1);
                 }
 
+                var aimHandler = new AimHandler();
                 var shootingSession = new ShootingSessionService(
-                    CreateDetector(detection.Method, detection.DetectionSensitivity), Program.StartedAt);
+                    CreateDetector(detection.Method, detection.DetectionSensitivity), aimHandler, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession);
