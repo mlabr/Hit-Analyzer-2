@@ -76,14 +76,14 @@ namespace HitAnalyzer2.ViewModels
         }
 
         public IReadOnlyList<WeaponOption> Weapons { get; }
-        public IReadOnlyList<HitTrigger> Triggers { get; } = Array.AsReadOnly(Enum.GetValues<HitTrigger>());
+        public IReadOnlyList<TriggerTypeEnum> Triggers { get; } = Array.AsReadOnly(Enum.GetValues<TriggerTypeEnum>());
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(SaveWeaponCommand))]
         private WeaponOption? selectedWeapon;
 
         [ObservableProperty]
-        private HitTrigger selectedTrigger;
+        private TriggerTypeEnum selectedTrigger;
 
         [ObservableProperty]
         private string? settingsMessage;
@@ -133,7 +133,7 @@ namespace HitAnalyzer2.ViewModels
             OffsetSettingsMessage = null;
         }
 
-        partial void OnSelectedTriggerChanged(HitTrigger value)
+        partial void OnSelectedTriggerChanged(TriggerTypeEnum value)
         {
             _shootingSession.SetTrigger(value);
             SettingsMessage = null;

@@ -15,7 +15,7 @@ namespace HitAnalyzer2.Services.Shooting
         private volatile ILaserDetector _laserDetector = laserDetector;
         private volatile int _nextDetectionInterval = MinimumDetectionInterval;
         private LaserPosition? _lastHit;
-        private HitTrigger _trigger = HitTrigger.FirstSpot;
+        private TriggerTypeEnum _trigger = TriggerTypeEnum.FirstSpot;
         private bool _spotWasVisible;
         private long? _lastAcceptedExternalPressAt;
         private long? _externalPressedAt;
@@ -28,7 +28,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         internal void SetLaserDetector(ILaserDetector detector) => _laserDetector = detector;
 
-        internal void SetTrigger(HitTrigger trigger)
+        internal void SetTrigger(TriggerTypeEnum trigger)
         {
             lock (_hitGate)
             {
@@ -44,7 +44,7 @@ namespace HitAnalyzer2.Services.Shooting
             {
                 if (isPressed)
                 {
-                    if (_trigger == HitTrigger.ExternalEvent &&
+                    if (_trigger == TriggerTypeEnum.ExternalEvent &&
                         (_lastAcceptedExternalPressAt is not { } previousPress ||
                          Stopwatch.GetElapsedTime(previousPress, timestamp) >=
                          TimeSpan.FromMilliseconds(NexDetectionInterval)))
@@ -75,10 +75,10 @@ namespace HitAnalyzer2.Services.Shooting
             lock (_hitGate)
             {
                 bool intervalElapsed = elapsed >= NextDetectionTimeStamp;
-                if ((intervalElapsed || _trigger != HitTrigger.FirstSpot)
+                if ((intervalElapsed || _trigger != TriggerTypeEnum.FirstSpot)
                     && GetTriggeredPosition(frame, capturedAt, intervalElapsed) is { } position)
                 {
-                    if (_trigger == HitTrigger.ExternalEvent)
+                    if (_trigger == TriggerTypeEnum.ExternalEvent)
                         _externalPressedAt = null;
                     else
                         NextDetectionTimeStamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
@@ -99,7 +99,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         private LaserPosition? GetTriggeredPosition(Mat frame, long capturedAt, bool intervalElapsed)
         {
-            if (_trigger == HitTrigger.ExternalEvent)
+            if (_trigger == TriggerTypeEnum.ExternalEvent)
             {
                 // Compare against capture time, even if the frame is processed after key-up.
                 if (_externalPressedAt is not { } pressedAt || capturedAt < pressedAt ||
@@ -110,7 +110,7 @@ namespace HitAnalyzer2.Services.Shooting
             }
 
             LaserPosition? position = _laserDetector.Detect(frame);
-            if (_trigger == HitTrigger.FirstSpot)
+            if (_trigger == TriggerTypeEnum.FirstSpot)
                 return position;
 
             // Observe every frame so a spot that appeared during the interval is not a new spot afterward.

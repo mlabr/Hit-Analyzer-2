@@ -18,7 +18,7 @@ namespace HitAnalyzer2
             {
                 new JsonStringEnumConverter<FlipMode>(),
                 new JsonStringEnumConverter<DetectionMethod>(),
-                new JsonStringEnumConverter<HitTrigger>()
+                new JsonStringEnumConverter<TriggerTypeEnum>()
             }
         };
 
