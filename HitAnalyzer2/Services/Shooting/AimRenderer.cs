@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal static class HitRenderer
+    internal static class AimRenderer
     {
         private const double MarkerSizeRatio = 0.05;
         private const int MinimumAimPathBrightness = 64;

@@ -61,7 +61,7 @@ namespace HitAnalyzer2.ViewModels
                 FlareDetectionOverlay.Draw(pixels, sensitivity);
 
             if (lastHit is { } hit)
-                HitRenderer.Draw(pixels, hit, aimPath, followPath);
+                AimRenderer.Draw(pixels, hit, aimPath, followPath);
 
             await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
         }
