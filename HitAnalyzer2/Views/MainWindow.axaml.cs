@@ -41,7 +41,7 @@ namespace HitAnalyzer2.Views
         private void ShowDetectionSettings(object? sender, RoutedEventArgs e) => ShowSettings(DetectionSettings);
 
         private void ShowTargetSettings(object? sender, RoutedEventArgs e) =>
-            ShowSettings(SettingsPlaceholder, "Nastavení terče zatím není k dispozici.");
+            ShowSettings(SettingsPlaceholder, "Target settings not implementet yet.");
 
         private void ShowWeaponSettings(object? sender, RoutedEventArgs e) =>
             ShowSettings(WeaponSettings);

@@ -26,57 +26,57 @@
     </UserControl.Styles>
 
     <StackPanel Spacing="8">
-        <TextBlock Text="Nastavení kamery" FontWeight="SemiBold" />
-        <ComboBox PlaceholderText="Vyberte kameru" HorizontalAlignment="Stretch"
+        <TextBlock Text="Webcam settings" FontWeight="SemiBold" />
+        <ComboBox PlaceholderText="Select camera" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding Cameras}" SelectedItem="{Binding SelectedCamera, Mode=TwoWay}"
                   IsEnabled="{Binding !IsDiscoveringCameras}"
-                  AutomationProperties.Name="Výběr kamery" />
+                  AutomationProperties.Name="CamSelected" />
         <ComboBox PlaceholderText="{Binding CameraModePlaceholder}" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CameraModes}" SelectedItem="{Binding SelectedCameraMode, Mode=TwoWay}"
                   IsEnabled="{Binding CanSelectCameraMode}"
                   AutomationProperties.Name="Výběr rozlišení a FPS" />
         <ComboBox HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CameraFlipOptions}" SelectedItem="{Binding SelectedCameraFlip, Mode=TwoWay}"
-                  AutomationProperties.Name="Převrácení obrazu kamery" />
+                  AutomationProperties.Name="Camera View Flip" />
         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.ColumnSpan="2" Text="Jas obrazu (%)" />
+            <TextBlock Grid.ColumnSpan="2" Text="Brightness (%)" />
             <Slider Grid.Row="1" Classes="compact"
                     Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
                     Value="{Binding CameraBrightnessPercent, Mode=TwoWay}"
-                    VerticalAlignment="Center" AutomationProperties.Name="Jas obrazu v procentech" />
+                    VerticalAlignment="Center" AutomationProperties.Name="Brightness (percent)" />
             <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
                            ShowButtonSpinner="False"
                            ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding CameraBrightnessPercent, Mode=TwoWay}"
-                           AutomationProperties.Name="Ruční zadání jasu v procentech" />
+                           AutomationProperties.Name="Manual brightnes input" />
         </Grid>
         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.ColumnSpan="2" Text="Kontrast obrazu (%)" />
+            <TextBlock Grid.ColumnSpan="2" Text="Contrast (%)" />
             <Slider Grid.Row="1" Classes="compact"
                     Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
                     Value="{Binding CameraContrastPercent, Mode=TwoWay}"
-                    VerticalAlignment="Center" AutomationProperties.Name="Kontrast obrazu v procentech" />
+                    VerticalAlignment="Center" AutomationProperties.Name="Contrast (percent)" />
             <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
                            ShowButtonSpinner="False"
                            ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding CameraContrastPercent, Mode=TwoWay}"
-                           AutomationProperties.Name="Ruční zadání kontrastu v procentech" />
+                           AutomationProperties.Name="Manual contrast input" />
         </Grid>
         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.ColumnSpan="2" Text="Sytost barev (%)" />
+            <TextBlock Grid.ColumnSpan="2" Text="Saturation (%)" />
             <Slider Grid.Row="1" Classes="compact"
                     Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
                     Value="{Binding CameraSaturationPercent, Mode=TwoWay}"
-                    VerticalAlignment="Center" AutomationProperties.Name="Sytost barev v procentech" />
+                    VerticalAlignment="Center" AutomationProperties.Name="Saturation (percent)" />
             <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
                            ShowButtonSpinner="False"
                            ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding CameraSaturationPercent, Mode=TwoWay}"
-                           AutomationProperties.Name="Ruční zadání sytosti barev v procentech" />
+                           AutomationProperties.Name="Manual Saturation input" />
         </Grid>
-        <Button Content="Obnovit kamery" Command="{Binding RefreshCamerasCommand}"
+        <Button Content="Refresh webcams" Command="{Binding RefreshCamerasCommand}"
                 IsEnabled="{Binding !IsDiscoveringCameras}" />
-        <Button Content="Uložit nastavení kamery" Command="{Binding SaveCameraSettingsCommand}" />
+        <Button Content="Save webcam settings" Command="{Binding SaveCameraSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </StackPanel>

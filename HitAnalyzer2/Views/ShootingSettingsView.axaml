@@ -6,7 +6,7 @@
              x:DataType="vm:ShootingSettingsViewModel">
 
     <StackPanel Spacing="16">
-        <TextBlock Text="Nastavení střelby" FontWeight="SemiBold" />
+        <TextBlock Text="Shooting settings" FontWeight="SemiBold" />
         <views:HitCounterView />
     </StackPanel>
 

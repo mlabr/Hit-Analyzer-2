@@ -5,23 +5,24 @@
              x:DataType="vm:DetectionSettingsViewModel">
     <StackPanel Spacing="8">
         <ComboBox HorizontalAlignment="Stretch"
-                  AutomationProperties.Name="Metoda detekce"
+                  AutomationProperties.Name="Detection method"
                   ItemsSource="{Binding Methods}"
                   SelectedItem="{Binding SelectedMethod, Mode=TwoWay}" />
+      
         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.ColumnSpan="2" Text="Citlivost detekce" />
+            <TextBlock Grid.ColumnSpan="2" Text="Sensitiviy:" />
             <Slider Grid.Row="1" Minimum="1" Maximum="99" TickFrequency="1" SmallChange="1"
                     IsSnapToTickEnabled="True" VerticalAlignment="Center"
                     Value="{Binding DetectionSensitivity, Mode=TwoWay}"
-                    AutomationProperties.Name="Citlivost detekce" />
+                    AutomationProperties.Name="Detection sensitivity" />
             <NumericUpDown Grid.Row="1" Grid.Column="1" MinWidth="56" Minimum="1" Maximum="99" Increment="1"
                            ShowButtonSpinner="False" ClipValueToMinMax="True"
                            ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding DetectionSensitivity, Mode=TwoWay}"
-                           AutomationProperties.Name="Ruční zadání citlivosti detekce" />
+                           AutomationProperties.Name="Manual sensitivity input" />
         </Grid>
         <CheckBox Content="Show flares" IsChecked="{Binding ShowFlares, Mode=TwoWay}" />
-        <Button Content="Uložit nastavení detekce" Command="{Binding SaveDetectionSettingsCommand}" />
+        <Button Content="Save detection  settings" Command="{Binding SaveDetectionSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
     </StackPanel>

@@ -9,7 +9,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Width="800" Height="450" MinWidth="450"
-        Title="HitAnalyzer2">
+        Title="Hit Analyzer 2">
 
     <Grid RowDefinitions="Auto,*">
         <Menu x:Name="SettingsMenu">
