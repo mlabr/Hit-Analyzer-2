@@ -2,6 +2,7 @@ using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,15 +12,31 @@ namespace HitAnalyzer2
     {
         public CameraSettings Camera { get; init; } = new();
         public DetectionSettings Detection { get; init; } = new();
-        public WeaponSettings Weapon { get; init; } = new();
+        [JsonPropertyName("Weapon")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public WeaponSettings? LegacyWeapon { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public SavedWeaponProfile? SelectedWeapon { get; init; }
     }
 
-    internal sealed record WeaponSettings
+    internal sealed record SavedWeaponProfile(string FileName, WeaponProfile Profile);
+
+    internal record WeaponSettings
     {
         public int OffsetX { get; init; }
         public int OffsetY { get; init; }
         public HitTrigger Trigger { get; init; } = HitTrigger.FirstSpot;
         public int NexDetectionInterval { get; init; } = ShootingSessionService.MinimumDetectionInterval;
+    }
+
+    internal sealed record WeaponProfile : WeaponSettings
+    {
+        public required string Type { get; init; }
+        public required string Name { get; init; }
+        public decimal Caliber { get; init; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? AdditionalProperties { get; init; }
     }
 
     internal sealed record CameraSettings

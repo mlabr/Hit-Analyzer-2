@@ -5,14 +5,12 @@ namespace HitAnalyzer2.Services.Shooting
         internal const int MinimumOffset = -100;
         internal const int MaximumOffset = 100;
 
-        private readonly SettingsService _settings;
         private readonly AimHandler _aimHandler;
 
         internal WeaponHandler(SettingsService settings, AimHandler aimHandler)
         {
-            _settings = settings;
             _aimHandler = aimHandler;
-            var weapon = settings.Current.Weapon;
+            var weapon = settings.InitialWeapon;
             SetOffset(weapon.OffsetX, weapon.OffsetY);
         }
 
@@ -24,6 +22,5 @@ namespace HitAnalyzer2.Services.Shooting
             _aimHandler.SetOffset(x, y);
         }
 
-        internal void SaveOffset() => _settings.SaveWeaponOffset(Offset.X, Offset.Y);
     }
 }

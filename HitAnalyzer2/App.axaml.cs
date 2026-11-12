@@ -21,7 +21,8 @@ namespace HitAnalyzer2
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var settings = new SettingsService(GetSettingsPath(AppContext.BaseDirectory));
+                var settings = new SettingsService(GetSettingsPath(AppContext.BaseDirectory),
+                    Path.Combine(AppContext.BaseDirectory, "Data", "Weapons"));
                 var detection = settings.Current.Detection;
                 ILaserDetector CreateDetector(DetectionMethod method, int sensitivity)
                 {

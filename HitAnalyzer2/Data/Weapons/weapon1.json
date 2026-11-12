@@ -1,0 +1,9 @@
+{
+  "Type": "ha_weapon",
+  "Name": "weapon1",
+  "Caliber": 0,
+  "OffsetX": 45,
+  "OffsetY": -35,
+  "Trigger": "FirstSpot",
+  "NexDetectionInterval": 500
+}

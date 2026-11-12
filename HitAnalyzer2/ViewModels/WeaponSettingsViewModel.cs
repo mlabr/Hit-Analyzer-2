@@ -10,6 +10,19 @@ namespace HitAnalyzer2.ViewModels
 {
     public sealed partial class WeaponSettingsViewModel : ViewModelBase
     {
+        public sealed class WeaponOption
+        {
+            internal WeaponOption(string fileName, WeaponProfile profile)
+            {
+                FileName = fileName;
+                Profile = profile;
+            }
+
+            public string Label => $"{Profile.Name} ({FileName})";
+            internal string FileName { get; }
+            internal WeaponProfile Profile { get; set; }
+        }
+
         private readonly SettingsService _settings;
         private readonly ShootingSessionService _shootingSession;
 
@@ -40,20 +53,85 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession = shootingSession;
             _weaponHandler = weaponHandler;
             (offsetX, offsetY) = weaponHandler.Offset;
-            var weapon = settings.Current.Weapon;
+            var weapon = settings.InitialWeapon;
             selectedTrigger = weapon.Trigger;
             _shootingSession.SetTrigger(weapon.Trigger);
             _shootingSession.NexDetectionInterval = weapon.NexDetectionInterval;
             settingsMessage = settings.LoadError;
+            Weapons = LoadWeapons();
+            if (settings.Current.SelectedWeapon is { } savedWeapon)
+            {
+                foreach (var option in Weapons)
+                {
+                    if (option.FileName == savedWeapon.FileName)
+                    {
+                        SelectedWeapon = option;
+                        break;
+                    }
+                }
+
+                if (SelectedWeapon is null)
+                    SettingsMessage ??= $"Profil zbraně {savedWeapon.FileName} se nepodařilo načíst.";
+            }
         }
 
+        public IReadOnlyList<WeaponOption> Weapons { get; }
         public IReadOnlyList<HitTrigger> Triggers { get; } = Array.AsReadOnly(Enum.GetValues<HitTrigger>());
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(SaveWeaponCommand))]
+        private WeaponOption? selectedWeapon;
 
         [ObservableProperty]
         private HitTrigger selectedTrigger;
 
         [ObservableProperty]
         private string? settingsMessage;
+
+        private IReadOnlyList<WeaponOption> LoadWeapons()
+        {
+            var weapons = new List<WeaponOption>();
+            try
+            {
+                var paths = Directory.GetFiles(_settings.WeaponsDirectory, "*.json");
+                Array.Sort(paths, StringComparer.OrdinalIgnoreCase);
+                foreach (var path in paths)
+                {
+                    try
+                    {
+                        weapons.Add(new WeaponOption(Path.GetFileName(path), SettingsService.LoadWeaponProfile(path)));
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                    {
+                        // Unreadable or invalid files are skipped so valid profiles can still be selected.
+                    }
+                }
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return Array.Empty<WeaponOption>();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                SettingsMessage ??= $"Profily zbraní se nepodařilo načíst. {ex.Message}";
+            }
+
+            return weapons.AsReadOnly();
+        }
+
+        partial void OnSelectedWeaponChanged(WeaponOption? value)
+        {
+            if (value is null)
+                return;
+
+            var profile = value.Profile;
+            SelectedTrigger = profile.Trigger;
+            NexDetectionInterval = profile.NexDetectionInterval;
+            OffsetX = profile.OffsetX;
+            OffsetY = profile.OffsetY;
+            SettingsMessage = null;
+            OffsetSettingsMessage = null;
+        }
 
         partial void OnSelectedTriggerChanged(HitTrigger value)
         {
@@ -98,31 +176,30 @@ namespace HitAnalyzer2.ViewModels
         {
         }
 
-        [RelayCommand]
-        private void SaveOffset()
-        {
-            try
-            {
-                _weaponHandler.SaveOffset();
-                OffsetSettingsMessage = "Offset zbraně uložen.";
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-            {
-                OffsetSettingsMessage = $"Offset zbraně se nepodařilo uložit. {ex.Message}";
-            }
-        }
+        private bool CanSaveWeapon() => SelectedWeapon is not null;
 
-        [RelayCommand]
-        private void SaveWeaponSettings()
+        [RelayCommand(CanExecute = nameof(CanSaveWeapon))]
+        private void SaveWeapon()
         {
+            if (SelectedWeapon is not { } weapon)
+                return;
+
+            var profile = weapon.Profile with
+            {
+                Trigger = SelectedTrigger,
+                NexDetectionInterval = NexDetectionInterval,
+                OffsetX = OffsetX,
+                OffsetY = OffsetY
+            };
             try
             {
-                _settings.SaveWeapon(SelectedTrigger, NexDetectionInterval);
-                SettingsMessage = "Nastavení zbraně uloženo.";
+                _settings.SaveWeapon(weapon.FileName, profile);
+                weapon.Profile = profile;
+                OffsetSettingsMessage = "Nastavení zbraně uloženo.";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
-                SettingsMessage = $"Nastavení zbraně se nepodařilo uložit. {ex.Message}";
+                OffsetSettingsMessage = $"Nastavení zbraně se nepodařilo uložit. {ex.Message}";
             }
         }
     }

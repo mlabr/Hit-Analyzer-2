@@ -20,10 +20,16 @@
     "MinimumHitAreaPixels": null,
     "ShowFlares": false
   },
-  "Weapon": {
-    "Trigger": "FirstSpot",
-    "NexDetectionInterval": 500,
-    "OffsetX": 0,
-    "OffsetY": 0
+  "SelectedWeapon": {
+    "FileName": "weapon2.json",
+    "Profile": {
+      "Type": "ha_weapon",
+      "Name": "weapon2",
+      "Caliber": 0,
+      "OffsetX": 0,
+      "OffsetY": 0,
+      "Trigger": "FirstSpot",
+      "NexDetectionInterval": 500
+    }
   }
 }

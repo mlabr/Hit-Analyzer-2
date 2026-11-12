@@ -26,9 +26,10 @@ namespace HitAnalyzer2
         private readonly object _saveGate = new();
         private volatile AppSettings _current = new();
 
-        public SettingsService(string path)
+        public SettingsService(string path, string weaponsDirectory)
         {
             _path = path;
+            WeaponsDirectory = weaponsDirectory;
             try
             {
                 if (!File.Exists(_path))
@@ -45,16 +46,41 @@ namespace HitAnalyzer2
 
                 var settings = json.Deserialize<AppSettings>(JsonOptions);
                 Validate(settings);
-                _current = settings!;
+                _current = settings!.SelectedWeapon is null ? settings : settings with { LegacyWeapon = null };
+                InitialWeapon = _current.LegacyWeapon ?? new WeaponSettings();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
                 LoadError = $"Nastavení se nepodařilo načíst nebo vytvořit. Používám výchozí hodnoty. {ex.Message}";
             }
+
+            try
+            {
+                if (_current.SelectedWeapon is { } savedWeapon)
+                {
+                    ValidateWeaponProfile(savedWeapon.Profile);
+                    InitialWeapon = savedWeapon.Profile;
+                    RestoreWeaponProfile(savedWeapon);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                LoadError = $"Uložený profil zbraně se nepodařilo obnovit. {ex.Message}";
+            }
         }
 
         public AppSettings Current => _current;
         public string? LoadError { get; }
+        internal WeaponSettings InitialWeapon { get; } = new();
+        internal string WeaponsDirectory { get; }
+
+        internal static WeaponProfile LoadWeaponProfile(string path)
+        {
+            using var stream = File.OpenRead(path);
+            var profile = JsonSerializer.Deserialize<WeaponProfile>(stream, JsonOptions);
+            ValidateWeaponProfile(profile);
+            return profile!;
+        }
 
         public void SaveCamera(CameraDevice device, CameraMode? mode, FlipMode? flip,
             int brightnessPercent, int contrastPercent, int saturationPercent)
@@ -97,30 +123,89 @@ namespace HitAnalyzer2
             }
         }
 
-        public void SaveWeapon(HitTrigger trigger, int interval)
+        internal void SaveWeapon(string fileName, WeaponProfile profile)
         {
             lock (_saveGate)
             {
+                var profilePath = GetWeaponProfilePath(fileName);
+                ValidateWeaponProfile(profile);
                 var settings = _current with
                 {
-                    Weapon = _current.Weapon with { Trigger = trigger, NexDetectionInterval = interval }
+                    LegacyWeapon = null,
+                    SelectedWeapon = new SavedWeaponProfile(fileName, profile)
                 };
-                Write(settings, overwrite: true);
-                _current = settings;
+
+                Validate(settings);
+                var temporarySettingsPath = WriteTemporaryFile(_path, settings);
+                try
+                {
+                    var temporaryProfilePath = WriteTemporaryFile(profilePath, profile);
+                    var previousProfilePath = $"{temporaryProfilePath}.bak";
+                    try
+                    {
+                        bool hadProfile = File.Exists(profilePath);
+                        if (hadProfile)
+                            File.Replace(temporaryProfilePath, profilePath, previousProfilePath);
+                        else
+                            File.Move(temporaryProfilePath, profilePath);
+
+                        try
+                        {
+                            File.Move(temporarySettingsPath, _path, overwrite: true);
+                        }
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                        {
+                            RollBackWeaponProfile(profilePath, previousProfilePath, hadProfile);
+                            throw;
+                        }
+
+                        _current = settings;
+                        File.Delete(previousProfilePath);
+                    }
+                    finally
+                    {
+                        File.Delete(temporaryProfilePath);
+                    }
+                }
+                finally
+                {
+                    File.Delete(temporarySettingsPath);
+                }
             }
         }
 
-        public void SaveWeaponOffset(int x, int y)
+        private static void RollBackWeaponProfile(string profilePath, string previousProfilePath, bool hadProfile)
         {
-            lock (_saveGate)
+            if (hadProfile)
+                File.Move(previousProfilePath, profilePath, overwrite: true);
+            else
+                File.Delete(profilePath);
+        }
+
+        private void RestoreWeaponProfile(SavedWeaponProfile savedWeapon)
+        {
+            var path = GetWeaponProfilePath(savedWeapon.FileName);
+            if (File.Exists(path))
+                return;
+
+            try
             {
-                var settings = _current with
-                {
-                    Weapon = _current.Weapon with { OffsetX = x, OffsetY = y }
-                };
-                Write(settings, overwrite: true);
-                _current = settings;
+                WriteFile(path, savedWeapon.Profile, overwrite: false);
             }
+            catch (IOException) when (File.Exists(path))
+            {
+                // Another instance restored the profile first.
+            }
+        }
+
+        private string GetWeaponProfilePath(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName) || fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
+                || fileName.Contains('/') || fileName.Contains('\\')
+                || !string.Equals(Path.GetExtension(fileName), ".json", StringComparison.OrdinalIgnoreCase))
+                throw new JsonException("Neplatný název souboru profilu zbraně.");
+
+            return Path.Combine(WeaponsDirectory, fileName);
         }
 
         private void CreateDefaults()
@@ -138,14 +223,15 @@ namespace HitAnalyzer2
         private void Write(AppSettings settings, bool overwrite)
         {
             Validate(settings);
-            Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-            var temporaryPath = $"{_path}.{Guid.NewGuid():N}.tmp";
+            WriteFile(_path, settings, overwrite);
+        }
+
+        private static void WriteFile<T>(string path, T data, bool overwrite)
+        {
+            var temporaryPath = WriteTemporaryFile(path, data);
             try
             {
-                using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write))
-                    JsonSerializer.Serialize(stream, settings, JsonOptions);
-
-                File.Move(temporaryPath, _path, overwrite);
+                File.Move(temporaryPath, path, overwrite);
             }
             finally
             {
@@ -153,10 +239,27 @@ namespace HitAnalyzer2
             }
         }
 
+        private static string WriteTemporaryFile<T>(string path, T data)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+            try
+            {
+                using var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write);
+                JsonSerializer.Serialize(stream, data, JsonOptions);
+                return temporaryPath;
+            }
+            catch
+            {
+                File.Delete(temporaryPath);
+                throw;
+            }
+        }
+
         private static void Validate(AppSettings? settings)
         {
-            if (settings is not { Camera: { } camera, Detection: { } detection, Weapon: { } weapon })
-                throw new JsonException("Chybí nastavení kamery, detekce nebo zbraně.");
+            if (settings is not { Camera: { } camera, Detection: { } detection })
+                throw new JsonException("Chybí nastavení kamery nebo detekce.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
                 || camera.BrightnessPercent is < 0 or > 100
@@ -171,12 +274,26 @@ namespace HitAnalyzer2
                 || detection.MinimumHitAreaPixels is <= 0)
                 throw new JsonException("Neplatné parametry detekce.");
 
+            if (settings.SelectedWeapon is null && settings.LegacyWeapon is { } legacyWeapon)
+                ValidateWeapon(legacyWeapon);
+        }
+
+        private static void ValidateWeapon(WeaponSettings weapon)
+        {
             if (!Enum.IsDefined(weapon.Trigger)
                 || weapon.NexDetectionInterval is < ShootingSessionService.MinimumDetectionInterval
                     or > ShootingSessionService.MaximumDetectionInterval
                 || weapon.OffsetX is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset
                 || weapon.OffsetY is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset)
                 throw new JsonException("Neplatné nastavení zbraně.");
+        }
+
+        private static void ValidateWeaponProfile(WeaponProfile? profile)
+        {
+            if (profile is not { Type: "ha_weapon" } || string.IsNullOrWhiteSpace(profile.Name))
+                throw new JsonException("Neplatný typ nebo název profilu zbraně.");
+
+            ValidateWeapon(profile);
         }
     }
 }
