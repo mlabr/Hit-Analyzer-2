@@ -21,7 +21,7 @@
                   ItemsSource="{Binding Triggers}"
                   SelectedItem="{Binding SelectedTrigger, Mode=TwoWay}">
             <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="shooting:HitTrigger">
+                <DataTemplate x:DataType="shooting:TriggerTypeEnum">
                     <TextBlock Text="{Binding Converter={x:Static views:WeaponSettingsView.TriggerLabel}}" />
                 </DataTemplate>
             </ComboBox.ItemTemplate>
