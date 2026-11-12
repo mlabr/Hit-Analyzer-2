@@ -6,11 +6,7 @@
 
     <StackPanel Spacing="16">
         <TextBlock Text="Shooting settings" FontWeight="SemiBold" />
-        <StackPanel Spacing="4">
-            <TextBlock Text="Hits:" />
-            <TextBlock Text="{Binding HitCount}" FontSize="32" FontWeight="SemiBold" />
-            <Button Content="Reset" Command="{Binding ResetHitCountCommand}" />
-        </StackPanel>
+        <Button Content="Reset" Command="{Binding ResetHitCountCommand}" />
     </StackPanel>
 
 </UserControl>

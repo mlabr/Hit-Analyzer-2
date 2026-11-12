@@ -8,7 +8,7 @@
         x:Class="HitAnalyzer2.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Width="800" Height="450" MinWidth="450"
+        Width="800" Height="450" MinWidth="450" MinHeight="150"
         Title="Hit Analyzer 2">
 
     <Grid RowDefinitions="Auto,*">
@@ -19,7 +19,7 @@
             <MenuItem Header="_Target" Click="ShowTargetSettings" />
             <MenuItem Header="_Weapon" Click="ShowWeaponSettings" />
         </Menu>
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="1" RowDefinitions="*,Auto" ColumnDefinitions="*,Auto">
             <Grid x:Name="CameraPreview">
                 <Image x:Name="PreviewImage" Source="{Binding CameraPreview.WebcamImage}" Stretch="Uniform"
                        StretchDirection="DownOnly" />
@@ -29,7 +29,11 @@
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             </Grid>
-            <Border x:Name="SettingsPanel" Grid.Column="1" Width="280" BorderThickness="1,0,0,0"
+            <StackPanel x:Name="HitCounter" Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
+                <TextBlock Text="Hits:" FontSize="32" />
+                <TextBlock Text="{Binding ShootingSettings.HitCount}" FontSize="32" FontWeight="SemiBold" />
+            </StackPanel>
+            <Border x:Name="SettingsPanel" Grid.Column="1" Grid.RowSpan="2" Width="280" BorderThickness="1,0,0,0"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                 <ScrollViewer Padding="12" HorizontalScrollBarVisibility="Disabled">
                     <Grid>

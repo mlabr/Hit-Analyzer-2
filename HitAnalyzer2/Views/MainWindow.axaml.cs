@@ -85,13 +85,14 @@ namespace HitAnalyzer2.Views
                 : Math.Max(1, screen.WorkingArea.Height / DesktopScaling - frameHeight);
 
             SettingsMenu.Measure(Size.Infinity);
-            double verticalSpace = verticalMargin + SettingsMenu.DesiredSize.Height;
+            HitCounter.Measure(Size.Infinity);
+            double verticalSpace = verticalMargin + SettingsMenu.DesiredSize.Height + HitCounter.DesiredSize.Height;
             double scale = Math.Clamp(Math.Min(
                 (maxWidth - horizontalSpace) / imageSize.Width,
                 (maxHeight - verticalSpace) / imageSize.Height), 0, 1);
 
             Width = Math.Min(maxWidth, Math.Max(MinWidth, Math.Ceiling(imageSize.Width * scale + horizontalSpace)));
-            Height = Math.Min(maxHeight, Math.Ceiling(imageSize.Height * scale + verticalSpace));
+            Height = Math.Min(maxHeight, Math.Max(MinHeight, Math.Ceiling(imageSize.Height * scale + verticalSpace)));
 
             if (screen is { } currentScreen)
             {
