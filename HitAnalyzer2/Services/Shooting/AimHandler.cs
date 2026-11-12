@@ -3,7 +3,10 @@ using HitAnalyzer2.Services.Detection;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal readonly record struct AimPosition(double X, double Y, TimeSpan Time);
+    internal readonly record struct AimPosition(double X, double Y, LaserPosition LaserPosition)
+    {
+        public TimeSpan Time => LaserPosition.Time;
+    }
 
     internal sealed class AimHandler
     {
@@ -19,7 +22,7 @@ namespace HitAnalyzer2.Services.Shooting
         internal AimPosition GetAimPosition(LaserPosition position)
         {
             lock (_offsetGate)
-                return new AimPosition(position.X + _offset.X, position.Y + _offset.Y, position.Time);
+                return new AimPosition(position.X + _offset.X, position.Y + _offset.Y, position);
         }
     }
 }
