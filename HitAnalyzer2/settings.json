@@ -21,7 +21,7 @@
     "ShowFlares": false
   },
   "Weapon": {
-    "Trigger": "NewSpot",
-    "NexDetectionInterval": 100
+    "Trigger": "FirstSpot",
+    "NexDetectionInterval": 500
   }
 }
