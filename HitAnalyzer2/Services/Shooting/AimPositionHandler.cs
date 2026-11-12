@@ -8,7 +8,7 @@ namespace HitAnalyzer2.Services.Shooting
         public TimeSpan Time => LaserPosition.Time;
     }
 
-    internal sealed class AimHandler
+    internal sealed class AimPositionHandler
     {
         private readonly object _offsetGate = new();
         private (double X, double Y) _offset;

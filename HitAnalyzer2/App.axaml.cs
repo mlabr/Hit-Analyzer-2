@@ -32,10 +32,10 @@ namespace HitAnalyzer2
                         : new LaserDetectorBlob(threshold, detection.MinimumHitAreaPixels ?? 1);
                 }
 
-                var aimHandler = new AimHandler();
-                var weaponHandler = new WeaponHandler(settings, aimHandler);
+                var aimPositionHandler = new AimPositionHandler();
+                var weaponHandler = new WeaponHandler(settings, aimPositionHandler);
                 var shootingSession = new ShootingSessionService(
-                    CreateDetector(detection.Method, detection.DetectionSensitivity), aimHandler, Program.StartedAt);
+                    CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler);
@@ -44,8 +44,8 @@ namespace HitAnalyzer2
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
                         shootingSession),
                 };
-                var externalTriggerKeyboard = new ExternalTriggerKeyboard(mainWindow);
-                externalTriggerKeyboard.PressChanged += shootingSession.OnExternalPressChanged;
+                var externalTriggerHandler = new ExternalTriggerHandler(mainWindow);
+                externalTriggerHandler.PressChanged += shootingSession.OnExternalPressChanged;
                 desktop.MainWindow = mainWindow;
             }
 

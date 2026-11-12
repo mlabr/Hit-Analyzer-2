@@ -6,11 +6,11 @@ using System.Diagnostics;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal sealed class ExternalTriggerKeyboard
+    internal sealed class ExternalTriggerHandler
     {
         private bool _isPressed;
 
-        internal ExternalTriggerKeyboard(Window window)
+        internal ExternalTriggerHandler(Window window)
         {
             window.AddHandler(InputElement.KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
             window.AddHandler(InputElement.KeyUpEvent, OnKeyUp, RoutingStrategies.Tunnel);

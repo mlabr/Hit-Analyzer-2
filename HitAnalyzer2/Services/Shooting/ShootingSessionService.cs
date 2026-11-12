@@ -6,7 +6,7 @@ using HitAnalyzer2.Services.Detection;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimHandler aimHandler, long startedAt)
+    internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler, long startedAt)
     {
         internal const int MinimumDetectionInterval = 100;
         internal const int MaximumDetectionInterval = 5000;
@@ -94,7 +94,7 @@ namespace HitAnalyzer2.Services.Shooting
             if (registeredHit is { } hit)
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
-            return lastHit is { } lastPosition ? aimHandler.GetAimPosition(lastPosition) : null;
+            return lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null;
         }
 
         private LaserPosition? GetTriggeredPosition(Mat frame, long capturedAt, bool intervalElapsed)
