@@ -27,7 +27,11 @@ namespace HitAnalyzer2.ViewModels
             ShootingSettings = new ShootingSettingsViewModel(shootingSession);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
-                CameraPreview.ClearPreview,
+                () =>
+                {
+                    shootingSession.ClearAimPaths();
+                    CameraPreview.ClearPreview();
+                },
                 message => CameraPreview.StatusMessage = message);
 
             CameraSettings = new CameraSettingsViewModel(settings, captureSession);
@@ -37,14 +41,14 @@ namespace HitAnalyzer2.ViewModels
 
         internal Task StopCameraAsync() => CameraSettings.StopCameraAsync();
 
-        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double? fps,
+        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double? fps, double detectedFps,
             CancellationToken cancellationToken)
         {
             using var output = new Mat();
             var pixels = PreviewFrameProcessor.Process(frame, output, CameraSettings.CameraBrightnessPercent,
                 CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent);
-            cancellationToken.ThrowIfCancellationRequested();
-            var lastHit = _shootingSession.ProcessFrame(pixels, capturedAt);
+            var (lastHit, aimPath, followPath) =
+                _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
 
             if (ReferenceEquals(pixels, frame) && (lastHit.HasValue || flareSensitivity.HasValue))
@@ -57,7 +61,7 @@ namespace HitAnalyzer2.ViewModels
                 FlareDetectionOverlay.Draw(pixels, sensitivity);
 
             if (lastHit is { } hit)
-                HitRenderer.Draw(pixels, hit);
+                HitRenderer.Draw(pixels, hit, aimPath, followPath);
 
             await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
         }

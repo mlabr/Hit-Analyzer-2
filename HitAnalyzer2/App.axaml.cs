@@ -32,7 +32,7 @@ namespace HitAnalyzer2
                         : new LaserDetectorBlob(threshold, detection.MinimumHitAreaPixels ?? 1);
                 }
 
-                var aimPositionHandler = new AimPositionHandler();
+                var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
                 var weaponHandler = new WeaponHandler(settings, aimPositionHandler);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler, Program.StartedAt);

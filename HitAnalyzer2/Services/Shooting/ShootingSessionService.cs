@@ -1,6 +1,7 @@
 using OpenCvSharp;
 using System;
 using System.Diagnostics;
+using System.Threading;
 
 using HitAnalyzer2.Services.Detection;
 
@@ -15,6 +16,8 @@ namespace HitAnalyzer2.Services.Shooting
         private volatile ILaserDetector _laserDetector = laserDetector;
         private volatile int _nextDetectionInterval = MinimumDetectionInterval;
         private LaserPosition? _lastHit;
+        private LaserPosition[] _lastHitAimPath = Array.Empty<LaserPosition>();
+        private LaserPosition[] _lastHitFollowPath = Array.Empty<LaserPosition>();
         private TriggerTypeEnum _trigger = TriggerTypeEnum.FirstSpot;
         private bool _spotWasVisible;
         private long? _lastAcceptedExternalPressAt;
@@ -35,6 +38,12 @@ namespace HitAnalyzer2.Services.Shooting
                 _trigger = trigger;
                 _spotWasVisible = false;
                 _externalPressedAt = null;
+                if (trigger != TriggerTypeEnum.ExternalEvent)
+                {
+                    _lastHitAimPath = Array.Empty<LaserPosition>();
+                    _lastHitFollowPath = Array.Empty<LaserPosition>();
+                    aimPositionHandler.ClearFollowPath();
+                }
             }
         }
 
@@ -67,26 +76,52 @@ namespace HitAnalyzer2.Services.Shooting
             set => _nextDetectionInterval = Math.Clamp(value, MinimumDetectionInterval, MaximumDetectionInterval);
         }
 
-        internal AimPosition? ProcessFrame(Mat frame, long capturedAt)
+        internal void ClearAimPaths()
+        {
+            lock (_hitGate)
+            {
+                aimPositionHandler.ClearAimPaths();
+                _lastHitAimPath = Array.Empty<LaserPosition>();
+                _lastHitFollowPath = Array.Empty<LaserPosition>();
+            }
+        }
+
+        internal (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath) ProcessFrame(
+            Mat frame, long capturedAt, double detectedFps, CancellationToken cancellationToken)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(startedAt, capturedAt);
             LaserPosition? registeredHit = null;
             LaserPosition? lastHit;
+            LaserPosition[] aimPath;
+            LaserPosition[] followPath;
             lock (_hitGate)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                var detectedPosition = _laserDetector.Detect(frame);
+                LaserPosition? position = detectedPosition is { } point ? point with { Time = elapsed } : null;
+                aimPositionHandler.UpdateAimPath(position, elapsed, detectedFps);
                 bool intervalElapsed = elapsed >= NextDetectionTimeStamp;
-                if ((intervalElapsed || _trigger != TriggerTypeEnum.FirstSpot)
-                    && GetTriggeredPosition(frame, capturedAt, intervalElapsed) is { } position)
+                bool externalHit = false;
+                if (IsTriggered(position, capturedAt, intervalElapsed))
                 {
                     if (_trigger == TriggerTypeEnum.ExternalEvent)
+                    {
                         _externalPressedAt = null;
+                        _lastHitAimPath = aimPositionHandler.GetAimPathSnapshot();
+                        externalHit = true;
+                    }
                     else
                         NextDetectionTimeStamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
 
-                    registeredHit = position with { Time = elapsed };
+                    registeredHit = position;
                     _lastHit = registeredHit;
                 }
                 lastHit = _lastHit;
+                aimPath = _lastHitAimPath;
+                var updatedFollowPath = aimPositionHandler.UpdateFollowPath(position, elapsed, detectedFps, externalHit);
+                if (externalHit || updatedFollowPath.Length > 0)
+                    _lastHitFollowPath = updatedFollowPath;
+                followPath = _lastHitFollowPath;
             }
 
             LaserPositionEvaluated?.Invoke(registeredHit, elapsed);
@@ -94,29 +129,25 @@ namespace HitAnalyzer2.Services.Shooting
             if (registeredHit is { } hit)
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
-            return lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null;
+            return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null, aimPath, followPath);
         }
 
-        private LaserPosition? GetTriggeredPosition(Mat frame, long capturedAt, bool intervalElapsed)
+        private bool IsTriggered(LaserPosition? position, long capturedAt, bool intervalElapsed)
         {
             if (_trigger == TriggerTypeEnum.ExternalEvent)
             {
                 // Compare against capture time, even if the frame is processed after key-up.
-                if (_externalPressedAt is not { } pressedAt || capturedAt < pressedAt ||
-                    capturedAt >= _externalReleasedAt)
-                    return null;
-
-                return _laserDetector.Detect(frame);
+                return position.HasValue && _externalPressedAt is { } pressedAt &&
+                    capturedAt >= pressedAt && capturedAt < _externalReleasedAt;
             }
 
-            LaserPosition? position = _laserDetector.Detect(frame);
             if (_trigger == TriggerTypeEnum.FirstSpot)
-                return position;
+                return position.HasValue && intervalElapsed;
 
             // Observe every frame so a spot that appeared during the interval is not a new spot afterward.
             bool appeared = position.HasValue && !_spotWasVisible;
             _spotWasVisible = position.HasValue;
-            return appeared && intervalElapsed ? position : null;
+            return appeared && intervalElapsed;
         }
     }
 }

@@ -10,6 +10,7 @@ namespace HitAnalyzer2
 {
     internal sealed record AppSettings
     {
+        public ShootingSettings Shooting { get; init; } = new();
         public CameraSettings Camera { get; init; } = new();
         public DetectionSettings Detection { get; init; } = new();
         [JsonPropertyName("Weapon")]
@@ -17,6 +18,13 @@ namespace HitAnalyzer2
         public WeaponSettings? LegacyWeapon { get; init; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public SavedWeaponProfile? SelectedWeapon { get; init; }
+    }
+
+    internal sealed record ShootingSettings
+    {
+        public int AimPathTimeLimit { get; init; } = 15;
+        public int AimPathTimeoutMs { get; init; } = 400;
+        public int AimPathAfterTimeLimit { get; init; } = 4;
     }
 
     internal sealed record SavedWeaponProfile(string FileName, WeaponProfile Profile);
