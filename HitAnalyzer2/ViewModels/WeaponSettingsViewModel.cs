@@ -22,7 +22,14 @@ namespace HitAnalyzer2.ViewModels
         private int offsetX;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(DisplayOffsetY))]
         private int offsetY;
+
+        public int DisplayOffsetY
+        {
+            get => -OffsetY;
+            set => OffsetY = -value;
+        }
 
         [ObservableProperty]
         private string? offsetSettingsMessage;

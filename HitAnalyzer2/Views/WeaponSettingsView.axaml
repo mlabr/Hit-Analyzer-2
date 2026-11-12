@@ -32,8 +32,8 @@
                 <Slider Grid.Row="1" Grid.Column="1" Minimum="{Binding MinimumOffset}" Maximum="{Binding MaximumOffset}"
                         Height="22" MinHeight="0" VerticalAlignment="Center"
                         TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
-                        Value="{Binding OffsetY, Mode=TwoWay}" AutomationProperties.Name="Weapon offset Y" />
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding OffsetY}" VerticalAlignment="Center" />
+                        Value="{Binding DisplayOffsetY, Mode=TwoWay}" AutomationProperties.Name="Weapon offset Y" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding DisplayOffsetY}" VerticalAlignment="Center" />
                 <Button Grid.Row="1" Grid.Column="3" Content="ToCenter" Command="{Binding ToCenterCommand}"
                         Height="22" MinHeight="0" Padding="6,0" VerticalAlignment="Center" />
             </Grid>
