@@ -21,10 +21,10 @@
     "ShowFlares": false
   },
   "SelectedWeapon": {
-    "FileName": "weapon2.json",
+    "FileName": "weapon4.json",
     "Profile": {
       "Type": "ha_weapon",
-      "Name": "weapon2",
+      "Name": "weapon4",
       "Caliber": 0,
       "OffsetX": 0,
       "OffsetY": 0,

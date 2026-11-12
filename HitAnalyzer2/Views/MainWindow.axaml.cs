@@ -1,10 +1,15 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using HitAnalyzer2.ViewModels;
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 
 namespace HitAnalyzer2.Views
 {
@@ -45,6 +50,52 @@ namespace HitAnalyzer2.Views
 
         private void ShowWeaponSettings(object? sender, RoutedEventArgs e) =>
             ShowSettings(WeaponSettings);
+
+        private async void ShowHelp(object? sender, RoutedEventArgs e)
+        {
+            string helpPath = Path.Combine(AppContext.BaseDirectory, "Data", "Help", "index.html");
+            string message;
+            if (File.Exists(helpPath))
+            {
+                try
+                {
+                    using var browser = Process.Start(new ProcessStartInfo(helpPath) { UseShellExecute = true });
+                    return;
+                }
+                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException)
+                {
+                    message = "Could not open the help page. Check that a default web browser is configured.";
+                }
+            }
+            else
+            {
+                message = "The help file is missing. Check that Data/Help/index.html is in the application folder.";
+            }
+
+            var closeButton = new Button { Content = "OK", IsDefault = true, IsCancel = true,
+                HorizontalAlignment = HorizontalAlignment.Right };
+            var dialog = new Window
+            {
+                Title = "Hit Analyzer 2 Help",
+                Width = 380,
+                SizeToContent = SizeToContent.Height,
+                CanResize = false,
+                ShowInTaskbar = false,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Content = new StackPanel
+                {
+                    Margin = new Thickness(16),
+                    Spacing = 12,
+                    Children =
+                    {
+                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                        closeButton
+                    }
+                }
+            };
+            closeButton.Click += (_, _) => dialog.Close();
+            await dialog.ShowDialog(this);
+        }
 
         private void ShowSettings(Control view, string? placeholder = null)
         {

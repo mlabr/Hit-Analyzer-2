@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hit Analyzer 2 Help</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { max-width: 46rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 system-ui, sans-serif; }
+    h1, h2, h3 { line-height: 1.2; }
+    h2 { margin-top: 2rem; }
+    li + li { margin-top: .35rem; }
+    dt { font-weight: bold; margin-top: .75rem; }
+    dd { margin-inline-start: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Hit Analyzer 2 Help</h1>
+    <nav aria-label="Contents">
+      <ul>
+        <li><a href="#quick-start">Record your first hit</a></li>
+        <li><a href="#settings">Settings reference</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </nav>
+
+    <section id="quick-start">
+      <h2>Record your first hit</h2>
+      <ol>
+        <li>Connect your webcam and point it at the target so the shooting area is visible in the preview.</li>
+        <li>Open <strong>Camera</strong> and select the webcam. If it is missing from the list, click <strong>Refresh webcams</strong>. Choose a resolution and frame rate if the camera mode list is available.</li>
+        <li>Open <strong>Weapon</strong> and select the profile for your setup.</li>
+        <li>Open <strong>Shooting</strong> and click <strong>Reset hit count</strong> if you want to start from zero.</li>
+        <li>Fire a test pulse at the target. A registered hit increases the <strong>Hits</strong> counter. If the counter stays at zero, follow the <a href="#missed-hits">missed hits checklist</a>.</li>
+      </ol>
+    </section>
+
+    <section id="settings">
+      <h2>Settings reference</h2>
+      <h3>Shooting</h3>
+      <p><strong>Reset hit count</strong> sets the <strong>Hits</strong> counter to zero.</p>
+
+      <h3>Camera</h3>
+      <p>Select a webcam, choose an available resolution and frame rate, and use the flip selector to orient the preview. Adjust brightness, contrast, and saturation while checking the preview. Click <strong>Save webcam settings</strong> to keep your changes.</p>
+
+      <h3>Detection</h3>
+      <dl>
+        <dt>Simple</dt>
+        <dd>Looks for the brightest pixels that meet the detection threshold.</dd>
+        <dt>Blob</dt>
+        <dd>Uses the center of the largest connected bright region that meets the minimum area.</dd>
+        <dt>Sensitivity</dt>
+        <dd>Increase sensitivity to pick up dimmer spots. Decrease it if bright areas in the scene are counted as hits.</dd>
+        <dt>Show flares</dt>
+        <dd>Highlights bright regions that meet the detection threshold so you can see which parts of the image may affect detection.</dd>
+      </dl>
+      <p>Click <strong>Save detection settings</strong> to keep your changes.</p>
+
+      <h3>Target</h3>
+      <p>Target settings are currently unavailable.</p>
+
+      <h3>Weapon</h3>
+      <dl>
+        <dt>Trigger type</dt>
+        <dd><strong>FirstSpot</strong> can count a spot again once the detection interval expires. <strong>NewSpot</strong> requires the spot to disappear and reappear after the interval before it can count again.</dd>
+        <dt>Next detection interval (ms)</dt>
+        <dd>Sets the minimum time between registered hits, from 100 to 5,000 milliseconds.</dd>
+        <dt>Weapon offset (px)</dt>
+        <dd>Adjust X and Y to shift the displayed hit position when it consistently differs from the point of aim. Click <strong>Reset</strong> to zero both offsets.</dd>
+      </dl>
+      <p>Click <strong>Save Weapon</strong> to keep the changes for the selected profile.</p>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>Troubleshooting</h2>
+      <h3>No camera preview</h3>
+      <p>Check the camera connection, close other apps that may be using the webcam, and click <strong>Refresh webcams</strong>. Select the camera again and try another available camera mode if the preview stays blank.</p>
+
+      <h3 id="missed-hits">The counter misses hits</h3>
+      <ol>
+        <li>Check that the preview shows the entire shooting area and that the laser spot is inside the frame.</li>
+        <li>Turn on <strong>Show flares</strong>. Increase sensitivity a little at a time and repeat the test. If the background starts lighting up, reduce glare on the target and test again.</li>
+        <li>If <strong>Blob</strong> misses a small spot, try <strong>Simple</strong> and compare the counter after a test pulse.</li>
+        <li>Wait longer than the <strong>Next detection interval</strong> between test pulses. With <strong>NewSpot</strong>, make sure the spot disappears before the next pulse.</li>
+      </ol>
+
+      <h3>The counter increases without a shot</h3>
+      <p>Use <strong>Show flares</strong> to locate bright reflections or background lights in the preview. Remove them from the frame or lower sensitivity, then fire another test pulse.</p>
+    </section>
+  </main>
+</body>
+</html>
