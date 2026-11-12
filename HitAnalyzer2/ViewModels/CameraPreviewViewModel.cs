@@ -40,7 +40,7 @@ namespace HitAnalyzer2.ViewModels
                     published = true;
                     WebcamImage = bitmap;
                     previous?.Dispose();
-                    FpsText = fps is { } value ? $"Náhled: {value:0.0} FPS" : null;
+                    FpsText = fps is { } value ? $"FPS: {value:0.0}" : null;
                     StatusMessage = null;
                 }, DispatcherPriority.Background);
             }
