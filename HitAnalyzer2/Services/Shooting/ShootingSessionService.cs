@@ -14,7 +14,7 @@ namespace HitAnalyzer2.Services.Shooting
         private readonly object _hitGate = new();
         private volatile ILaserDetector _laserDetector = laserDetector;
         private volatile int _nextDetectionInterval = MinimumDetectionInterval;
-        private AimPosition? _lastHit;
+        private LaserPosition? _lastHit;
         private HitTrigger _trigger = HitTrigger.FirstSpot;
         private bool _spotWasVisible;
 
@@ -44,7 +44,7 @@ namespace HitAnalyzer2.Services.Shooting
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(startedAt, capturedAt);
             LaserPosition? registeredHit = null;
-            AimPosition? lastHit;
+            LaserPosition? lastHit;
             lock (_hitGate)
             {
                 bool intervalElapsed = elapsed >= NextDetectionTimeStamp;
@@ -52,7 +52,7 @@ namespace HitAnalyzer2.Services.Shooting
                     && GetTriggeredPosition(frame, intervalElapsed) is { } position)
                 {
                     registeredHit = position with { Time = elapsed };
-                    _lastHit = aimHandler.GetAimPosition(registeredHit.Value);
+                    _lastHit = registeredHit;
                     NextDetectionTimeStamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
                 }
                 lastHit = _lastHit;
@@ -63,7 +63,7 @@ namespace HitAnalyzer2.Services.Shooting
             if (registeredHit is { } hit)
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
-            return lastHit;
+            return lastHit is { } lastPosition ? aimHandler.GetAimPosition(lastPosition) : null;
         }
 
         private LaserPosition? GetTriggeredPosition(Mat frame, bool intervalElapsed)

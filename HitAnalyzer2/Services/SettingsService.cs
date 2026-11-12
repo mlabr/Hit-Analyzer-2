@@ -110,6 +110,19 @@ namespace HitAnalyzer2
             }
         }
 
+        public void SaveWeaponOffset(int x, int y)
+        {
+            lock (_saveGate)
+            {
+                var settings = _current with
+                {
+                    Weapon = _current.Weapon with { OffsetX = x, OffsetY = y }
+                };
+                Write(settings, overwrite: true);
+                _current = settings;
+            }
+        }
+
         private void CreateDefaults()
         {
             try
@@ -160,7 +173,9 @@ namespace HitAnalyzer2
 
             if (!Enum.IsDefined(weapon.Trigger)
                 || weapon.NexDetectionInterval is < ShootingSessionService.MinimumDetectionInterval
-                    or > ShootingSessionService.MaximumDetectionInterval)
+                    or > ShootingSessionService.MaximumDetectionInterval
+                || weapon.OffsetX is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset
+                || weapon.OffsetY is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset)
                 throw new JsonException("Neplatné nastavení zbraně.");
         }
     }

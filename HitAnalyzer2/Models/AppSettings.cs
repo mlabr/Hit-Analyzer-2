@@ -16,6 +16,8 @@ namespace HitAnalyzer2
 
     internal sealed record WeaponSettings
     {
+        public int OffsetX { get; init; }
+        public int OffsetY { get; init; }
         public HitTrigger Trigger { get; init; } = HitTrigger.FirstSpot;
         public int NexDetectionInterval { get; init; } = ShootingSessionService.MinimumDetectionInterval;
     }

@@ -32,6 +32,7 @@ namespace HitAnalyzer2
                 }
 
                 var aimHandler = new AimHandler();
+                var weaponHandler = new WeaponHandler(settings, aimHandler);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimHandler, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
@@ -40,7 +41,7 @@ namespace HitAnalyzer2
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
-                        shootingSession),
+                        shootingSession, weaponHandler),
                 };
             }
 

@@ -22,6 +22,8 @@
   },
   "Weapon": {
     "Trigger": "FirstSpot",
-    "NexDetectionInterval": 500
+    "NexDetectionInterval": 500,
+    "OffsetX": 0,
+    "OffsetY": 0
   }
 }
