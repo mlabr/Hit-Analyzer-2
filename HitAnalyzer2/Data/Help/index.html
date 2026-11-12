@@ -63,7 +63,7 @@
       <h3>Weapon</h3>
       <dl>
         <dt>Trigger type</dt>
-        <dd><strong>FirstSpot</strong> can count a spot again once the detection interval expires. <strong>NewSpot</strong> requires the spot to disappear and reappear after the interval before it can count again.</dd>
+        <dd><strong>FirstSpot</strong> can count a spot again once the detection interval expires. <strong>NewSpot</strong> requires the spot to disappear and reappear after the interval before it can count again. <strong>External Event</strong> counts one hit per accepted press of T while the main window is active, provided a frame captured while T is held contains a laser spot. The detection interval starts with each accepted press, even if it yields no hit. Presses during that interval are ignored.</dd>
         <dt>Next detection interval (ms)</dt>
         <dd>Sets the minimum time between registered hits, from 100 to 5,000 milliseconds.</dd>
         <dt>Weapon offset (px)</dt>

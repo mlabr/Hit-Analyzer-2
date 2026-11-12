@@ -1,6 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:HitAnalyzer2.ViewModels"
+             xmlns:views="using:HitAnalyzer2.Views"
+             xmlns:shooting="using:HitAnalyzer2.Services.Shooting"
              x:Class="HitAnalyzer2.Views.WeaponSettingsView"
              x:DataType="vm:WeaponSettingsViewModel">
     <StackPanel Spacing="8">
@@ -17,7 +19,13 @@
         <TextBlock Text="Trigger type:" />
         <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Trigger type"
                   ItemsSource="{Binding Triggers}"
-                  SelectedItem="{Binding SelectedTrigger, Mode=TwoWay}" />
+                  SelectedItem="{Binding SelectedTrigger, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="shooting:HitTrigger">
+                    <TextBlock Text="{Binding Converter={x:Static views:WeaponSettingsView.TriggerLabel}}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
         <TextBlock Text="Next detection interval (ms)" />
         <NumericUpDown Minimum="100" Maximum="5000" Increment="1" ShowButtonSpinner="False"
                        ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"

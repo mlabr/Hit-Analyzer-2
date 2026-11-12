@@ -17,6 +17,9 @@ namespace HitAnalyzer2.Services.Shooting
         private LaserPosition? _lastHit;
         private HitTrigger _trigger = HitTrigger.FirstSpot;
         private bool _spotWasVisible;
+        private long? _lastAcceptedExternalPressAt;
+        private long? _externalPressedAt;
+        private long _externalReleasedAt;
 
         private TimeSpan NextDetectionTimeStamp { get; set; }
 
@@ -31,6 +34,30 @@ namespace HitAnalyzer2.Services.Shooting
             {
                 _trigger = trigger;
                 _spotWasVisible = false;
+                _externalPressedAt = null;
+            }
+        }
+
+        internal void OnExternalPressChanged(bool isPressed, long timestamp)
+        {
+            lock (_hitGate)
+            {
+                if (isPressed)
+                {
+                    if (_trigger == HitTrigger.ExternalEvent &&
+                        (_lastAcceptedExternalPressAt is not { } previousPress ||
+                         Stopwatch.GetElapsedTime(previousPress, timestamp) >=
+                         TimeSpan.FromMilliseconds(NexDetectionInterval)))
+                    {
+                        _lastAcceptedExternalPressAt = timestamp;
+                        _externalPressedAt = timestamp;
+                        _externalReleasedAt = long.MaxValue;
+                    }
+                }
+                else if (_externalReleasedAt == long.MaxValue)
+                {
+                    _externalReleasedAt = timestamp;
+                }
             }
         }
 
@@ -48,12 +75,16 @@ namespace HitAnalyzer2.Services.Shooting
             lock (_hitGate)
             {
                 bool intervalElapsed = elapsed >= NextDetectionTimeStamp;
-                if ((intervalElapsed || _trigger == HitTrigger.NewSpot)
-                    && GetTriggeredPosition(frame, intervalElapsed) is { } position)
+                if ((intervalElapsed || _trigger != HitTrigger.FirstSpot)
+                    && GetTriggeredPosition(frame, capturedAt, intervalElapsed) is { } position)
                 {
+                    if (_trigger == HitTrigger.ExternalEvent)
+                        _externalPressedAt = null;
+                    else
+                        NextDetectionTimeStamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
+
                     registeredHit = position with { Time = elapsed };
                     _lastHit = registeredHit;
-                    NextDetectionTimeStamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
                 }
                 lastHit = _lastHit;
             }
@@ -66,8 +97,18 @@ namespace HitAnalyzer2.Services.Shooting
             return lastHit is { } lastPosition ? aimHandler.GetAimPosition(lastPosition) : null;
         }
 
-        private LaserPosition? GetTriggeredPosition(Mat frame, bool intervalElapsed)
+        private LaserPosition? GetTriggeredPosition(Mat frame, long capturedAt, bool intervalElapsed)
         {
+            if (_trigger == HitTrigger.ExternalEvent)
+            {
+                // Compare against capture time, even if the frame is processed after key-up.
+                if (_externalPressedAt is not { } pressedAt || capturedAt < pressedAt ||
+                    capturedAt >= _externalReleasedAt)
+                    return null;
+
+                return _laserDetector.Detect(frame);
+            }
+
             LaserPosition? position = _laserDetector.Detect(frame);
             if (_trigger == HitTrigger.FirstSpot)
                 return position;

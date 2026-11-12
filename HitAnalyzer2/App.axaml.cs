@@ -39,11 +39,14 @@ namespace HitAnalyzer2
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler);
-                desktop.MainWindow = new MainWindow
+                var mainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
                         shootingSession),
                 };
+                var externalTriggerKeyboard = new ExternalTriggerKeyboard(mainWindow);
+                externalTriggerKeyboard.PressChanged += shootingSession.OnExternalPressChanged;
+                desktop.MainWindow = mainWindow;
             }
 
             base.OnFrameworkInitializationCompleted();
