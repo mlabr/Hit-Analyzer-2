@@ -9,8 +9,9 @@ namespace HitAnalyzer2.Services.Shooting
     {
         private const double MarkerSizeRatio = 0.05;
         private const int MinimumAimPathBrightness = 64;
-        private static readonly Scalar AimMarkerColor = new(0, 255, 0, 255);
-        private static readonly Scalar LaserMarkerColor = new(255, 0, 0, 255);
+        //private static readonly Scalar AimMarkerColor = new(0, 255, 0, 255); //Green
+		private static readonly Scalar AimMarkerColor = new(0, 255, 255, 255);
+		private static readonly Scalar LaserMarkerColor = new(255, 0, 0, 255);
         private static readonly Scalar AimPathColor = new(0, 255, 255, 255);
         private static readonly Scalar FollowPathColor = new(255, 255, 0, 255);
 
@@ -24,7 +25,7 @@ namespace HitAnalyzer2.Services.Shooting
 
             int size = Math.Max(1, (int)Math.Round(preview.Height * MarkerSizeRatio));
             if (offset.X != 0 || offset.Y != 0)
-                DrawMarker(preview, laser.X, laser.Y, size, LaserMarkerColor);
+                DrawMarker(preview, laser.X, laser.Y, size, LaserMarkerColor, diagonal: true);
 
             DrawMarker(preview, position.X, position.Y, size, AimMarkerColor);
         }
@@ -55,12 +56,22 @@ namespace HitAnalyzer2.Services.Shooting
             }
         }
 
-        private static void DrawMarker(Mat preview, double positionX, double positionY, int size, Scalar color)
+        private static void DrawMarker(Mat preview, double positionX, double positionY, int size, Scalar color,
+            bool diagonal = false)
         {
             int x = (int)Math.Round(positionX);
             int y = (int)Math.Round(positionY);
             int startOffset = (size - 1) / 2;
             int endOffset = size / 2;
+
+            if (diagonal)
+            {
+                Cv2.Line(preview, new Point(x - startOffset, y - startOffset),
+                    new Point(x + endOffset, y + endOffset), color, 2);
+                Cv2.Line(preview, new Point(x - startOffset, y + startOffset),
+                    new Point(x + endOffset, y - endOffset), color, 2);
+                return;
+            }
 
             Cv2.Line(preview, new Point(x - startOffset, y), new Point(x + endOffset, y), color, 2);
             Cv2.Line(preview, new Point(x, y - startOffset), new Point(x, y + endOffset), color, 2);
