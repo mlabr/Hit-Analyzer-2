@@ -6,26 +6,7 @@
 
     <StackPanel Spacing="16">
         <TextBlock Text="Shooting settings" FontWeight="SemiBold" />
-        <Button Content="Reset" Command="{Binding ResetHitCountCommand}" />
-        <StackPanel Spacing="8">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Text="Weapon offset X (px)" />
-                <TextBlock Grid.Column="1" Text="{Binding OffsetX}" />
-            </Grid>
-            <Slider Minimum="{Binding MinimumOffset}" Maximum="{Binding MaximumOffset}"
-                    TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
-                    Value="{Binding OffsetX, Mode=TwoWay}" AutomationProperties.Name="Weapon offset X" />
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Text="Weapon offset Y (px)" />
-                <TextBlock Grid.Column="1" Text="{Binding OffsetY}" />
-            </Grid>
-            <Slider Minimum="{Binding MinimumOffset}" Maximum="{Binding MaximumOffset}"
-                    TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
-                    Value="{Binding OffsetY, Mode=TwoWay}" AutomationProperties.Name="Weapon offset Y" />
-            <Button Content="Save weapon offset" Command="{Binding SaveOffsetCommand}" />
-            <TextBlock Text="{Binding OffsetSettingsMessage}" TextWrapping="Wrap"
-                       IsVisible="{Binding OffsetSettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        </StackPanel>
+        <Button Content="Reset hit count" Command="{Binding ResetHitCountCommand}" />
     </StackPanel>
 
 </UserControl>

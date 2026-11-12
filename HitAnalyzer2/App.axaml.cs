@@ -37,11 +37,11 @@ namespace HitAnalyzer2
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimHandler, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
-                var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession);
+                var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler);
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
-                        shootingSession, weaponHandler),
+                        shootingSession),
                 };
             }
 

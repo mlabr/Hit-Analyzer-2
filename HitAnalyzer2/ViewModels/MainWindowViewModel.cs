@@ -19,12 +19,12 @@ namespace HitAnalyzer2.ViewModels
         public WeaponSettingsViewModel WeaponSettings { get; }
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
-            WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession, WeaponHandler weaponHandler)
+            WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession)
         {
             DetectionSettings = detectionSettings;
             WeaponSettings = weaponSettings;
             _shootingSession = shootingSession;
-            ShootingSettings = new ShootingSettingsViewModel(shootingSession, weaponHandler);
+            ShootingSettings = new ShootingSettingsViewModel(shootingSession);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
                 CameraPreview.ClearPreview,
