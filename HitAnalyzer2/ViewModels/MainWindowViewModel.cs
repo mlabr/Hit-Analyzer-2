@@ -54,13 +54,13 @@ namespace HitAnalyzer2.ViewModels
             using var output = new Mat();
             var pixels = PreviewFrameProcessor.Process(frame, output, DetectionSettings.BrightnessPercent,
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
-            bool showAimPointPreview = IsShootingTabActive && ShootingSettings.ShowAimPointPreview;
+            bool showTargetPreview = IsShootingTabActive && ShootingSettings.ShowTargetPreview;
             var (lastHit, currentAim, aimPath, followPath, lastTargetHit) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
-            if (showAimPointPreview)
+            if (showTargetPreview)
             {
-                using var target = new Mat(pixels.Rows, pixels.Cols, pixels.Type(), Scalar.Black);
-                AimRenderer.DrawAimPointPreview(target, currentAim, lastHit, aimPath, followPath,
+                using var target = new Mat(pixels.Rows, pixels.Cols, pixels.Type());
+                TargetRender.DrawTargetPreview(target, currentAim, lastHit, aimPath, followPath,
                     lastTargetHit, CameraSettings.Calibration);
                 await CameraPreview.ShowFrameAsync(target, fps, cancellationToken);
                 return;

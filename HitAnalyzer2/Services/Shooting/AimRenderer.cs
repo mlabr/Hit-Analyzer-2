@@ -1,5 +1,4 @@
 using HitAnalyzer2.Services.Detection;
-using HitAnalyzer2.Services.Target;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -8,12 +7,12 @@ namespace HitAnalyzer2.Services.Shooting
 {
     internal static class AimRenderer
     {
-        private const double MarkerSizeRatio = 0.05;
+        internal const double MarkerSizeRatio = 0.05;
         private const int MinimumAimPathBrightness = 64;
-		private static readonly Scalar AimPositionMarkerColor = new(0, 255, 255, 255);
-		private static readonly Scalar LaserPositionMarkerColor = new(255, 0, 0, 255);
-        private static readonly Scalar AimPathBeforeColor = new(0, 255, 255, 255);
-        private static readonly Scalar AimPathAfterColor = new(255, 255, 0, 255);
+		internal static readonly Scalar AimPositionMarkerColor = new(0, 255, 255, 255);
+		internal static readonly Scalar LaserPositionMarkerColor = new(255, 0, 0, 255);
+        internal static readonly Scalar AimPathBeforeColor = new(0, 255, 255, 255);
+        internal static readonly Scalar AimPathAfterColor = new(255, 255, 0, 255);
 
         internal static void Draw(Mat preview, AimPosition position, IReadOnlyList<LaserPosition> aimPath,
             IReadOnlyList<LaserPosition> followPath)
@@ -30,69 +29,7 @@ namespace HitAnalyzer2.Services.Shooting
 			DrawAimPosition(preview, position.X, position.Y, size, AimPositionMarkerColor);
         }
 
-        internal static void DrawAimPointPreview(Mat preview, AimPosition? aim, AimPosition? lastHit,
-            IReadOnlyList<LaserPosition> aimPath, IReadOnlyList<LaserPosition> followPath,
-            TargetHit? lastTargetHit, TargetCalibrationService calibration)
-        {
-            int size = Math.Min(preview.Width, preview.Height);
-            if (size < 2)
-                return;
-
-            using var target = new Mat(preview, new Rect((preview.Width - size) / 2, (preview.Height - size) / 2, size, size));
-            target.SetTo(new Scalar(25, 25, 25, 255));
-            var guide = new Scalar(210, 210, 210, 255);
-            Cv2.Rectangle(target, default(Point), new Point(size - 1, size - 1), guide);
-            var center = ToTargetPixel(TargetCalibrationService.TargetCenter);
-            Cv2.Circle(target, center, (size - 1) / 2, guide);
-            Cv2.Circle(target, center, 2, guide, -1);
-
-            var reference = aim ?? lastHit;
-            var offset = reference is { } position
-                ? (position.X - position.LaserPosition.X, position.Y - position.LaserPosition.Y)
-                : (0.0, 0.0);
-            DrawAimPath(target, aimPath, AimPathBeforeColor, offset, false, Project);
-            DrawAimPath(target, followPath, AimPathAfterColor, offset, true, Project);
-
-            int markerSize = Math.Max(1, (int)Math.Round(target.Height * MarkerSizeRatio));
-            if (lastTargetHit is { } hit)
-            {
-                if (hit.Laser is { } laser && IsInsideTarget(laser))
-                {
-                    var marker = ToTargetPixel(laser);
-                    DrawLaserPosition(target, marker.X, marker.Y, markerSize, LaserPositionMarkerColor);
-                }
-
-                if (hit.Aim is { } hitAim && IsInsideTarget(hitAim))
-                {
-                    var marker = ToTargetPixel(hitAim);
-                    DrawAimPosition(target, marker.X, marker.Y, markerSize, AimPositionMarkerColor);
-                }
-            }
-
-            if (aim is { } current)
-            {
-                var laser = current.LaserPosition;
-                if ((current.X != laser.X || current.Y != laser.Y) && Project(laser.X, laser.Y) is { } laserMarker)
-                    DrawLaserPosition(target, laserMarker.X, laserMarker.Y, markerSize, LaserPositionMarkerColor);
-
-                if (Project(current.X, current.Y) is { } aimMarker)
-                    DrawAimPosition(target, aimMarker.X, aimMarker.Y, markerSize, AimPositionMarkerColor);
-            }
-
-            Point ToTargetPixel(CalibrationPoint point) =>
-                new(Math.Round(point.X * (size - 1)), Math.Round(point.Y * (size - 1)));
-
-            Point? Project(double x, double y)
-            {
-                var mapped = calibration.MapHit(x / preview.Width, y / preview.Height);
-                return mapped is { } point && IsInsideTarget(point) ? ToTargetPixel(point) : null;
-            }
-        }
-
-        private static bool IsInsideTarget(CalibrationPoint point) =>
-            point is { X: >= -0.000001 and <= 1.000001, Y: >= -0.000001 and <= 1.000001 };
-
-        private static void DrawAimPath(Mat preview, IReadOnlyList<LaserPosition> aimPath, Scalar baseColor,
+        internal static void DrawAimPath(Mat preview, IReadOnlyList<LaserPosition> aimPath, Scalar baseColor,
             (double X, double Y) offset, bool oldestIsBrightest, Func<double, double, Point?>? project = null)
         {
             if (aimPath.Count < 2)
@@ -127,7 +64,7 @@ namespace HitAnalyzer2.Services.Shooting
             }
         }
 
-        private static void DrawAimPosition(Mat preview, double positionX, double positionY, int size, Scalar color)
+        internal static void DrawAimPosition(Mat preview, double positionX, double positionY, int size, Scalar color)
         {
             int x = (int)Math.Round(positionX);
             int y = (int)Math.Round(positionY);
@@ -137,7 +74,7 @@ namespace HitAnalyzer2.Services.Shooting
             Cv2.Line(preview, new Point(x, y - startOffset), new Point(x, y + endOffset), color, 2);
         }
 
-		private static void DrawLaserPosition(Mat preview, double positionX, double positionY, int size, Scalar color)
+		internal static void DrawLaserPosition(Mat preview, double positionX, double positionY, int size, Scalar color)
 		{
 			int x = (int)Math.Round(positionX);
 			int y = (int)Math.Round(positionY);

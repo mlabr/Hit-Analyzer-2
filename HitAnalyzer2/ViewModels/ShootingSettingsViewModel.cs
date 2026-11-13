@@ -17,7 +17,7 @@ namespace HitAnalyzer2.ViewModels
         private int hitCount;
 
         [ObservableProperty]
-        private bool showAimPointPreview;
+        private bool showTargetPreview;
 
         [ObservableProperty]
         private string? previewSettingsError;
@@ -26,7 +26,7 @@ namespace HitAnalyzer2.ViewModels
         {
             _settings = settings;
             _shootingSession = shootingSession;
-            showAimPointPreview = settings.Current.Detection.ShowAimPointPreview;
+            showTargetPreview = settings.Current.Detection.ShowTargetPreview;
             shootingSession.LaserPositionEvaluated += (position, _, _) =>
             {
                 if (position.HasValue)
@@ -34,11 +34,11 @@ namespace HitAnalyzer2.ViewModels
             };
         }
 
-        partial void OnShowAimPointPreviewChanged(bool value)
+        partial void OnShowTargetPreviewChanged(bool value)
         {
             try
             {
-                _settings.SaveAimPointPreview(value);
+                _settings.SaveTargetPreview(value);
                 PreviewSettingsError = null;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)

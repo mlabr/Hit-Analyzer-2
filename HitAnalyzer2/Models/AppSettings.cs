@@ -101,7 +101,7 @@ namespace HitAnalyzer2
         public int? MinimumHitAreaPixels { get; init; }
         public bool ShowFlares { get; init; }
         public bool ShowAllowedArea { get; init; }
-        public bool ShowAimPointPreview { get; init; }
+        public bool ShowTargetPreview { get; init; }
         public int VerticalForbiddenZoneSize { get; init; } = 50;
         public int HorizontalForbiddenZoneSize { get; init; } = 50;
     }

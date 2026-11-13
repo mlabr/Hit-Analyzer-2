@@ -5,7 +5,7 @@
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u002622fbc4d2\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_328f\u0026pid_006d\u0026mi_00#6\u002634c3077b\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
       "Width": 640,
@@ -18,26 +18,26 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.37812500000000004,
-          "Y": 0.22499999999999998
+          "X": 0.28281249999999997,
+          "Y": 0.27291666666666664
         },
         "TopRight": {
-          "X": 0.7203125000000001,
-          "Y": 0.24999999999999997
+          "X": 0.6984374999999999,
+          "Y": 0.3020833333333333
         },
         "BottomRight": {
-          "X": 0.7187500000000001,
-          "Y": 0.7083333333333334
+          "X": 0.6765625,
+          "Y": 0.78125
         },
         "BottomLeft": {
-          "X": 0.3703125,
-          "Y": 0.7125
+          "X": 0.30624999999999997,
+          "Y": 0.8020833333333334
         }
       }
     }
   },
   "Detection": {
-    "Method": "Simple",
+    "Method": "Blob",
     "DetectionSensitivity": 1,
     "BrightnessPercent": 50,
     "ContrastPercent": 50,
@@ -45,7 +45,7 @@
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
     "ShowAllowedArea": false,
-    "ShowAimPointPreview": false,
+    "ShowTargetPreview": true,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },

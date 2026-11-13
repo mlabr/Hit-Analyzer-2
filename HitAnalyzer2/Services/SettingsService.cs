@@ -46,6 +46,13 @@ namespace HitAnalyzer2
                 }
 
                 MigrateImageAdjustments(json as JsonObject);
+                if (json?[nameof(AppSettings.Detection)] is JsonObject detection &&
+                    !detection.ContainsKey(nameof(DetectionSettings.ShowTargetPreview)) &&
+                    detection["ShowAimPointPreview"] is { } legacyPreview)
+                {
+                    detection[nameof(DetectionSettings.ShowTargetPreview)] = legacyPreview.DeepClone();
+                }
+
                 var settings = json.Deserialize<AppSettings>(JsonOptions);
                 Validate(settings);
                 _current = settings!.SelectedWeapon is null ? settings : settings with { LegacyWeapon = null };
@@ -110,11 +117,11 @@ namespace HitAnalyzer2
             camera.DeviceId == device.DeviceId && (device.DeviceId is not null || camera.DeviceIndex == device.Index) &&
             camera.Mode == mode && camera.Flip == flip;
 
-        public void SaveAimPointPreview(bool show)
+        public void SaveTargetPreview(bool show)
         {
             lock (_saveGate)
             {
-                var settings = _current with { Detection = _current.Detection with { ShowAimPointPreview = show } };
+                var settings = _current with { Detection = _current.Detection with { ShowTargetPreview = show } };
                 Write(settings, overwrite: true);
                 _current = settings;
             }
