@@ -5,9 +5,7 @@ using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace HitAnalyzer2.ViewModels
@@ -39,14 +37,12 @@ namespace HitAnalyzer2.ViewModels
             _captureSession = captureSession;
             Calibration = calibration;
             selectedCameraFlip = CameraFlipOptions.First(option => option.Mode == settings.Current.Camera.Flip);
-            SettingsMessage = settings.LoadError;
         }
 
         [ObservableProperty]
         private IReadOnlyList<CameraDevice> cameras = Array.Empty<CameraDevice>();
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SaveCameraSettingsCommand))]
         private CameraDevice? selectedCamera;
 
         [ObservableProperty]
@@ -59,16 +55,12 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private CameraFlipOption selectedCameraFlip;
 
-        [ObservableProperty]
-        private string? targetSettingsMessage;
-
         internal void SetCalibrationSquare(double width, double height)
             => SetCalibrationCorners(CalibrationCorners.CenteredSquare(width, height));
 
         internal void SetCalibrationCorners(CalibrationCorners corners)
         {
             Calibration.Update(Calibration.Settings with { Corners = corners });
-            TargetSettingsMessage = null;
         }
 
         internal void MoveCalibrationCorner(int index, CalibrationPoint point)
@@ -93,11 +85,7 @@ namespace HitAnalyzer2.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CanSelectCameraMode))]
-        [NotifyCanExecuteChangedFor(nameof(SaveCameraSettingsCommand))]
         private bool isDiscoveringCameras;
-
-        [ObservableProperty]
-        private string? settingsMessage;
 
         [RelayCommand]
         internal async Task RefreshCamerasAsync()
@@ -137,53 +125,19 @@ namespace HitAnalyzer2.ViewModels
             return (SelectedCamera, SelectedCameraMode, SelectedCameraFlip.Mode);
         }
 
-        internal async Task StopCameraAsync()
-        {
-            var stopping = _captureSession.StopAsync();
-            SaveCameraSettingsCommand.NotifyCanExecuteChanged();
-            await stopping;
-        }
+        internal Task StopCameraAsync() => _captureSession.StopAsync();
 
-        private bool CanSaveCameraSettings() => !_captureSession.IsClosing && !IsDiscoveringCameras && SelectedCamera is not null;
-
-        [RelayCommand(CanExecute = nameof(CanSaveCameraSettings))]
-        private void SaveCameraSettings()
-        {
-            if (SelectedCamera is not { } camera)
-                return;
-
-            try
-            {
-                _settings.SaveCamera(camera, SelectedCameraMode, SelectedCameraFlip.Mode);
-                SettingsMessage = "Nastavení kamery uloženo.";
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-            {
-                SettingsMessage = $"Nastavení kamery se nepodařilo uložit. {ex.Message}";
-            }
-        }
-
-        [RelayCommand]
-        private void SaveTargetSettings()
-        {
-            try
-            {
-                if (!IsDiscoveringCameras && SelectedCamera is { } camera)
+        internal CameraSettings GetConfiguration(CameraSettings current) =>
+            !IsDiscoveringCameras && SelectedCamera is { } camera
+                ? current with
                 {
-                    _settings.SaveCamera(camera, SelectedCameraMode, SelectedCameraFlip.Mode,
-                        Calibration.Settings);
-                    TargetSettingsMessage = "Nastavení terče uloženo.";
+                    DeviceId = camera.DeviceId,
+                    DeviceIndex = camera.DeviceId is null ? camera.Index : null,
+                    Mode = SelectedCameraMode,
+                    Flip = SelectedCameraFlip.Mode,
+                    Calibration = Calibration.Settings
                 }
-                else
-                {
-                    TargetSettingsMessage = "Kalibraci uložte po výběru kamery.";
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-            {
-                TargetSettingsMessage = $"Nastavení terče se nepodařilo uložit. {ex.Message}";
-            }
-        }
+                : current;
 
         partial void OnSelectedCameraChanged(CameraDevice? value)
         {

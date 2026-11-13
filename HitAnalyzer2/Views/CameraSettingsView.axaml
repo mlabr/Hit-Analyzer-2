@@ -19,9 +19,7 @@
         <Button Content="Refresh webcams" Command="{Binding RefreshCamerasCommand}"
                  IsEnabled="{Binding !IsDiscoveringCameras}" />
 
-        <Button Content="Save webcam settings" Command="{Binding SaveCameraSettingsCommand}" />
-        <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
-                   IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>
 
 </UserControl>

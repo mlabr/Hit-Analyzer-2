@@ -2,15 +2,11 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Services.Shooting;
-using System;
-using System.IO;
-using System.Text.Json;
 
 namespace HitAnalyzer2.ViewModels
 {
     public sealed partial class ShootingSettingsViewModel : ViewModelBase
     {
-        private readonly SettingsService _settings;
         private readonly ShootingSessionService _shootingSession;
 
         [ObservableProperty]
@@ -19,12 +15,8 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private bool showTargetPreview;
 
-        [ObservableProperty]
-        private string? previewSettingsError;
-
         internal ShootingSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession)
         {
-            _settings = settings;
             _shootingSession = shootingSession;
             showTargetPreview = settings.Current.Detection.ShowTargetPreview;
             shootingSession.LaserPositionEvaluated += (position, _, _) =>
@@ -32,19 +24,6 @@ namespace HitAnalyzer2.ViewModels
                 if (position.HasValue)
                     Dispatcher.UIThread.Post(() => HitCount++);
             };
-        }
-
-        partial void OnShowTargetPreviewChanged(bool value)
-        {
-            try
-            {
-                _settings.SaveTargetPreview(value);
-                PreviewSettingsError = null;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-            {
-                PreviewSettingsError = $"Volbu náhledu se nepodařilo uložit. {ex.Message}";
-            }
         }
 
         [RelayCommand]

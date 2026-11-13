@@ -6,8 +6,6 @@
     <StackPanel Spacing="8">
         <TextBlock Text="Calibration" FontWeight="SemiBold" />
         <Button x:Name="ResetCalibrationButton" Content="Reset to square" IsEnabled="False" />
-        <Button Content="Save target settings" Command="{Binding SaveTargetSettingsCommand}" />
-        <TextBlock Text="{Binding TargetSettingsMessage}" TextWrapping="Wrap"
-                   IsVisible="{Binding TargetSettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>
 </UserControl>

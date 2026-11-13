@@ -38,18 +38,22 @@
             <Border x:Name="SettingsPanel" Grid.Column="1" Grid.RowSpan="2" Width="280" BorderThickness="1,0,0,0"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                 <ScrollViewer Padding="12" HorizontalScrollBarVisibility="Disabled">
-                    <Grid>
-                        <views:CameraSettingsView x:Name="CameraSettings" IsVisible="False"
-                                                  DataContext="{Binding CameraSettings}" />
-                        <views:DetectionSettingsView x:Name="DetectionSettings" IsVisible="False"
-                                                     DataContext="{Binding DetectionSettings}" />
-                        <views:WeaponSettingsView x:Name="WeaponSettings" IsVisible="False"
-                                                  DataContext="{Binding WeaponSettings}" />
-                        <views:ShootingSettingsView x:Name="ShootingSettings" 
-                                                    DataContext="{Binding ShootingSettings}" />
-                        <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
-                                                  DataContext="{Binding CameraSettings}" />
-                    </Grid>
+                    <StackPanel Spacing="8">
+                        <Grid>
+                            <views:CameraSettingsView x:Name="CameraSettings" IsVisible="False"
+                                                      DataContext="{Binding CameraSettings}" />
+                            <views:DetectionSettingsView x:Name="DetectionSettings" IsVisible="False"
+                                                         DataContext="{Binding DetectionSettings}" />
+                            <views:WeaponSettingsView x:Name="WeaponSettings" IsVisible="False"
+                                                      DataContext="{Binding WeaponSettings}" />
+                            <views:ShootingSettingsView x:Name="ShootingSettings"
+                                                        DataContext="{Binding ShootingSettings}" />
+                            <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
+                                                      DataContext="{Binding CameraSettings}" />
+                        </Grid>
+                        <TextBlock Text="{Binding ConfigurationMessage}" TextWrapping="Wrap"
+                                   IsVisible="{Binding ConfigurationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
                 </ScrollViewer>
             </Border>
         </Grid>

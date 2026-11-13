@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Rendering;
 using HitAnalyzer2.Services.Shooting;
@@ -5,13 +7,16 @@ using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
+using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace HitAnalyzer2.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public partial class MainWindowViewModel : ViewModelBase
     {
+        private readonly SettingsService _settings;
         private readonly ShootingSessionService _shootingSession;
         private readonly DetectionSettings _detectionSettings;
         internal volatile bool IsShootingTabActive = true;
@@ -22,10 +27,15 @@ namespace HitAnalyzer2.ViewModels
         public ShootingSettingsViewModel ShootingSettings { get; }
         public WeaponSettingsViewModel WeaponSettings { get; }
 
+        [ObservableProperty]
+        private string? configurationMessage;
+
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
             WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession,
             TargetCalibrationService cameraCalibration)
         {
+            _settings = settings;
+            configurationMessage = settings.LoadError;
             DetectionSettings = detectionSettings;
             _detectionSettings = settings.Current.Detection;
             WeaponSettings = weaponSettings;
@@ -46,6 +56,39 @@ namespace HitAnalyzer2.ViewModels
         internal Task RefreshCamerasAsync() => CameraSettings.RefreshCamerasAsync();
 
         internal Task StopCameraAsync() => CameraSettings.StopCameraAsync();
+
+        [RelayCommand]
+        private void SaveConfiguration()
+        {
+            var current = _settings.Current;
+            var camera = CameraSettings.GetConfiguration(current.Camera);
+            var detection = DetectionSettings.GetConfiguration(current.Detection) with
+            {
+                ShowTargetPreview = ShootingSettings.ShowTargetPreview
+            };
+            var weapon = WeaponSettings.GetSelectedProfile();
+            var configuration = current with
+            {
+                Camera = camera,
+                Detection = detection,
+                SelectedWeapon = weapon ?? current.SelectedWeapon,
+                LegacyWeapon = weapon is null && current.SelectedWeapon is null
+                    ? WeaponSettings.GetConfiguration(current.LegacyWeapon ?? new WeaponSettings())
+                    : null
+            };
+
+            try
+            {
+                _settings.SaveConfiguration(configuration, weapon);
+                if (weapon is not null && WeaponSettings.SelectedWeapon is { } selected)
+                    selected.Profile = weapon.Profile;
+                ConfigurationMessage = "Nastavení uloženo.";
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                ConfigurationMessage = $"Nastavení se nepodařilo uložit. {ex.Message}";
+            }
+        }
 
         private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double? fps, double detectedFps,
             CancellationToken cancellationToken)

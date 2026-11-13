@@ -32,7 +32,7 @@
       <h2>Record your first hit</h2>
       <ol>
         <li>Connect your webcam and point it at the target so the shooting area is visible in the preview.</li>
-        <li>Open <strong>Camera</strong> and select the webcam. If it is missing from the list, click <strong>Refresh webcams</strong>. Choose a camera mode if the list is available, set the preview orientation, and click <strong>Save webcam settings</strong>.</li>
+        <li>Open <strong>Camera</strong> and select the webcam. If it is missing from the list, click <strong>Refresh webcams</strong>. Choose a camera mode if the list is available, set the preview orientation, and click <strong>Save</strong>.</li>
         <li>Open <strong>Weapon</strong> and select a profile. Choose <strong>FirstSpot</strong> for a test with a short laser pulse.</li>
         <li>Open <strong>Shooting</strong>. Clear <strong>Show Target Preview</strong> to see the camera image during the test. Click <strong>Reset hit count</strong> to start from zero.</li>
         <li>Fire a test pulse at the target. A registered hit increases the <strong>Hits</strong> counter. If the counter stays at zero, follow the <a href="#missed-hits">missed hits checklist</a>. To see hits on the target diagram, <a href="#calibration">calibrate the target</a> first.</li>
@@ -45,7 +45,7 @@
         <li>Set the camera, resolution, and flip orientation before calibrating. Keep the camera and target fixed while shooting.</li>
         <li>Open <strong>Target</strong> to display the calibration guides over the live camera image. Click <strong>Reset to square</strong> if you need a centered starting shape.</li>
         <li>Drag the center handle to move the entire guide. Drag the four corner handles until the projected circle follows the outer edge of the physical target and its center matches the bullseye. The guide is yellow when the geometry is valid. If it turns cyan, uncross the edges and spread out the corners until the circle returns.</li>
-        <li>Click <strong>Save target settings</strong> to save the calibration together with the current camera settings.</li>
+        <li>Click <strong>Save</strong> to save the calibration together with the current camera settings.</li>
         <li>Return to <strong>Shooting</strong> and enable <strong>Show Target Preview</strong>. Test a hit at a known location and check where the marker appears.</li>
       </ol>
       <p>Check the calibration again after moving the camera or target. Changing the camera, camera mode, or flip resets the active calibration.</p>
@@ -54,11 +54,11 @@
     <section id="settings">
       <h2>Settings reference</h2>
       <h3>Shooting</h3>
-      <p><strong>Reset hit count</strong> sets <strong>Hits</strong> to zero and clears the last hit marker from the target preview. <strong>Show Target Preview</strong> replaces the camera image with a calibrated target diagram while <strong>Shooting</strong> is open. The preview choice is saved automatically.</p>
+      <p><strong>Reset hit count</strong> sets <strong>Hits</strong> to zero and clears the last hit marker from the target preview. <strong>Show Target Preview</strong> replaces the camera image with a calibrated target diagram while <strong>Shooting</strong> is open. Click <strong>Save</strong> to keep the preview choice.</p>
       <p>The yellow cross marks the aim position after applying the weapon offset. When the offset moves the aim away from the laser spot, a blue X marks the detected spot. <strong>External Event</strong> can show the aim path before and after the hit. <strong>TimeOut</strong> shows the recorded aim path when a hit registers.</p>
 
       <h3>Camera</h3>
-      <p>Select a webcam, choose an available resolution and frame rate, and use the flip selector to orient the image. Click <strong>Save webcam settings</strong> to keep your changes.</p>
+      <p>Select a webcam, choose an available resolution and frame rate, and use the flip selector to orient the image. Click <strong>Save</strong> to keep your changes.</p>
 
       <h3>Detection</h3>
       <dl>
@@ -75,10 +75,10 @@
         <dt>Show Allowed Area</dt>
         <dd>Outlines the allowed area and hatches the margins on the camera image. In <strong>TimeOut</strong> mode, the final aim position must fall inside this area to register a hit.</dd>
       </dl>
-      <p>Click <strong>Save detection settings</strong> to keep your changes.</p>
+      <p>Click <strong>Save</strong> to keep your changes.</p>
 
       <h3>Weapon</h3>
-      <p>The selector displays each profile as its name followed by its filename in parentheses. Profiles are loaded from JSON files in <code>Data/Weapons</code> under the application folder. Selecting a profile applies its saved trigger, interval, and offsets. Click <strong>Save Weapon</strong> to write the changes to that profile and select it for the next launch.</p>
+      <p>The selector displays each profile as its name followed by its filename in parentheses. Profiles are loaded from JSON files in <code>Data/Weapons</code> under the application folder. Selecting a profile applies its saved trigger, interval, and offsets. Click <strong>Save</strong> to write the changes to that profile and select it for the next launch.</p>
       <dl>
         <dt>Next detection interval (ms)</dt>
         <dd>Set a delay of 100 to 5,000 milliseconds. See <a href="#triggers">Trigger types</a> for when the delay starts and how it applies.</dd>

@@ -4,15 +4,12 @@ using HitAnalyzer2.Repository;
 using HitAnalyzer2.Services.Shooting;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 
 namespace HitAnalyzer2.ViewModels
 {
     public sealed partial class WeaponSettingsViewModel : ViewModelBase
     {
-        private readonly SettingsService _settings;
         private readonly ShootingSessionService _shootingSession;
 
         private readonly WeaponHandler _weaponHandler;
@@ -33,13 +30,9 @@ namespace HitAnalyzer2.ViewModels
             set => OffsetY = -value;
         }
 
-        [ObservableProperty]
-        private string? offsetSettingsMessage;
-
         internal WeaponSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
             WeaponHandler weaponHandler, WeaponFileRepository weaponProfiles)
         {
-            _settings = settings;
             _shootingSession = shootingSession;
             _weaponHandler = weaponHandler;
             (offsetX, offsetY) = weaponHandler.Offset;
@@ -47,7 +40,6 @@ namespace HitAnalyzer2.ViewModels
             selectedTrigger = weapon.Trigger;
             _shootingSession.SetTrigger(weapon.Trigger);
             _shootingSession.NexDetectionInterval = weapon.NexDetectionInterval;
-            settingsMessage = settings.LoadError;
             var profiles = weaponProfiles.LoadProfileList(out var loadError);
             Weapons = Array.AsReadOnly(profiles
                 .Select(profile => new WeaponProfileItem(profile.FileName, profile.Profile))
@@ -75,7 +67,6 @@ namespace HitAnalyzer2.ViewModels
         public IReadOnlyList<TriggerTypeEnum> Triggers { get; } = Array.AsReadOnly(Enum.GetValues<TriggerTypeEnum>());
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SaveWeaponCommand))]
         private WeaponProfileItem? selectedWeapon;
 
         [ObservableProperty]
@@ -95,7 +86,6 @@ namespace HitAnalyzer2.ViewModels
             OffsetX = profile.OffsetX;
             OffsetY = profile.OffsetY;
             SettingsMessage = null;
-            OffsetSettingsMessage = null;
         }
 
         partial void OnSelectedTriggerChanged(TriggerTypeEnum value)
@@ -126,7 +116,6 @@ namespace HitAnalyzer2.ViewModels
         private void ApplyOffset()
         {
             _weaponHandler.SetOffset(OffsetX, OffsetY);
-            OffsetSettingsMessage = null;
         }
 
         [RelayCommand]
@@ -141,31 +130,16 @@ namespace HitAnalyzer2.ViewModels
         {
         }
 
-        private bool CanSaveWeapon() => SelectedWeapon is not null;
+        internal SavedWeaponProfile? GetSelectedProfile() => SelectedWeapon is { } weapon
+            ? new(weapon.FileName, (WeaponProfile)GetConfiguration(weapon.Profile))
+            : null;
 
-        [RelayCommand(CanExecute = nameof(CanSaveWeapon))]
-        private void SaveWeapon()
+        internal WeaponSettings GetConfiguration(WeaponSettings current) => current with
         {
-            if (SelectedWeapon is not { } weapon)
-                return;
-
-            var profile = weapon.Profile with
-            {
-                Trigger = SelectedTrigger,
-                NexDetectionInterval = NexDetectionInterval,
-                OffsetX = OffsetX,
-                OffsetY = OffsetY
-            };
-            try
-            {
-                _settings.SaveWeapon(weapon.FileName, profile);
-                weapon.Profile = profile;
-                OffsetSettingsMessage = "Nastavení zbraně uloženo.";
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-            {
-                OffsetSettingsMessage = $"Nastavení zbraně se nepodařilo uložit. {ex.Message}";
-            }
-        }
+            Trigger = SelectedTrigger,
+            NexDetectionInterval = NexDetectionInterval,
+            OffsetX = OffsetX,
+            OffsetY = OffsetY
+        };
     }
 }

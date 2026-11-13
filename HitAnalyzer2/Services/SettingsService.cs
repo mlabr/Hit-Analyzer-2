@@ -1,7 +1,4 @@
 using HitAnalyzer2.Repository;
-using HitAnalyzer2.Services.Shooting;
-using HitAnalyzer2.Services.Target;
-using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
 using System.IO;
@@ -84,81 +81,22 @@ namespace HitAnalyzer2
         public string? LoadError { get; }
         internal WeaponSettings InitialWeapon { get; } = new();
 
-        public void SaveCamera(CameraDevice device, CameraMode? mode, FlipMode? flip,
-            CameraCalibrationSettings? calibration = null)
+        internal void SaveConfiguration(AppSettings settings, SavedWeaponProfile? weapon)
         {
             lock (_saveGate)
             {
-                var settings = _current with
+                if (weapon is null)
                 {
-                    Camera = _current.Camera with
-                    {
-                        DeviceId = device.DeviceId,
-                        DeviceIndex = device.DeviceId is null ? device.Index : null,
-                        Mode = mode,
-                        Flip = flip,
-                        Calibration = calibration ?? (MatchesCamera(_current.Camera, device, mode, flip)
-                            ? _current.Camera.Calibration : new())
-                    }
-                };
-                Write(settings, overwrite: true);
-                _current = settings;
-            }
-        }
-
-        private static bool MatchesCamera(CameraSettings camera, CameraDevice device, CameraMode? mode, FlipMode? flip) =>
-            camera.DeviceId == device.DeviceId && (device.DeviceId is not null || camera.DeviceIndex == device.Index) &&
-            camera.Mode == mode && camera.Flip == flip;
-
-        public void SaveTargetPreview(bool show)
-        {
-            lock (_saveGate)
-            {
-                var settings = _current with { Detection = _current.Detection with { ShowTargetPreview = show } };
-                Write(settings, overwrite: true);
-                _current = settings;
-            }
-        }
-
-        public void SaveDetection(DetectionMethod method, int sensitivity, bool showFlares, bool showAllowedArea,
-            int brightnessPercent, int contrastPercent, int saturationPercent)
-        {
-            lock (_saveGate)
-            {
-                var settings = _current with
-                {
-                    Detection = _current.Detection with
-                    {
-                        Method = method,
-                        DetectionSensitivity = sensitivity,
-                        ShowFlares = showFlares,
-                        ShowAllowedArea = showAllowedArea,
-                        BrightnessPercent = brightnessPercent,
-                        ContrastPercent = contrastPercent,
-                        SaturationPercent = saturationPercent
-                    }
-                };
-                Write(settings, overwrite: true);
-                _current = settings;
-            }
-        }
-
-        internal void SaveWeapon(string fileName, WeaponProfile profile)
-        {
-            lock (_saveGate)
-            {
-                var selectedWeapon = new SavedWeaponProfile(fileName, profile);
-                var settings = _current with
-                {
-                    LegacyWeapon = null,
-                    SelectedWeapon = selectedWeapon
-                };
+                    Write(settings, overwrite: true);
+                    _current = settings;
+                    return;
+                }
 
                 Validate(settings);
                 var temporarySettingsPath = JsonFile.WriteTemporaryFile(_path, settings, JsonOptions);
                 try
                 {
-                    _weaponProfiles.SaveProfile(selectedWeapon, () =>
+                    _weaponProfiles.SaveProfile(weapon, () =>
                     {
                         File.Move(temporarySettingsPath, _path, overwrite: true);
                         _current = settings;

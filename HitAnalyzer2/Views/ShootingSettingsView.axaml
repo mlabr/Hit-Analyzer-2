@@ -8,8 +8,7 @@
         <TextBlock Text="Shooting settings" FontWeight="SemiBold" />
         <Button Content="Reset hit count" Command="{Binding ResetHitCountCommand}" />
         <CheckBox Content="Show Target Preview" IsChecked="{Binding ShowTargetPreview, Mode=TwoWay}" />
-        <TextBlock Text="{Binding PreviewSettingsError}" TextWrapping="Wrap"
-                   IsVisible="{Binding PreviewSettingsError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>
 
 </UserControl>
