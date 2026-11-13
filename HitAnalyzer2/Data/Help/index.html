@@ -17,10 +17,13 @@
 <body>
   <main>
     <h1>Hit Analyzer 2 Help</h1>
+    <p>Hit Analyzer 2 uses a webcam to detect a laser spot, register hits, and show where they landed on a calibrated target. Open <strong>Help</strong> or press <kbd>F1</kbd> to return to this guide.</p>
     <nav aria-label="Contents">
       <ul>
         <li><a href="#quick-start">Record your first hit</a></li>
+        <li><a href="#calibration">Calibrate the target</a></li>
         <li><a href="#settings">Settings reference</a></li>
+        <li><a href="#triggers">Trigger types</a></li>
         <li><a href="#troubleshooting">Troubleshooting</a></li>
       </ul>
     </nav>
@@ -29,47 +32,73 @@
       <h2>Record your first hit</h2>
       <ol>
         <li>Connect your webcam and point it at the target so the shooting area is visible in the preview.</li>
-        <li>Open <strong>Camera</strong> and select the webcam. If it is missing from the list, click <strong>Refresh webcams</strong>. Choose a resolution and frame rate if the camera mode list is available.</li>
-        <li>Open <strong>Weapon</strong> and select the profile for your setup.</li>
-        <li>Open <strong>Shooting</strong> and click <strong>Reset hit count</strong> if you want to start from zero.</li>
-        <li>Fire a test pulse at the target. A registered hit increases the <strong>Hits</strong> counter. If the counter stays at zero, follow the <a href="#missed-hits">missed hits checklist</a>.</li>
+        <li>Open <strong>Camera</strong> and select the webcam. If it is missing from the list, click <strong>Refresh webcams</strong>. Choose a camera mode if the list is available, set the preview orientation, and click <strong>Save webcam settings</strong>.</li>
+        <li>Open <strong>Weapon</strong> and select a profile. Choose <strong>FirstSpot</strong> for a test with a short laser pulse.</li>
+        <li>Open <strong>Shooting</strong>. Clear <strong>Show Target Preview</strong> to see the camera image during the test. Click <strong>Reset hit count</strong> to start from zero.</li>
+        <li>Fire a test pulse at the target. A registered hit increases the <strong>Hits</strong> counter. If the counter stays at zero, follow the <a href="#missed-hits">missed hits checklist</a>. To see hits on the target diagram, <a href="#calibration">calibrate the target</a> first.</li>
       </ol>
+    </section>
+
+    <section id="calibration">
+      <h2>Calibrate the target</h2>
+      <ol>
+        <li>Set the camera, resolution, and flip orientation before calibrating. Keep the camera and target fixed while shooting.</li>
+        <li>Open <strong>Target</strong> to display the calibration guides over the live camera image. Click <strong>Reset to square</strong> if you need a centered starting shape.</li>
+        <li>Drag the center handle to move the entire guide. Drag the four corner handles until the projected circle follows the outer edge of the physical target and its center matches the bullseye. The guide is yellow when the geometry is valid. If it turns cyan, uncross the edges and spread out the corners until the circle returns.</li>
+        <li>Click <strong>Save target settings</strong> to save the calibration together with the current camera settings.</li>
+        <li>Return to <strong>Shooting</strong> and enable <strong>Show Target Preview</strong>. Test a hit at a known location and check where the marker appears.</li>
+      </ol>
+      <p>Check the calibration again after moving the camera or target. Changing the camera, camera mode, or flip resets the active calibration.</p>
     </section>
 
     <section id="settings">
       <h2>Settings reference</h2>
       <h3>Shooting</h3>
-      <p><strong>Reset hit count</strong> sets the <strong>Hits</strong> counter to zero.</p>
+      <p><strong>Reset hit count</strong> sets <strong>Hits</strong> to zero and clears the last hit marker from the target preview. <strong>Show Target Preview</strong> replaces the camera image with a calibrated target diagram while <strong>Shooting</strong> is open. The preview choice is saved automatically.</p>
+      <p>The yellow cross marks the aim position after applying the weapon offset. When the offset moves the aim away from the laser spot, a blue X marks the detected spot. <strong>External Event</strong> can show the aim path before and after the hit. <strong>TimeOut</strong> shows the recorded aim path when a hit registers.</p>
 
       <h3>Camera</h3>
-      <p>Select a webcam, choose an available resolution and frame rate, and use the flip selector to orient the preview. Adjust brightness, contrast, and saturation while checking the preview. Click <strong>Save webcam settings</strong> to keep your changes.</p>
+      <p>Select a webcam, choose an available resolution and frame rate, and use the flip selector to orient the image. Click <strong>Save webcam settings</strong> to keep your changes.</p>
 
       <h3>Detection</h3>
       <dl>
         <dt>Simple</dt>
-        <dd>Looks for the brightest pixels that meet the detection threshold.</dd>
+        <dd>Looks for the brightest part of the image that meets the detection threshold.</dd>
         <dt>Blob</dt>
         <dd>Uses the center of the largest connected bright region that meets the minimum area.</dd>
         <dt>Sensitivity</dt>
         <dd>Increase sensitivity to pick up dimmer spots. Decrease it if bright areas in the scene are counted as hits.</dd>
+        <dt>Brightness, contrast, and saturation</dt>
+        <dd>Adjust the camera image that the detector processes. Check the preview and test a pulse after changing these values.</dd>
         <dt>Show flares</dt>
         <dd>Highlights bright regions that meet the detection threshold so you can see which parts of the image may affect detection.</dd>
+        <dt>Show Allowed Area</dt>
+        <dd>Outlines the allowed area and hatches the margins on the camera image. In <strong>TimeOut</strong> mode, the final aim position must fall inside this area to register a hit.</dd>
       </dl>
       <p>Click <strong>Save detection settings</strong> to keep your changes.</p>
 
-      <h3>Target</h3>
-      <p>Target settings are currently unavailable.</p>
-
       <h3>Weapon</h3>
+      <p>The selector displays each profile as its name followed by its filename in parentheses. Profiles are loaded from JSON files in <code>Data/Weapons</code> under the application folder. Selecting a profile applies its saved trigger, interval, and offsets. Click <strong>Save Weapon</strong> to write the changes to that profile and select it for the next launch.</p>
       <dl>
-        <dt>Trigger type</dt>
-        <dd><strong>FirstSpot</strong> can count a spot again once the detection interval expires. <strong>NewSpot</strong> requires the spot to disappear and reappear after the interval before it can count again. <strong>External Event</strong> counts one hit per accepted press of T while the main window is active, provided a frame captured while T is held contains a laser spot. The detection interval starts with each accepted press, even if it yields no hit. Presses during that interval are ignored.</dd>
         <dt>Next detection interval (ms)</dt>
-        <dd>Sets the minimum time between registered hits, from 100 to 5,000 milliseconds.</dd>
+        <dd>Set a delay of 100 to 5,000 milliseconds. See <a href="#triggers">Trigger types</a> for when the delay starts and how it applies.</dd>
         <dt>Weapon offset (px)</dt>
-        <dd>Adjust X and Y to shift the displayed hit position when it consistently differs from the point of aim. Click <strong>Reset</strong> to zero both offsets.</dd>
+        <dd>Adjust X and Y from −100 to +100 pixels to align the displayed aim with the point of aim. Positive X moves it right and positive Y moves it up. Click <strong>Reset</strong> to zero both offsets.</dd>
       </dl>
-      <p>Click <strong>Save Weapon</strong> to keep the changes for the selected profile.</p>
+    </section>
+
+    <section id="triggers">
+      <h2>Trigger types</h2>
+      <dl>
+        <dt>FirstSpot</dt>
+        <dd>Registers a hit whenever a spot is detected and the interval since the last hit has elapsed. A spot that stays visible can register repeatedly.</dd>
+        <dt>NewSpot</dt>
+        <dd>Registers a hit when a spot appears after the interval since the last hit. If it appears too early and stays visible, let it disappear and try again after the interval.</dd>
+        <dt>TimeOut</dt>
+        <dd>Tracks the spot while you aim. After the spot disappears and the aim path times out, the last position registers if the path spans at least two seconds and the final aim position is inside the allowed area. The aim path times out after 400 milliseconds without a detected spot by default.</dd>
+        <dt>External Event</dt>
+        <dd>With the main window active, press and hold <kbd>T</kbd> long enough for the camera to capture the visible spot. Each accepted press can register one hit. The interval starts at the accepted press, even if it yields no hit. Release <kbd>T</kbd> and wait for the interval before pressing again.</dd>
+      </dl>
     </section>
 
     <section id="troubleshooting">
@@ -82,11 +111,14 @@
         <li>Check that the preview shows the entire shooting area and that the laser spot is inside the frame.</li>
         <li>Turn on <strong>Show flares</strong>. Increase sensitivity a little at a time and repeat the test. If the background starts lighting up, reduce glare on the target and test again.</li>
         <li>If <strong>Blob</strong> misses a small spot, try <strong>Simple</strong> and compare the counter after a test pulse.</li>
-        <li>Wait longer than the <strong>Next detection interval</strong> between test pulses. With <strong>NewSpot</strong>, make sure the spot disappears before the next pulse.</li>
+        <li>Check the selected <a href="#triggers">trigger type</a>. With <strong>NewSpot</strong>, let the spot disappear and wait for the interval before firing again. With <strong>TimeOut</strong>, turn on <strong>Show Allowed Area</strong> and check the final aim position. With <strong>External Event</strong>, check that the main window is active and that the spot is visible while you hold <kbd>T</kbd>.</li>
       </ol>
 
       <h3>The counter increases without a shot</h3>
       <p>Use <strong>Show flares</strong> to locate bright reflections or background lights in the preview. Remove them from the frame or lower sensitivity, then fire another test pulse.</p>
+
+      <h3>Hits appear in the wrong place on the target</h3>
+      <p>Open <strong>Target</strong> and check the projected circle and center against the physical target. If the calibration lines up but every hit is shifted in the same direction, check the selected profile's <strong>Weapon offset (px)</strong>.</p>
     </section>
   </main>
 </body>

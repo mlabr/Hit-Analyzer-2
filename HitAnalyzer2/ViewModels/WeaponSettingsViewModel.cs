@@ -10,19 +10,6 @@ namespace HitAnalyzer2.ViewModels
 {
     public sealed partial class WeaponSettingsViewModel : ViewModelBase
     {
-        public sealed class WeaponOption
-        {
-            internal WeaponOption(string fileName, WeaponProfile profile)
-            {
-                FileName = fileName;
-                Profile = profile;
-            }
-
-            public string Label => $"{Profile.Name} ({FileName})";
-            internal string FileName { get; }
-            internal WeaponProfile Profile { get; set; }
-        }
-
         private readonly SettingsService _settings;
         private readonly ShootingSessionService _shootingSession;
 
@@ -58,7 +45,10 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession.SetTrigger(weapon.Trigger);
             _shootingSession.NexDetectionInterval = weapon.NexDetectionInterval;
             settingsMessage = settings.LoadError;
-            Weapons = LoadWeapons();
+            Weapons = _weaponHandler.LoadWeapons(out var loadError);
+            if (loadError is not null)
+                SettingsMessage ??= $"Profily zbraní se nepodařilo načíst. {loadError}";
+
             if (settings.Current.SelectedWeapon is { } savedWeapon)
             {
                 foreach (var option in Weapons)
@@ -87,37 +77,6 @@ namespace HitAnalyzer2.ViewModels
 
         [ObservableProperty]
         private string? settingsMessage;
-
-        private IReadOnlyList<WeaponOption> LoadWeapons()
-        {
-            var weapons = new List<WeaponOption>();
-            try
-            {
-                var paths = Directory.GetFiles(_settings.WeaponsDirectory, "*.json");
-                Array.Sort(paths, StringComparer.OrdinalIgnoreCase);
-                foreach (var path in paths)
-                {
-                    try
-                    {
-                        weapons.Add(new WeaponOption(Path.GetFileName(path), SettingsService.LoadWeaponProfile(path)));
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
-                    {
-                        // Unreadable or invalid files are skipped so valid profiles can still be selected.
-                    }
-                }
-            }
-            catch (DirectoryNotFoundException)
-            {
-                return Array.Empty<WeaponOption>();
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                SettingsMessage ??= $"Profily zbraní se nepodařilo načíst. {ex.Message}";
-            }
-
-            return weapons.AsReadOnly();
-        }
 
         partial void OnSelectedWeaponChanged(WeaponOption? value)
         {
