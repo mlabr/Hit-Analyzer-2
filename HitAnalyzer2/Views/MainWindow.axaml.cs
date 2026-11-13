@@ -26,6 +26,7 @@ namespace HitAnalyzer2.Views
             InitializeComponent();
             CameraPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
+            CameraSettings.ResetCalibrationButton.Click += (_, _) => CalibrationOverlay.ResetToSquare();
             DataContextChanged += (_, _) =>
             {
                 if (_cameraSettingsViewModel is { } previous)
@@ -130,6 +131,7 @@ namespace HitAnalyzer2.Views
             if (!CameraSettings.IsVisible || PreviewImage.Source is not Bitmap bitmap)
             {
                 CalibrationOverlay.Update(null, default);
+                CameraSettings.ResetCalibrationButton.IsEnabled = false;
                 return;
             }
 
@@ -138,6 +140,7 @@ namespace HitAnalyzer2.Views
             var imageBounds = new Rect(bounds.X + (bounds.Width - size.Width) / 2,
                 bounds.Y + (bounds.Height - size.Height) / 2, size.Width, size.Height);
             CalibrationOverlay.Update(_cameraSettingsViewModel, imageBounds);
+            CameraSettings.ResetCalibrationButton.IsEnabled = CalibrationOverlay.IsVisible;
         }
 
         private void OnPreviewImageChanged(object? sender, AvaloniaPropertyChangedEventArgs e)

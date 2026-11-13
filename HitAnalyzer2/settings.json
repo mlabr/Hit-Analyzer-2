@@ -5,7 +5,7 @@
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_1e2f\u0026pid_9801\u0026mi_00#6\u00261a040c39\u00261\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_328f\u0026pid_006d\u0026mi_00#7\u002634c3077b\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
       "Width": 640,
@@ -14,7 +14,11 @@
       "FpsDenominator": 1,
       "Format": "3231564e-0000-0010-8000-00aa00389b71"
     },
-    "Flip": "X"
+    "Flip": "X",
+    "Calibration": {
+      "Mode": "None",
+      "Corners": null
+    }
   },
   "Detection": {
     "Method": "Simple",

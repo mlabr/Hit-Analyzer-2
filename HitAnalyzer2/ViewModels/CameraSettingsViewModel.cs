@@ -72,18 +72,21 @@ namespace HitAnalyzer2.ViewModels
 
         partial void OnSelectedCalibrationModeChanged(CameraCalibrationOption value)
         {
-            Calibration.Update(Calibration.Settings with
-            {
-                Mode = value.Mode,
-                Corners = Calibration.Settings.Corners ?? CalibrationCorners.Default
-            });
+            Calibration.Update(Calibration.Settings with { Mode = value.Mode });
+            SettingsMessage = null;
+        }
+
+        internal void SetCalibrationSquare(double width, double height)
+        {
+            Calibration.Update(Calibration.Settings with { Corners = CalibrationCorners.CenteredSquare(width, height) });
             SettingsMessage = null;
         }
 
         internal void MoveCalibrationCorner(int index, CalibrationPoint point)
         {
             var settings = Calibration.Settings;
-            var corners = settings.Corners ?? CalibrationCorners.Default;
+            if (settings.Corners is not { } corners)
+                return;
             Calibration.Update(settings with
             {
                 Corners = index switch

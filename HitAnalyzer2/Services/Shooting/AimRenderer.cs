@@ -14,6 +14,7 @@ namespace HitAnalyzer2.Services.Shooting
 		private static readonly Scalar LaserPositionMarkerColor = new(255, 0, 0, 255);
         private static readonly Scalar AimPathBeforeColor = new(0, 255, 255, 255);
         private static readonly Scalar AimPathAfterColor = new(255, 255, 0, 255);
+        private static readonly Scalar TargetGuideColor = new(210, 210, 210, 255);
 
         internal static void Draw(Mat preview, AimPosition position, IReadOnlyList<LaserPosition> aimPath,
             IReadOnlyList<LaserPosition> followPath)
@@ -30,14 +31,35 @@ namespace HitAnalyzer2.Services.Shooting
 			DrawAimPosition(preview, position.X, position.Y, size, AimPositionMarkerColor);
         }
 
+        internal static void DrawTargetPreview(Mat preview, CalibrationPoint? aim)
+        {
+            int side = 2 * (Math.Min(preview.Width, preview.Height) / 6);
+            const int margin = 8;
+            if (side < 8 || side + 2 * margin >= Math.Min(preview.Width, preview.Height))
+                return;
+
+            var origin = new Point(preview.Width - side - margin, margin);
+            var end = new Point(origin.X + side, origin.Y + side);
+            Cv2.Rectangle(preview, origin, end, new Scalar(25, 25, 25, 255), -1);
+            Cv2.Rectangle(preview, origin, end, TargetGuideColor, 1);
+            var center = ToPreviewPoint(CameraCalibrationService.TargetCenter, origin, side, side);
+            Cv2.Circle(preview, center, (int)(side * CameraCalibrationService.TargetRadius), TargetGuideColor, 1);
+            Cv2.Circle(preview, center, 2, TargetGuideColor, -1);
+
+            if (aim is { X: >= -0.000001 and <= 1.000001, Y: >= -0.000001 and <= 1.000001 } point)
+                Cv2.Circle(preview, ToPreviewPoint(point, origin, side, side), 5, AimPositionMarkerColor, 2);
+        }
+
         internal static void DrawAimPointPreview(Mat preview, CalibrationPoint point)
         {
             int radius = Math.Max(4, (int)Math.Round(preview.Height * MarkerSizeRatio) / 2);
-            var center = new Point(
-                Math.Round(Math.Clamp(point.X, 0, 1) * (preview.Width - 1)),
-                Math.Round(Math.Clamp(point.Y, 0, 1) * (preview.Height - 1)));
+            var center = ToPreviewPoint(point, default, preview.Width - 1, preview.Height - 1);
             Cv2.Circle(preview, center, radius, AimPositionMarkerColor, 2);
         }
+
+        private static Point ToPreviewPoint(CalibrationPoint point, Point origin, int width, int height) => new(
+            origin.X + Math.Round(Math.Clamp(point.X, 0, 1) * width),
+            origin.Y + Math.Round(Math.Clamp(point.Y, 0, 1) * height));
 
         private static void DrawAimPath(Mat preview, IReadOnlyList<LaserPosition> aimPath, Scalar baseColor,
             (double X, double Y) offset, bool oldestIsBrightest)

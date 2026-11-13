@@ -23,6 +23,7 @@
         <ComboBox HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CalibrationModes}" SelectedItem="{Binding SelectedCalibrationMode, Mode=TwoWay}"
                   AutomationProperties.Name="Camera calibration" />
+        <Button x:Name="ResetCalibrationButton" Content="Reset to square" IsEnabled="False" />
 
         <Button Content="Save webcam settings" Command="{Binding SaveCameraSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"

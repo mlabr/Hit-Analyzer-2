@@ -27,7 +27,19 @@ namespace HitAnalyzer2.Views
 
             _settings = settings;
             _imageBounds = imageBounds;
+            if (visible && settings!.Calibration.Settings.Corners is null)
+                settings.SetCalibrationSquare(imageBounds.Width, imageBounds.Height);
             IsVisible = visible;
+            InvalidateVisual();
+        }
+
+        internal void ResetToSquare()
+        {
+            if (!IsVisible || _settings is not { } settings)
+                return;
+
+            _dragPointer?.Capture(null);
+            settings.SetCalibrationSquare(_imageBounds.Width, _imageBounds.Height);
             InvalidateVisual();
         }
 
@@ -45,6 +57,9 @@ namespace HitAnalyzer2.Views
 
             foreach (var point in points)
                 context.DrawEllipse(brush, null, point, HandleRadius, HandleRadius);
+
+            if (settings.Calibration.CameraTargetCenter is { } center)
+                context.DrawEllipse(brush, null, ToPreview(center), 3, 3);
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)
@@ -112,7 +127,8 @@ namespace HitAnalyzer2.Views
 
         private Point[] GetPreviewCorners(CameraSettingsViewModel settings)
         {
-            var corners = settings.Calibration.Settings.Corners ?? CalibrationCorners.Default;
+            if (settings.Calibration.Settings.Corners is not { } corners)
+                return [];
             return [ToPreview(corners.TopLeft), ToPreview(corners.TopRight),
                 ToPreview(corners.BottomRight), ToPreview(corners.BottomLeft)];
         }

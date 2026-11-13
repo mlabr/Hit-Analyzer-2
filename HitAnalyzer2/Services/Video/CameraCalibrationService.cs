@@ -15,8 +15,14 @@ namespace HitAnalyzer2.Services.Video
         CalibrationPoint TopLeft, CalibrationPoint TopRight,
         CalibrationPoint BottomRight, CalibrationPoint BottomLeft)
     {
-        internal static CalibrationCorners Default { get; } =
-            new(new(0.1, 0.1), new(0.9, 0.1), new(0.9, 0.9), new(0.1, 0.9));
+        internal static CalibrationCorners CenteredSquare(double width, double height)
+        {
+            double halfSide = 0.4 * Math.Min(width, height);
+            double x = halfSide / width;
+            double y = halfSide / height;
+            return new(new(0.5 - x, 0.5 - y), new(0.5 + x, 0.5 - y),
+                new(0.5 + x, 0.5 + y), new(0.5 - x, 0.5 + y));
+        }
     }
 
     internal sealed record CameraCalibrationSettings
@@ -27,6 +33,8 @@ namespace HitAnalyzer2.Services.Video
 
     internal sealed class CameraCalibrationService
     {
+        internal static readonly CalibrationPoint TargetCenter = new(0.5, 0.5);
+        internal const double TargetRadius = 0.5;
         private const double MinimumCornerCrossProduct = 0.0001;
         private volatile CalibrationSnapshot _snapshot;
 
@@ -34,6 +42,7 @@ namespace HitAnalyzer2.Services.Video
 
         internal CameraCalibrationSettings Settings => _snapshot.Settings;
         internal bool IsValid => _snapshot.Matrix is not null;
+        internal CalibrationPoint? CameraTargetCenter => _snapshot.CameraTargetCenter;
 
         internal void Update(CameraCalibrationSettings settings) => _snapshot = CreateSnapshot(settings);
 
@@ -55,10 +64,9 @@ namespace HitAnalyzer2.Services.Video
 
         private static CalibrationSnapshot CreateSnapshot(CameraCalibrationSettings settings)
         {
-            if (settings.Mode != CameraCalibrationMode.HitOnly)
-                return new(settings, null);
+            if (settings.Mode != CameraCalibrationMode.HitOnly || settings.Corners is not { } corners)
+                return new(settings, null, null);
 
-            var corners = settings.Corners ?? CalibrationCorners.Default;
             CalibrationPoint[] points = [corners.TopLeft, corners.TopRight, corners.BottomRight, corners.BottomLeft];
             var source = new Point2f[points.Length];
             for (int i = 0; i < points.Length; i++)
@@ -69,7 +77,7 @@ namespace HitAnalyzer2.Services.Video
                 double cross = (b.X - a.X) * (c.Y - b.Y) - (b.Y - a.Y) * (c.X - b.X);
                 if (!double.IsFinite(cross) || cross <= MinimumCornerCrossProduct ||
                     a.X is < 0 or > 1 || a.Y is < 0 or > 1)
-                    return new(settings, null);
+                    return new(settings, null, null);
 
                 source[i] = new Point2f((float)a.X, (float)a.Y);
             }
@@ -81,12 +89,21 @@ namespace HitAnalyzer2.Services.Video
             {
                 matrix[i] = transform.At<double>(i / 3, i % 3);
                 if (!double.IsFinite(matrix[i]))
-                    return new(settings, null);
+                    return new(settings, null, null);
             }
 
-            return new(settings, matrix);
+            // The diagonals intersect at the projected center of the square.
+            var origin = corners.TopLeft;
+            double dx = corners.BottomRight.X - origin.X;
+            double dy = corners.BottomRight.Y - origin.Y;
+            double ex = corners.BottomLeft.X - corners.TopRight.X;
+            double ey = corners.BottomLeft.Y - corners.TopRight.Y;
+            double t = ((corners.TopRight.X - origin.X) * ey - (corners.TopRight.Y - origin.Y) * ex)
+                / (dx * ey - dy * ex);
+            return new(settings, matrix, new CalibrationPoint(origin.X + t * dx, origin.Y + t * dy));
         }
 
-        private sealed record CalibrationSnapshot(CameraCalibrationSettings Settings, double[]? Matrix);
+        private sealed record CalibrationSnapshot(
+            CameraCalibrationSettings Settings, double[]? Matrix, CalibrationPoint? CameraTargetCenter);
     }
 }
