@@ -45,7 +45,7 @@
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
     "ShowAllowedArea": false,
-    "ShowTargetPreview": true,
+    "ShowTargetPreview": false,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },

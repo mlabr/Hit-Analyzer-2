@@ -1,11 +1,12 @@
 using OpenCvSharp;
+using System;
 
 namespace HitAnalyzer2.Services.Detection
 {
     internal sealed class LaserDetectorBlob(
         int intensityThreshold, int minimumHitAreaPixels) : ILaserDetector
     {
-        public LaserPosition? GetLaserPosition(Mat frame)
+        public LaserPosition? GetLaserPosition(Mat frame, TimeSpan frameTime)
         {
             if (frame.Empty())
                 return null;
@@ -37,7 +38,7 @@ namespace HitAnalyzer2.Services.Detection
 
             return selected == 0
                 ? null
-                : new LaserPosition(centroids.At<double>(selected, 0), centroids.At<double>(selected, 1));
+                : new LaserPosition(centroids.At<double>(selected, 0), centroids.At<double>(selected, 1), frameTime);
         }
     }
 }

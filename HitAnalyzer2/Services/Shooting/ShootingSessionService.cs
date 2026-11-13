@@ -119,8 +119,7 @@ namespace HitAnalyzer2.Services.Shooting
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var detectedPosition = _laserDetector.GetLaserPosition(frame);
-                position = detectedPosition is { } point ? point with { Time = elapsed } : null;
+                position = _laserDetector.GetLaserPosition(frame, elapsed);
                 bool startFollowPath = false;
                 if (_trigger == TriggerTypeEnum.TimeOut && position is null &&
                     aimPositionHandler.GetTimedOutAimPosition(elapsed) is { } timedOutPosition)

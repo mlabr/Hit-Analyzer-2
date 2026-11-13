@@ -5,7 +5,7 @@ namespace HitAnalyzer2.Services.Detection
 {
     internal sealed class LaserDetectorSimple(int intensityThreshold) : ILaserDetector
     {
-        public unsafe LaserPosition? GetLaserPosition(Mat frame)
+        public unsafe LaserPosition? GetLaserPosition(Mat frame, TimeSpan frameTime)
         {
             if (frame.Empty())
                 return null;
@@ -45,7 +45,7 @@ namespace HitAnalyzer2.Services.Detection
             return brightest < 0
                 ? null
                 : new LaserPosition(first.X + (last.X - first.X) / 2.0,
-                    first.Y + (last.Y - first.Y) / 2.0);
+                    first.Y + (last.Y - first.Y) / 2.0, frameTime);
         }
     }
 }
