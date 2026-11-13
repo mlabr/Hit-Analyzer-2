@@ -84,7 +84,7 @@ namespace HitAnalyzer2.ViewModels
                 AllowedAreaRenderer.Draw(pixels, _detectionSettings);
 
             if (lastHit is { } hit)
-                AimRenderer.Draw(pixels, hit, aimPath, followPath);
+                AimTracerRenderer.DrawHitAndTraceIntoFrame(pixels, hit, aimPath, followPath);
 
             await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
         }

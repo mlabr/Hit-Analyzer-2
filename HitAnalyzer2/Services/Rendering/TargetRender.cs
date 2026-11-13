@@ -33,22 +33,22 @@ namespace HitAnalyzer2.Services.Rendering
             var offset = reference is { } position
                 ? (position.X - position.LaserPosition.X, position.Y - position.LaserPosition.Y)
                 : (0.0, 0.0);
-            AimRenderer.DrawAimPath(target, aimPath, AimRenderer.AimPathBeforeColor, offset, false, Project);
-            AimRenderer.DrawAimPath(target, followPath, AimRenderer.AimPathAfterColor, offset, true, Project);
+            AimTracerRenderer.DrawAimPath(target, aimPath, AimTracerRenderer.AimPathBeforeColor, offset, false, Project);
+            AimTracerRenderer.DrawAimPath(target, followPath, AimTracerRenderer.AimPathAfterColor, offset, true, Project);
 
-            int markerSize = Math.Max(1, (int)Math.Round(target.Height * AimRenderer.MarkerSizeRatio));
+            int markerSize = Math.Max(1, (int)Math.Round(target.Height * AimTracerRenderer.MarkerSizeRatio));
             if (lastTargetHit is { } hit)
             {
                 if (hit.Laser is { } laser && IsInsidePreview(laser))
                 {
                     var marker = ToTargetPixel(laser);
-                    AimRenderer.DrawLaserPosition(target, marker.X, marker.Y, markerSize, AimRenderer.LaserPositionMarkerColor);
+                    AimTracerRenderer.DrawLaserPosition(target, marker.X, marker.Y, markerSize, AimTracerRenderer.LaserPositionMarkerColor);
                 }
 
                 if (hit.Aim is { } hitAim && IsInsidePreview(hitAim))
                 {
                     var marker = ToTargetPixel(hitAim);
-                    AimRenderer.DrawAimPosition(target, marker.X, marker.Y, markerSize, AimRenderer.AimPositionMarkerColor);
+                    AimTracerRenderer.DrawAimPosition(target, marker.X, marker.Y, markerSize, AimTracerRenderer.AimPositionMarkerColor);
                 }
             }
 
@@ -56,10 +56,10 @@ namespace HitAnalyzer2.Services.Rendering
             {
                 var laser = current.LaserPosition;
                 if ((current.X != laser.X || current.Y != laser.Y) && Project(laser.X, laser.Y) is { } laserMarker)
-                    AimRenderer.DrawLaserPosition(target, laserMarker.X, laserMarker.Y, markerSize, AimRenderer.LaserPositionMarkerColor);
+                    AimTracerRenderer.DrawLaserPosition(target, laserMarker.X, laserMarker.Y, markerSize, AimTracerRenderer.LaserPositionMarkerColor);
 
                 if (Project(current.X, current.Y) is { } aimMarker)
-                    AimRenderer.DrawAimPosition(target, aimMarker.X, aimMarker.Y, markerSize, AimRenderer.AimPositionMarkerColor);
+                    AimTracerRenderer.DrawAimPosition(target, aimMarker.X, aimMarker.Y, markerSize, AimTracerRenderer.AimPositionMarkerColor);
             }
 
             Point ToTargetPixel(CalibrationPoint point) =>

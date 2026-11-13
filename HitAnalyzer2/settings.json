@@ -45,19 +45,19 @@
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
     "ShowAllowedArea": false,
-    "ShowTargetPreview": false,
+    "ShowTargetPreview": true,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },
   "SelectedWeapon": {
-    "FileName": "weapon4.json",
+    "FileName": "weapon2.json",
     "Profile": {
       "Type": "ha_weapon",
-      "Name": "weapon4",
+      "Name": "weapon2",
       "Caliber": 0,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "FirstSpot",
+      "Trigger": "NewSpot",
       "NexDetectionInterval": 500
     }
   }

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace HitAnalyzer2.Services.Rendering
 {
-    internal static class AimRenderer
+    internal static class AimTracerRenderer
     {
         internal const double MarkerSizeRatio = 0.05;
         private const int MinimumAimPathBrightness = 64;
@@ -14,8 +14,8 @@ namespace HitAnalyzer2.Services.Rendering
         internal static readonly Scalar AimPathBeforeColor = new(0, 255, 255, 255);
         internal static readonly Scalar AimPathAfterColor = new(255, 255, 0, 255);
 
-        internal static void Draw(Mat preview, AimPosition position, IReadOnlyList<LaserPosition> aimPath,
-            IReadOnlyList<LaserPosition> followPath)
+        internal static void DrawHitAndTraceIntoFrame(Mat preview, AimPosition position,
+            IReadOnlyList<LaserPosition> aimPath, IReadOnlyList<LaserPosition> followPath)
         {
             var laser = position.LaserPosition;
             var offset = (X: position.X - laser.X, Y: position.Y - laser.Y);
