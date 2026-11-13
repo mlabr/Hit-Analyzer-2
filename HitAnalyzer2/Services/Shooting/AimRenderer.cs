@@ -9,25 +9,24 @@ namespace HitAnalyzer2.Services.Shooting
     {
         private const double MarkerSizeRatio = 0.05;
         private const int MinimumAimPathBrightness = 64;
-        //private static readonly Scalar AimMarkerColor = new(0, 255, 0, 255); //Green
-		private static readonly Scalar AimMarkerColor = new(0, 255, 255, 255);
-		private static readonly Scalar LaserMarkerColor = new(255, 0, 0, 255);
-        private static readonly Scalar AimPathColor = new(0, 255, 255, 255);
-        private static readonly Scalar FollowPathColor = new(255, 255, 0, 255);
+		private static readonly Scalar AimPositionMarkerColor = new(0, 255, 255, 255);
+		private static readonly Scalar LaserPositionMarkerColor = new(255, 0, 0, 255);
+        private static readonly Scalar AimPathBeforeColor = new(0, 255, 255, 255);
+        private static readonly Scalar AimPathAfterColor = new(255, 255, 0, 255);
 
         internal static void Draw(Mat preview, AimPosition position, IReadOnlyList<LaserPosition> aimPath,
             IReadOnlyList<LaserPosition> followPath)
         {
             var laser = position.LaserPosition;
             var offset = (X: position.X - laser.X, Y: position.Y - laser.Y);
-            DrawAimPath(preview, aimPath, AimPathColor, offset, oldestIsBrightest: false);
-            DrawAimPath(preview, followPath, FollowPathColor, offset, oldestIsBrightest: true);
+            DrawAimPath(preview, aimPath, AimPathBeforeColor, offset, oldestIsBrightest: false);
+            DrawAimPath(preview, followPath, AimPathAfterColor, offset, oldestIsBrightest: true);
 
             int size = Math.Max(1, (int)Math.Round(preview.Height * MarkerSizeRatio));
             if (offset.X != 0 || offset.Y != 0)
-                DrawMarker(preview, laser.X, laser.Y, size, LaserMarkerColor, diagonal: true);
+				DrawLaserPosition(preview, laser.X, laser.Y, size, LaserPositionMarkerColor);
 
-            DrawMarker(preview, position.X, position.Y, size, AimMarkerColor);
+			DrawAimPosition(preview, position.X, position.Y, size, AimPositionMarkerColor);
         }
 
         private static void DrawAimPath(Mat preview, IReadOnlyList<LaserPosition> aimPath, Scalar baseColor,
@@ -56,25 +55,25 @@ namespace HitAnalyzer2.Services.Shooting
             }
         }
 
-        private static void DrawMarker(Mat preview, double positionX, double positionY, int size, Scalar color,
-            bool diagonal = false)
+        private static void DrawAimPosition(Mat preview, double positionX, double positionY, int size, Scalar color)
         {
             int x = (int)Math.Round(positionX);
             int y = (int)Math.Round(positionY);
             int startOffset = (size - 1) / 2;
             int endOffset = size / 2;
-
-            if (diagonal)
-            {
-                Cv2.Line(preview, new Point(x - startOffset, y - startOffset),
-                    new Point(x + endOffset, y + endOffset), color, 2);
-                Cv2.Line(preview, new Point(x - startOffset, y + startOffset),
-                    new Point(x + endOffset, y - endOffset), color, 2);
-                return;
-            }
-
             Cv2.Line(preview, new Point(x - startOffset, y), new Point(x + endOffset, y), color, 2);
             Cv2.Line(preview, new Point(x, y - startOffset), new Point(x, y + endOffset), color, 2);
         }
-    }
+
+		private static void DrawLaserPosition(Mat preview, double positionX, double positionY, int size, Scalar color)
+		{
+			int x = (int)Math.Round(positionX);
+			int y = (int)Math.Round(positionY);
+			int startOffset = (size - 1) / 2;
+			int endOffset = size / 2;
+
+			Cv2.Line(preview, new Point(x - startOffset, y - startOffset),new Point(x + endOffset, y + endOffset), color, 2);
+			Cv2.Line(preview, new Point(x - startOffset, y + startOffset),new Point(x + endOffset, y - endOffset), color, 2);
+		}
+	}
 }
