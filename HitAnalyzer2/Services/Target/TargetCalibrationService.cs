@@ -1,9 +1,12 @@
 using OpenCvSharp;
 using System;
+using System.Text.Json.Serialization;
 
 namespace HitAnalyzer2.Services.Target
 {
-    internal readonly record struct CalibrationPoint(double X, double Y);
+    internal readonly record struct CalibrationPoint(
+        [property: JsonConverter(typeof(CalibrationCoordinateJsonConverter))] double X,
+        [property: JsonConverter(typeof(CalibrationCoordinateJsonConverter))] double Y);
 
     internal sealed record CalibrationCorners(
         CalibrationPoint TopLeft, CalibrationPoint TopRight,

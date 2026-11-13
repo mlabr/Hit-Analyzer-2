@@ -24,8 +24,9 @@ namespace HitAnalyzer2.Services.Rendering
 
             int size = Math.Max(1, (int)Math.Round(preview.Height * MarkerSizeRatio));
             if (offset.X != 0 || offset.Y != 0)
+            {
 				DrawLaserPosition(preview, laser.X, laser.Y, size, LaserPositionMarkerColor);
-
+			}
 			DrawAimPosition(preview, position.X, position.Y, size, AimPositionMarkerColor);
         }
 
