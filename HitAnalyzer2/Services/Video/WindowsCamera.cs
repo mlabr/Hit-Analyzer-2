@@ -1,7 +1,5 @@
 using OpenCvSharp;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -17,8 +15,7 @@ namespace HitAnalyzer2.Services.Video
 
         private static readonly Guid SourceType = new("c60ac5fe-252a-478f-a0ef-bc8fa5f7cad3");
         private static readonly Guid VideoCaptureSource = new("8ac3587a-4ae7-42d8-99e0-0a6013eef90f");
-        private static readonly Guid SymbolicLink = new("58f0aad8-22bf-4f8a-bb3d-d2c4978c6e2f");
-        private static readonly Guid FriendlyName = new("60d0e559-52f8-4fa2-bbce-acdb34a8ec01");
+        internal static readonly Guid SymbolicLink = new("58f0aad8-22bf-4f8a-bb3d-d2c4978c6e2f");
         private static readonly Guid AdvancedVideoProcessing = new("0f81da2c-b537-4672-a8b2-a681b17307a3");
         private static readonly Guid SourceReaderEx = new("7b981cf0-560e-4116-9875-b099895f23d7");
         private static readonly Guid MajorType = new("48eba18e-f8c9-4687-bf11-0a74c9f96a8f");
@@ -53,81 +50,6 @@ namespace HitAnalyzer2.Services.Video
             {
                 Dispose();
                 throw;
-            }
-        }
-
-        public static IReadOnlyList<CameraDevice> Detect(CancellationToken cancellationToken)
-        {
-            using var session = new Session();
-            nint attributes = CreateDeviceAttributes();
-            nint* devices = null;
-            uint count = 0;
-            try
-            {
-                Check(MFEnumDeviceSources(attributes, out devices, out count));
-                var cameras = new List<CameraDevice>();
-                for (int i = 0; i < count; i++)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    var id = GetString(devices[i], SymbolicLink);
-                    if (string.IsNullOrEmpty(id))
-                        continue;
-
-                    var camera = new CameraDevice(i, GetString(devices[i], FriendlyName), id);
-                    try
-                    {
-                        camera = camera with { Modes = DetectModes(id, cancellationToken) };
-                    }
-                    catch (COMException ex)
-                    {
-                        camera = camera with { ModeDetectionError = ex.Message };
-                    }
-                    cameras.Add(camera);
-                }
-                return cameras;
-            }
-            finally
-            {
-                for (int i = 0; i < count; i++)
-                    Release(devices[i]);
-                Marshal.FreeCoTaskMem((nint)devices);
-                Release(attributes);
-            }
-        }
-
-        private static CameraMode[] DetectModes(string deviceId, CancellationToken cancellationToken)
-        {
-            nint source = OpenSource(deviceId);
-            nint reader = 0;
-            try
-            {
-                reader = CreateReader(source, convertVideo: false);
-                var modes = new HashSet<CameraMode>();
-                for (uint index = 0; ; index++)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (!TryGetNativeType(reader, index, out var type))
-                        break;
-
-                    try
-                    {
-                        if (ReadMode(type) is { Width: >= 640, Height: >= 480 } mode &&
-                            mode.FramesPerSecond >= 25)
-                            modes.Add(mode);
-                    }
-                    finally
-                    {
-                        Release(type);
-                    }
-                }
-                return modes.OrderBy(mode => (long)mode.Width * mode.Height)
-                    .ThenByDescending(mode => mode.FramesPerSecond)
-                    .ThenBy(mode => mode.Format)
-                    .ToArray();
-            }
-            finally
-            {
-                CloseSource(source, reader);
             }
         }
 
@@ -291,7 +213,7 @@ namespace HitAnalyzer2.Services.Video
             }
         }
 
-        private static CameraMode? ReadMode(nint type)
+        internal static CameraMode? ReadMode(nint type)
         {
             if (!TryGetUInt64(type, FrameSize, out var size) ||
                 !TryGetUInt64(type, FrameRate, out var rate) || (uint)rate == 0 ||
@@ -309,7 +231,7 @@ namespace HitAnalyzer2.Services.Video
                 numerator / a, denominator / a, format);
         }
 
-        private static bool TryGetNativeType(nint reader, uint index, out nint type)
+        internal static bool TryGetNativeType(nint reader, uint index, out nint type)
         {
             // IMFSourceReader::GetNativeMediaType
             var getNativeType = (delegate* unmanaged[Stdcall]<nint, uint, uint, nint*, int>)Slot(reader, 5);
@@ -321,7 +243,7 @@ namespace HitAnalyzer2.Services.Video
             return hr != NoMoreTypes;
         }
 
-        private static nint CreateDeviceAttributes()
+        internal static nint CreateDeviceAttributes()
         {
             Check(MFCreateAttributes(out var attributes, 2));
             try
@@ -336,7 +258,7 @@ namespace HitAnalyzer2.Services.Video
             }
         }
 
-        private static nint OpenSource(string deviceId)
+        internal static nint OpenSource(string deviceId)
         {
             nint attributes = CreateDeviceAttributes();
             try
@@ -355,7 +277,7 @@ namespace HitAnalyzer2.Services.Video
             }
         }
 
-        private static nint CreateReader(nint source, bool convertVideo)
+        internal static nint CreateReader(nint source, bool convertVideo)
         {
             nint attributes = 0;
             try
@@ -374,24 +296,6 @@ namespace HitAnalyzer2.Services.Video
             finally
             {
                 Release(attributes);
-            }
-        }
-
-        private static string? GetString(nint attributes, Guid key)
-        {
-            // IMFAttributes::GetAllocatedString
-            var getString = (delegate* unmanaged[Stdcall]<nint, Guid*, nint*, uint*, int>)Slot(attributes, 13);
-            nint value;
-            uint length;
-            if (getString(attributes, &key, &value, &length) < 0)
-                return null;
-            try
-            {
-                return Marshal.PtrToStringUni(value, checked((int)length));
-            }
-            finally
-            {
-                Marshal.FreeCoTaskMem(value);
             }
         }
 
@@ -417,8 +321,8 @@ namespace HitAnalyzer2.Services.Video
             return succeeded;
         }
 
-        private static nint Slot(nint instance, int index) => (*(nint**)instance)[index];
-        private static void Check(int result)
+        internal static nint Slot(nint instance, int index) => (*(nint**)instance)[index];
+        internal static void Check(int result)
         {
             if (result < 0)
             {
@@ -427,13 +331,13 @@ namespace HitAnalyzer2.Services.Video
             }
         }
 
-        private static void Release(nint instance)
+        internal static void Release(nint instance)
         {
             if (instance != 0)
                 Marshal.Release(instance);
         }
 
-        private static void CloseSource(nint source, nint reader)
+        internal static void CloseSource(nint source, nint reader)
         {
             // By default releasing the reader shuts down the media source.
             Release(reader);
@@ -455,7 +359,7 @@ namespace HitAnalyzer2.Services.Video
             _session.Dispose();
         }
 
-        private sealed class Session : IDisposable
+        internal sealed class Session : IDisposable
         {
             private bool _started;
 
@@ -504,9 +408,6 @@ namespace HitAnalyzer2.Services.Video
 
         [DllImport("mfplat.dll", ExactSpelling = true)]
         private static extern int MFGetStrideForBitmapInfoHeader(uint format, uint width, out int stride);
-
-        [DllImport("mf.dll", ExactSpelling = true)]
-        private static extern int MFEnumDeviceSources(nint attributes, out nint* devices, out uint count);
 
         [DllImport("mf.dll", ExactSpelling = true)]
         private static extern int MFCreateDeviceSource(nint attributes, out nint source);

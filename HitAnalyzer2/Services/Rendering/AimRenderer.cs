@@ -1,9 +1,9 @@
-using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Shooting;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 
-namespace HitAnalyzer2.Services.Shooting
+namespace HitAnalyzer2.Services.Rendering
 {
     internal static class AimRenderer
     {

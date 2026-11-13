@@ -1,7 +1,8 @@
+using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Rendering;
 using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
-using HitAnalyzer2.Services.Detection;
 using OpenCvSharp;
 using System;
 using System.Threading;
@@ -52,7 +53,7 @@ namespace HitAnalyzer2.ViewModels
             cancellationToken.ThrowIfCancellationRequested();
             CameraSettings.Calibration.EnsureDefault(frame.Width, frame.Height);
             using var output = new Mat();
-            var pixels = PreviewFrameProcessor.Process(frame, output, DetectionSettings.BrightnessPercent,
+            var pixels = FramePreprocessor.ApplyImageAdjustments(frame, output, DetectionSettings.BrightnessPercent,
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
             bool showTargetPreview = IsShootingTabActive && ShootingSettings.ShowTargetPreview;
             var (lastHit, currentAim, aimPath, followPath, lastTargetHit) =

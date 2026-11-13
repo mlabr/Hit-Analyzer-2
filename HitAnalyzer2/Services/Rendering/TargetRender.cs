@@ -1,10 +1,10 @@
-using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Shooting;
+using HitAnalyzer2.Services.Target;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 
-namespace HitAnalyzer2.Services.Target
+namespace HitAnalyzer2.Services.Rendering
 {
     internal static class TargetRender
     {

@@ -2,8 +2,8 @@ using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Buffers.Binary;
-using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,41 +47,16 @@ namespace HitAnalyzer2.Services.Video
 
     internal sealed class VideoHandler
     {
-        private const int CameraProbeLimit = 10;
-
         public Task<IReadOnlyList<CameraDevice>> DetectCamerasAsync(CancellationToken cancellationToken)
         {
             return Task.Run<IReadOnlyList<CameraDevice>>(() =>
             {
                 if (OperatingSystem.IsWindows())
-                    return WindowsCamera.Detect(cancellationToken);
+                    return WindowsCameraDiscovery.Detect(cancellationToken);
+                if (OperatingSystem.IsLinux())
+                    return LinuxCameraDiscovery.Detect(cancellationToken);
 
-                var cameras = new List<CameraDevice>();
-                for (int index = 0; index < CameraProbeLimit; index++)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    using (var capture = OpenCapture(index))
-                    {
-                        if (!capture.IsOpened())
-                            continue;
-                    }
-
-                    var camera = new CameraDevice(index);
-                    if (OperatingSystem.IsLinux())
-                    {
-                        try
-                        {
-                            camera = camera with { Modes = LinuxCameraModes.Detect(index, cancellationToken) };
-                        }
-                        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or TimeoutException)
-                        {
-                            camera = camera with { ModeDetectionError = ex.Message };
-                        }
-                    }
-                    cameras.Add(camera);
-                }
-
-                return cameras;
+                return IndexedCameraDiscovery.Detect(VideoCaptureAPIs.ANY, cancellationToken).ToArray();
             }, cancellationToken);
         }
 

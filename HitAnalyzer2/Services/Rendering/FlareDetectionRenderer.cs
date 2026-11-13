@@ -1,6 +1,7 @@
+using HitAnalyzer2.Services.Detection;
 using OpenCvSharp;
 
-namespace HitAnalyzer2.Services.Detection
+namespace HitAnalyzer2.Services.Rendering
 {
     internal static class FlareDetectionRenderer
     {
@@ -13,7 +14,7 @@ namespace HitAnalyzer2.Services.Detection
         internal static void Draw(Mat preview, int sensitivity)
         {
             using var mask = new Mat();
-            LaserIntensity.CreateMask(preview, mask, LaserIntensity.ThresholdFromSensitivity(sensitivity));
+            BrightPixelFilter.CreateMask(preview, mask, BrightPixelFilter.ThresholdFromSensitivity(sensitivity));
 
             // Dilating with a filled circle stamps a 5 px dot at every matching pixel.
             const int diameter = DotRadius * 2 + 1;

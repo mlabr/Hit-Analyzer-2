@@ -1,4 +1,4 @@
-namespace HitAnalyzer2.Services.Shooting
+namespace HitAnalyzer2
 {
     public enum TriggerTypeEnum
     {

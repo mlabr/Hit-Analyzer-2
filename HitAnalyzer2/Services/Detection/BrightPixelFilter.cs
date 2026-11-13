@@ -2,7 +2,7 @@ using OpenCvSharp;
 
 namespace HitAnalyzer2.Services.Detection
 {
-    internal static class LaserIntensity
+    internal static class BrightPixelFilter
     {
         internal static int ThresholdFromSensitivity(int sensitivity) => byte.MaxValue - sensitivity;
 

@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using HitAnalyzer2.Services.Shooting;
 
 namespace HitAnalyzer2.Views
 {

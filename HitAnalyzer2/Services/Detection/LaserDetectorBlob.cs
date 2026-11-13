@@ -16,7 +16,7 @@ namespace HitAnalyzer2.Services.Detection
                 return null;
 
             using var mask = new Mat();
-            LaserIntensity.CreateMask(frame, mask, intensityThreshold);
+            BrightPixelFilter.CreateMask(frame, mask, intensityThreshold);
             if (Cv2.CountNonZero(mask) < minimumHitAreaPixels)
                 return null;
 

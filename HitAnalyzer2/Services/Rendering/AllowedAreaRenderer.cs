@@ -1,7 +1,7 @@
 using OpenCvSharp;
 using System;
 
-namespace HitAnalyzer2.Services.Detection
+namespace HitAnalyzer2.Services.Rendering
 {
     internal static class AllowedAreaRenderer
     {

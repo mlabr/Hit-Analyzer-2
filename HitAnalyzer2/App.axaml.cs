@@ -29,7 +29,7 @@ namespace HitAnalyzer2
                 var detection = settings.Current.Detection;
                 ILaserDetector CreateDetector(DetectionMethod method, int sensitivity)
                 {
-                    int threshold = LaserIntensity.ThresholdFromSensitivity(sensitivity);
+                    int threshold = BrightPixelFilter.ThresholdFromSensitivity(sensitivity);
                     return method == DetectionMethod.Simple
                         ? new LaserDetectorSimple(threshold)
                         : new LaserDetectorBlob(threshold, detection.MinimumHitAreaPixels ?? 1);

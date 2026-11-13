@@ -1,5 +1,7 @@
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -8,13 +10,31 @@ using System.Threading;
 
 namespace HitAnalyzer2.Services.Video
 {
-    internal static class LinuxCameraModes
+    internal static class LinuxCameraDiscovery
     {
         private static readonly Regex FormatLine = new(@"^\s*\[\d+\]:\s*'(.{4})'");
         private static readonly Regex SizeLine = new(@"^\s*Size:\s*Discrete\s+(\d+)x(\d+)");
         private static readonly Regex IntervalLine = new(@"^\s*Interval:\s*Discrete\s+.*\(([0-9.]+) fps\)");
 
-        public static CameraMode[] Detect(int index, CancellationToken cancellationToken)
+        public static IReadOnlyList<CameraDevice> Detect(CancellationToken cancellationToken)
+        {
+            var cameras = new List<CameraDevice>();
+            foreach (var camera in IndexedCameraDiscovery.Detect(VideoCaptureAPIs.V4L2, cancellationToken))
+            {
+                try
+                {
+                    cameras.Add(camera with { Modes = DetectModes(camera.Index, cancellationToken) });
+                }
+                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or TimeoutException)
+                {
+                    cameras.Add(camera with { ModeDetectionError = ex.Message });
+                }
+            }
+
+            return cameras;
+        }
+
+        private static CameraMode[] DetectModes(int index, CancellationToken cancellationToken)
         {
             var startInfo = new ProcessStartInfo("v4l2-ctl")
             {
