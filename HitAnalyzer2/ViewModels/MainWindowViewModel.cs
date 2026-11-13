@@ -20,7 +20,8 @@ namespace HitAnalyzer2.ViewModels
         public WeaponSettingsViewModel WeaponSettings { get; }
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
-            WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession)
+            WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession,
+            CameraCalibrationService cameraCalibration)
         {
             DetectionSettings = detectionSettings;
             _detectionSettings = settings.Current.Detection;
@@ -36,7 +37,7 @@ namespace HitAnalyzer2.ViewModels
                 },
                 message => CameraPreview.StatusMessage = message);
 
-            CameraSettings = new CameraSettingsViewModel(settings, captureSession);
+            CameraSettings = new CameraSettingsViewModel(settings, captureSession, cameraCalibration);
         }
 
         internal Task RefreshCamerasAsync() => CameraSettings.RefreshCamerasAsync();
@@ -47,14 +48,16 @@ namespace HitAnalyzer2.ViewModels
             CancellationToken cancellationToken)
         {
             using var output = new Mat();
-            var pixels = PreviewFrameProcessor.Process(frame, output, CameraSettings.CameraBrightnessPercent,
-                CameraSettings.CameraContrastPercent, CameraSettings.CameraSaturationPercent);
-            var (lastHit, aimPath, followPath) =
+            var pixels = PreviewFrameProcessor.Process(frame, output, DetectionSettings.BrightnessPercent,
+                DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
+            var (lastHit, currentAim, aimPath, followPath) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
             bool showAllowedArea = DetectionSettings.ShowAllowedArea;
+            bool showAimPoint = DetectionSettings.ShowAimPointPreview && currentAim.HasValue;
 
-            if (ReferenceEquals(pixels, frame) && (lastHit.HasValue || flareSensitivity.HasValue || showAllowedArea))
+            if (ReferenceEquals(pixels, frame) &&
+                (lastHit.HasValue || flareSensitivity.HasValue || showAllowedArea || showAimPoint))
             {
                 frame.CopyTo(output);
                 pixels = output;
@@ -68,6 +71,13 @@ namespace HitAnalyzer2.ViewModels
 
             if (lastHit is { } hit)
                 AimRenderer.Draw(pixels, hit, aimPath, followPath);
+
+            if (showAimPoint && currentAim is { } aim)
+            {
+                var cameraPoint = new CalibrationPoint(aim.X / pixels.Width, aim.Y / pixels.Height);
+                var targetPoint = CameraSettings.Calibration.MapHit(cameraPoint.X, cameraPoint.Y);
+                AimRenderer.DrawAimPointPreview(pixels, targetPoint ?? cameraPoint);
+            }
 
             await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
         }

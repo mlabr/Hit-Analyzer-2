@@ -12,7 +12,7 @@ namespace HitAnalyzer2.ViewModels
 
         internal ShootingSettingsViewModel(ShootingSessionService shootingSession)
         {
-            shootingSession.LaserPositionEvaluated += (position, _) =>
+            shootingSession.LaserPositionEvaluated += (position, _, _) =>
             {
                 if (position.HasValue)
                     Dispatcher.UIThread.Post(() => HitCount++);

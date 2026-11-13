@@ -29,6 +29,7 @@
                 <TextBlock Text="{Binding CameraPreview.FpsText}" Foreground="LightGreen" Background="#80000000"
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
             </Grid>
             <StackPanel x:Name="HitCounter" Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
                 <TextBlock Text="Hits:" FontSize="32" />

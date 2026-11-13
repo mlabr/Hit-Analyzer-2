@@ -18,6 +18,7 @@ namespace HitAnalyzer2
             {
                 new JsonStringEnumConverter<FlipMode>(),
                 new JsonStringEnumConverter<DetectionMethod>(),
+                new JsonStringEnumConverter<CameraCalibrationMode>(),
                 new JsonStringEnumConverter<TriggerTypeEnum>()
             }
         };
@@ -44,6 +45,7 @@ namespace HitAnalyzer2
                     config[nameof(AppSettings.Detection)] = legacyDetection;
                 }
 
+                MigrateImageAdjustments(json as JsonObject);
                 var settings = json.Deserialize<AppSettings>(JsonOptions);
                 Validate(settings);
                 _current = settings!.SelectedWeapon is null ? settings : settings with { LegacyWeapon = null };
@@ -83,7 +85,7 @@ namespace HitAnalyzer2
         }
 
         public void SaveCamera(CameraDevice device, CameraMode? mode, FlipMode? flip,
-            int brightnessPercent, int contrastPercent, int saturationPercent)
+            CameraCalibrationSettings calibration)
         {
             lock (_saveGate)
             {
@@ -95,9 +97,7 @@ namespace HitAnalyzer2
                         DeviceIndex = device.DeviceId is null ? device.Index : null,
                         Mode = mode,
                         Flip = flip,
-                        BrightnessPercent = brightnessPercent,
-                        ContrastPercent = contrastPercent,
-                        SaturationPercent = saturationPercent
+                        Calibration = calibration
                     }
                 };
                 Write(settings, overwrite: true);
@@ -105,7 +105,8 @@ namespace HitAnalyzer2
             }
         }
 
-        public void SaveDetection(DetectionMethod method, int sensitivity, bool showFlares, bool showAllowedArea)
+        public void SaveDetection(DetectionMethod method, int sensitivity, bool showFlares, bool showAllowedArea,
+            bool showAimPointPreview, int brightnessPercent, int contrastPercent, int saturationPercent)
         {
             lock (_saveGate)
             {
@@ -116,7 +117,11 @@ namespace HitAnalyzer2
                         Method = method,
                         DetectionSensitivity = sensitivity,
                         ShowFlares = showFlares,
-                        ShowAllowedArea = showAllowedArea
+                        ShowAllowedArea = showAllowedArea,
+                        ShowAimPointPreview = showAimPointPreview,
+                        BrightnessPercent = brightnessPercent,
+                        ContrastPercent = contrastPercent,
+                        SaturationPercent = saturationPercent
                     }
                 };
                 Write(settings, overwrite: true);
@@ -257,20 +262,44 @@ namespace HitAnalyzer2
             }
         }
 
+        private static void MigrateImageAdjustments(JsonObject? settings)
+        {
+            if (settings?[nameof(AppSettings.Camera)] is not JsonObject camera)
+                return;
+
+            if (!settings.ContainsKey(nameof(AppSettings.Detection)))
+                settings[nameof(AppSettings.Detection)] = new JsonObject();
+
+            if (settings[nameof(AppSettings.Detection)] is not JsonObject detection)
+                return;
+
+            foreach (string name in new[]
+            {
+                nameof(DetectionSettings.BrightnessPercent),
+                nameof(DetectionSettings.ContrastPercent),
+                nameof(DetectionSettings.SaturationPercent)
+            })
+            {
+                if (!detection.ContainsKey(name) && camera[name] is { } value)
+                    detection[name] = value.DeepClone();
+            }
+        }
+
         private static void Validate(AppSettings? settings)
         {
             if (settings is not { Camera: { } camera, Detection: { } detection })
                 throw new JsonException("Chybí nastavení kamery nebo detekce.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
-                || camera.BrightnessPercent is < 0 or > 100
-                || camera.ContrastPercent is < 0 or > 100
-                || camera.SaturationPercent is < 0 or > 100
+                || camera.Calibration is null || !Enum.IsDefined(camera.Calibration.Mode)
                 || camera.Mode is { } mode && (mode.Width <= 0 || mode.Height <= 0
                     || mode.FpsNumerator == 0 || mode.FpsDenominator == 0))
                 throw new JsonException("Neplatné nastavení kamery.");
 
             if (!Enum.IsDefined(detection.Method)
+                || detection.BrightnessPercent is < 0 or > 100
+                || detection.ContrastPercent is < 0 or > 100
+                || detection.SaturationPercent is < 0 or > 100
                 || detection.DetectionSensitivity is < 1 or > 99
                 || detection.MinimumHitAreaPixels is <= 0)
                 throw new JsonException("Neplatné parametry detekce.");

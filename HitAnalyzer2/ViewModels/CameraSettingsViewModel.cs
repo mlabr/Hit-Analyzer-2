@@ -16,14 +16,17 @@ namespace HitAnalyzer2.ViewModels
         public override string ToString() => Label;
     }
 
+    public sealed record CameraCalibrationOption(string Label, CameraCalibrationMode Mode)
+    {
+        public override string ToString() => Label;
+    }
+
     public partial class CameraSettingsViewModel : ViewModelBase
     {
         private readonly SettingsService _settings;
         private readonly CameraCaptureSession _captureSession;
+        internal CameraCalibrationService Calibration { get; }
         private bool _updatingModes;
-        private volatile int _cameraBrightnessPercent;
-        private volatile int _cameraContrastPercent;
-        private volatile int _cameraSaturationPercent;
 
         public IReadOnlyList<CameraFlipOption> CameraFlipOptions { get; } = Array.AsReadOnly(new CameraFlipOption[]
         {
@@ -33,14 +36,17 @@ namespace HitAnalyzer2.ViewModels
             new("Flip Vertical & Horizontal", FlipMode.XY)
         });
 
-        internal CameraSettingsViewModel(SettingsService settings, CameraCaptureSession captureSession)
+        public IReadOnlyList<CameraCalibrationOption> CalibrationModes { get; } = Array.AsReadOnly(
+            new CameraCalibrationOption[] { new("None", CameraCalibrationMode.None), new("Hit only", CameraCalibrationMode.HitOnly) });
+
+        internal CameraSettingsViewModel(SettingsService settings, CameraCaptureSession captureSession,
+            CameraCalibrationService calibration)
         {
             _settings = settings;
             _captureSession = captureSession;
+            Calibration = calibration;
+            selectedCalibrationMode = CalibrationModes.First(option => option.Mode == calibration.Settings.Mode);
             selectedCameraFlip = CameraFlipOptions.First(option => option.Mode == settings.Current.Camera.Flip);
-            _cameraBrightnessPercent = settings.Current.Camera.BrightnessPercent;
-            _cameraContrastPercent = settings.Current.Camera.ContrastPercent;
-            _cameraSaturationPercent = settings.Current.Camera.SaturationPercent;
             SettingsMessage = settings.LoadError;
         }
 
@@ -61,46 +67,35 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private CameraFlipOption selectedCameraFlip;
 
-        public int CameraBrightnessPercent
-        {
-            get => _cameraBrightnessPercent;
-            set
-            {
-                int percent = Math.Clamp(value, 0, 100);
-                if (percent == _cameraBrightnessPercent)
-                    return;
+        [ObservableProperty]
+        private CameraCalibrationOption selectedCalibrationMode;
 
-                _cameraBrightnessPercent = percent;
-                OnPropertyChanged(nameof(CameraBrightnessPercent));
-            }
+        partial void OnSelectedCalibrationModeChanged(CameraCalibrationOption value)
+        {
+            Calibration.Update(Calibration.Settings with
+            {
+                Mode = value.Mode,
+                Corners = Calibration.Settings.Corners ?? CalibrationCorners.Default
+            });
+            SettingsMessage = null;
         }
 
-        public int CameraContrastPercent
+        internal void MoveCalibrationCorner(int index, CalibrationPoint point)
         {
-            get => _cameraContrastPercent;
-            set
+            var settings = Calibration.Settings;
+            var corners = settings.Corners ?? CalibrationCorners.Default;
+            Calibration.Update(settings with
             {
-                int percent = Math.Clamp(value, 0, 100);
-                if (percent == _cameraContrastPercent)
-                    return;
-
-                _cameraContrastPercent = percent;
-                OnPropertyChanged(nameof(CameraContrastPercent));
-            }
-        }
-
-        public int CameraSaturationPercent
-        {
-            get => _cameraSaturationPercent;
-            set
-            {
-                int percent = Math.Clamp(value, 0, 100);
-                if (percent == _cameraSaturationPercent)
-                    return;
-
-                _cameraSaturationPercent = percent;
-                OnPropertyChanged(nameof(CameraSaturationPercent));
-            }
+                Corners = index switch
+                {
+                    0 => corners with { TopLeft = point },
+                    1 => corners with { TopRight = point },
+                    2 => corners with { BottomRight = point },
+                    3 => corners with { BottomLeft = point },
+                    _ => throw new ArgumentOutOfRangeException(nameof(index))
+                }
+            });
+            SettingsMessage = null;
         }
 
         [ObservableProperty]
@@ -149,6 +144,8 @@ namespace HitAnalyzer2.ViewModels
 
             SelectedCamera = sameCamera ?? savedCamera ?? detected.FirstOrDefault();
             UpdateCameraModes(sameCamera is not null ? previousMode : savedCamera is not null ? saved.Mode : null);
+            if (sameCamera is null && (savedCamera is null || SelectedCameraMode != saved.Mode))
+                ResetCalibration();
             return (SelectedCamera, SelectedCameraMode, SelectedCameraFlip.Mode);
         }
 
@@ -170,7 +167,7 @@ namespace HitAnalyzer2.ViewModels
             try
             {
                 _settings.SaveCamera(camera, SelectedCameraMode, SelectedCameraFlip.Mode,
-                    CameraBrightnessPercent, CameraContrastPercent, CameraSaturationPercent);
+                    Calibration.Settings);
                 SettingsMessage = "Nastavení kamery uloženo.";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
@@ -200,8 +197,17 @@ namespace HitAnalyzer2.ViewModels
                 SwitchToSelectedCamera();
         }
 
-        private void SwitchToSelectedCamera() =>
+        private void SwitchToSelectedCamera()
+        {
+            ResetCalibration();
             _ = _captureSession.SwitchAsync(SelectedCamera, SelectedCameraMode, SelectedCameraFlip.Mode);
+        }
+
+        private void ResetCalibration()
+        {
+            SelectedCalibrationMode = CalibrationModes[0];
+            Calibration.Update(new CameraCalibrationSettings());
+        }
 
         private void UpdateCameraModes(CameraMode? preferredMode)
         {

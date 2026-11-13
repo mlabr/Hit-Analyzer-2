@@ -7,7 +7,7 @@ namespace HitAnalyzer2.Services.Detection
     {
         private const int DashLength = 8;
         private const int GapLength = 5;
-        private static readonly Scalar BoundaryColor = new(0, 255, 255, 255);  //new (0, 165, 255, 255);
+        private static readonly Scalar BoundaryColor = new(255, 255, 0, 255);
 
 
         internal static void Draw(Mat preview, DetectionSettings settings,

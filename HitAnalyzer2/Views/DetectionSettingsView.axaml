@@ -3,6 +3,21 @@
              xmlns:vm="using:HitAnalyzer2.ViewModels"
              x:Class="HitAnalyzer2.Views.DetectionSettingsView"
              x:DataType="vm:DetectionSettingsViewModel">
+    <UserControl.Styles>
+        <Style Selector="Slider.compact">
+            <Setter Property="Height" Value="24" />
+        </Style>
+        <Style Selector="NumericUpDown.compact">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="24" />
+            <Setter Property="Padding" Value="5,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
     <StackPanel Spacing="8">
         <ComboBox HorizontalAlignment="Stretch"
                   AutomationProperties.Name="Detection method"
@@ -21,8 +36,45 @@
                            Value="{Binding DetectionSensitivity, Mode=TwoWay}"
                            AutomationProperties.Name="Manual sensitivity input" />
         </Grid>
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Text="Brightness (%)" />
+            <Slider Grid.Row="1" Classes="compact"
+                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
+                    Value="{Binding BrightnessPercent, Mode=TwoWay}"
+                    VerticalAlignment="Center" AutomationProperties.Name="Brightness (percent)" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+                           ShowButtonSpinner="False"
+                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
+                           Value="{Binding BrightnessPercent, Mode=TwoWay}"
+                           AutomationProperties.Name="Manual brightness input" />
+        </Grid>
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Text="Contrast (%)" />
+            <Slider Grid.Row="1" Classes="compact"
+                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
+                    Value="{Binding ContrastPercent, Mode=TwoWay}"
+                    VerticalAlignment="Center" AutomationProperties.Name="Contrast (percent)" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+                           ShowButtonSpinner="False"
+                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
+                           Value="{Binding ContrastPercent, Mode=TwoWay}"
+                           AutomationProperties.Name="Manual contrast input" />
+        </Grid>
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+            <TextBlock Grid.ColumnSpan="2" Text="Saturation (%)" />
+            <Slider Grid.Row="1" Classes="compact"
+                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
+                    Value="{Binding SaturationPercent, Mode=TwoWay}"
+                    VerticalAlignment="Center" AutomationProperties.Name="Saturation (percent)" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+                           ShowButtonSpinner="False"
+                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
+                           Value="{Binding SaturationPercent, Mode=TwoWay}"
+                           AutomationProperties.Name="Manual saturation input" />
+        </Grid>
         <CheckBox Content="Show flares" IsChecked="{Binding ShowFlares, Mode=TwoWay}" />
         <CheckBox Content="Show Allowed Area" IsChecked="{Binding ShowAllowedArea, Mode=TwoWay}" />
+        <CheckBox Content="Show AimPoint Preview" IsChecked="{Binding ShowAimPointPreview, Mode=TwoWay}" />
         <Button Content="Save detection  settings" Command="{Binding SaveDetectionSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

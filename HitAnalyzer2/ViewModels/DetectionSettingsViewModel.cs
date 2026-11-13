@@ -12,6 +12,9 @@ namespace HitAnalyzer2.ViewModels
         private readonly SettingsService _settings;
         private readonly Action<DetectionMethod, int> _applyDetection;
         private int _detectionSensitivity;
+        private volatile int _saturationPercent;
+        private volatile int _contrastPercent;
+        private volatile int _brightnessPercent;
 
         internal DetectionSettingsViewModel(SettingsService settings, Action<DetectionMethod, int> applyDetection)
         {
@@ -19,8 +22,12 @@ namespace HitAnalyzer2.ViewModels
             _applyDetection = applyDetection;
             selectedMethod = settings.Current.Detection.Method;
             _detectionSensitivity = settings.Current.Detection.DetectionSensitivity;
+            _brightnessPercent = settings.Current.Detection.BrightnessPercent;
+            _contrastPercent = settings.Current.Detection.ContrastPercent;
+            _saturationPercent = settings.Current.Detection.SaturationPercent;
             showFlares = settings.Current.Detection.ShowFlares;
             showAllowedArea = settings.Current.Detection.ShowAllowedArea;
+            showAimPointPreview = settings.Current.Detection.ShowAimPointPreview;
             settingsMessage = settings.LoadError;
         }
 
@@ -38,6 +45,9 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private bool showAllowedArea;
 
+        [ObservableProperty]
+        private bool showAimPointPreview;
+
         public int DetectionSensitivity
         {
             get => _detectionSensitivity;
@@ -48,9 +58,55 @@ namespace HitAnalyzer2.ViewModels
             }
         }
 
+        public int BrightnessPercent
+        {
+            get => _brightnessPercent;
+            set
+            {
+                int percent = Math.Clamp(value, 0, 100);
+                if (percent == _brightnessPercent)
+                    return;
+
+                _brightnessPercent = percent;
+                OnPropertyChanged(nameof(BrightnessPercent));
+                SettingsMessage = null;
+            }
+        }
+
+        public int ContrastPercent
+        {
+            get => _contrastPercent;
+            set
+            {
+                int percent = Math.Clamp(value, 0, 100);
+                if (percent == _contrastPercent)
+                    return;
+
+                _contrastPercent = percent;
+                OnPropertyChanged(nameof(ContrastPercent));
+                SettingsMessage = null;
+            }
+        }
+
+        public int SaturationPercent
+        {
+            get => _saturationPercent;
+            set
+            {
+                int percent = Math.Clamp(value, 0, 100);
+                if (percent == _saturationPercent)
+                    return;
+
+                _saturationPercent = percent;
+                OnPropertyChanged(nameof(SaturationPercent));
+                SettingsMessage = null;
+            }
+        }
+
         partial void OnSelectedMethodChanged(DetectionMethod value) => ApplyDetection();
         partial void OnShowFlaresChanged(bool value) => SettingsMessage = null;
         partial void OnShowAllowedAreaChanged(bool value) => SettingsMessage = null;
+        partial void OnShowAimPointPreviewChanged(bool value) => SettingsMessage = null;
 
         private void ApplyDetection()
         {
@@ -63,7 +119,8 @@ namespace HitAnalyzer2.ViewModels
         {
             try
             {
-                _settings.SaveDetection(SelectedMethod, DetectionSensitivity, ShowFlares, ShowAllowedArea);
+                _settings.SaveDetection(SelectedMethod, DetectionSensitivity, ShowFlares, ShowAllowedArea,
+                    ShowAimPointPreview, BrightnessPercent, ContrastPercent, SaturationPercent);
                 SettingsMessage = "Nastavení detekce uloženo.";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)

@@ -53,9 +53,7 @@ namespace HitAnalyzer2
         public int? DeviceIndex { get; init; }
         public CameraMode? Mode { get; init; }
         public FlipMode? Flip { get; init; } = FlipMode.XY;
-        public int BrightnessPercent { get; init; } = 50;
-        public int ContrastPercent { get; init; } = 50;
-        public int SaturationPercent { get; init; } = 50;
+        public CameraCalibrationSettings Calibration { get; init; } = new();
     }
 
     public enum DetectionMethod
@@ -96,9 +94,13 @@ namespace HitAnalyzer2
             }
         }
 
+        public int BrightnessPercent { get; init; } = 50;
+        public int ContrastPercent { get; init; } = 50;
+        public int SaturationPercent { get; init; } = 50;
         public int? MinimumHitAreaPixels { get; init; }
         public bool ShowFlares { get; init; }
         public bool ShowAllowedArea { get; init; }
+        public bool ShowAimPointPreview { get; init; }
         public int VerticalForbiddenZoneSize { get; init; } = 50;
         public int HorizontalForbiddenZoneSize { get; init; } = 50;
     }

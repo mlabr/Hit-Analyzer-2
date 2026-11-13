@@ -1,4 +1,5 @@
 using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,15 @@ namespace HitAnalyzer2.Services.Shooting
 				DrawLaserPosition(preview, laser.X, laser.Y, size, LaserPositionMarkerColor);
 
 			DrawAimPosition(preview, position.X, position.Y, size, AimPositionMarkerColor);
+        }
+
+        internal static void DrawAimPointPreview(Mat preview, CalibrationPoint point)
+        {
+            int radius = Math.Max(4, (int)Math.Round(preview.Height * MarkerSizeRatio) / 2);
+            var center = new Point(
+                Math.Round(Math.Clamp(point.X, 0, 1) * (preview.Width - 1)),
+                Math.Round(Math.Clamp(point.Y, 0, 1) * (preview.Height - 1)));
+            Cv2.Circle(preview, center, radius, AimPositionMarkerColor, 2);
         }
 
         private static void DrawAimPath(Mat preview, IReadOnlyList<LaserPosition> aimPath, Scalar baseColor,

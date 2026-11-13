@@ -19,12 +19,22 @@ namespace HitAnalyzer2.Views
         private PixelSize? _previewPixelSize;
         private bool _stoppingCamera;
         private bool _cameraStopped;
+        private CameraSettingsViewModel? _cameraSettingsViewModel;
 
         public MainWindow()
         {
             InitializeComponent();
             CameraPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
+            DataContextChanged += (_, _) =>
+            {
+                if (_cameraSettingsViewModel is { } previous)
+                    previous.PropertyChanged -= OnCameraSettingsChanged;
+                _cameraSettingsViewModel = (DataContext as MainWindowViewModel)?.CameraSettings;
+                if (_cameraSettingsViewModel is { } current)
+                    current.PropertyChanged += OnCameraSettingsChanged;
+                UpdateCalibrationOverlay();
+            };
             ScalingChanged += (_, _) => FitWindowToPreview();
             PropertyChanged += (_, e) =>
             {
@@ -106,15 +116,47 @@ namespace HitAnalyzer2.Views
             
             SettingsPlaceholder.Text = placeholder;
             SettingsPlaceholder.IsVisible = view == SettingsPlaceholder;
+            UpdateCalibrationOverlay();
+        }
+
+        private void OnCameraSettingsChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(CameraSettingsViewModel.SelectedCalibrationMode))
+                UpdateCalibrationOverlay();
+        }
+
+        private void UpdateCalibrationOverlay()
+        {
+            if (!CameraSettings.IsVisible || PreviewImage.Source is not Bitmap bitmap)
+            {
+                CalibrationOverlay.Update(null, default);
+                return;
+            }
+
+            var bounds = PreviewImage.Bounds;
+            var size = Stretch.Uniform.CalculateSize(bounds.Size, bitmap.Size, StretchDirection.DownOnly);
+            var imageBounds = new Rect(bounds.X + (bounds.Width - size.Width) / 2,
+                bounds.Y + (bounds.Height - size.Height) / 2, size.Width, size.Height);
+            CalibrationOverlay.Update(_cameraSettingsViewModel, imageBounds);
         }
 
         private void OnPreviewImageChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
-            if (e.Property != Image.SourceProperty || PreviewImage.Source is not Bitmap bitmap ||
-                bitmap.PixelSize == _previewPixelSize)
+            if (e.Property == BoundsProperty)
+            {
+                UpdateCalibrationOverlay();
+                return;
+            }
+
+            if (e.Property != Image.SourceProperty)
                 return;
 
-            _previewPixelSize = bitmap.PixelSize;
+            var pixelSize = (PreviewImage.Source as Bitmap)?.PixelSize;
+            if (pixelSize == _previewPixelSize)
+                return;
+
+            _previewPixelSize = pixelSize;
+            UpdateCalibrationOverlay();
             FitWindowToPreview();
         }
 

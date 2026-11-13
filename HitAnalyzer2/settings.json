@@ -14,17 +14,18 @@
       "FpsDenominator": 1,
       "Format": "3231564e-0000-0010-8000-00aa00389b71"
     },
-    "Flip": "X",
-    "BrightnessPercent": 50,
-    "ContrastPercent": 50,
-    "SaturationPercent": 50
+    "Flip": "X"
   },
   "Detection": {
     "Method": "Simple",
     "DetectionSensitivity": 1,
+    "BrightnessPercent": 50,
+    "ContrastPercent": 50,
+    "SaturationPercent": 50,
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
     "ShowAllowedArea": false,
+    "ShowAimPointPreview": false,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },

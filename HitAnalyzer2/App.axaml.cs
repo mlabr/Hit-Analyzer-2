@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Shooting;
+using HitAnalyzer2.Services.Video;
 using HitAnalyzer2.ViewModels;
 using HitAnalyzer2.Views;
 using System;
@@ -34,16 +35,17 @@ namespace HitAnalyzer2
 
                 var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
                 var weaponHandler = new WeaponHandler(settings, aimPositionHandler);
+                var cameraCalibration = new CameraCalibrationService(settings.Current.Camera.Calibration);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
-                    detection, Program.StartedAt);
+                    detection, cameraCalibration, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler);
                 var mainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
-                        shootingSession),
+                        shootingSession, cameraCalibration),
                 };
                 var externalTriggerHandler = new ExternalTriggerHandler(mainWindow);
                 externalTriggerHandler.PressChanged += shootingSession.OnExternalTriggerChanged;

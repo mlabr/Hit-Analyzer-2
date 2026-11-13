@@ -3,28 +3,6 @@
              xmlns:vm="using:HitAnalyzer2.ViewModels"
              x:Class="HitAnalyzer2.Views.CameraSettingsView"
              x:DataType="vm:CameraSettingsViewModel">
-
-    <UserControl.Resources>
-        <GridLength x:Key="SliderPreContentMargin">2</GridLength>
-        <GridLength x:Key="SliderPostContentMargin">2</GridLength>
-        <x:Double x:Key="SliderHorizontalHeight">24</x:Double>
-    </UserControl.Resources>
-
-    <UserControl.Styles>
-        <Style Selector="Slider.compact">
-            <Setter Property="Height" Value="24" />
-        </Style>
-        <Style Selector="NumericUpDown.compact">
-            <Setter Property="Width" Value="44" />
-            <Setter Property="MinWidth" Value="0" />
-            <Setter Property="MinHeight" Value="24" />
-            <Setter Property="Padding" Value="5,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="TextAlignment" Value="Center" />
-        </Style>
-    </UserControl.Styles>
-
     <StackPanel Spacing="8">
         <TextBlock Text="Webcam settings" FontWeight="SemiBold" />
         <ComboBox PlaceholderText="Select camera" HorizontalAlignment="Stretch"
@@ -40,44 +18,12 @@
                   AutomationProperties.Name="Camera View Flip" />
         <Button Content="Refresh webcams" Command="{Binding RefreshCamerasCommand}"
                  IsEnabled="{Binding !IsDiscoveringCameras}" />
-      
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.ColumnSpan="2" Text="Brightness (%)" />
-            <Slider Grid.Row="1" Classes="compact"
-                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
-                    Value="{Binding CameraBrightnessPercent, Mode=TwoWay}"
-                    VerticalAlignment="Center" AutomationProperties.Name="Brightness (percent)" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
-                           ShowButtonSpinner="False"
-                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
-                           Value="{Binding CameraBrightnessPercent, Mode=TwoWay}"
-                           AutomationProperties.Name="Manual brightnes input" />
-        </Grid>
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.ColumnSpan="2" Text="Contrast (%)" />
-            <Slider Grid.Row="1" Classes="compact"
-                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
-                    Value="{Binding CameraContrastPercent, Mode=TwoWay}"
-                    VerticalAlignment="Center" AutomationProperties.Name="Contrast (percent)" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
-                           ShowButtonSpinner="False"
-                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
-                           Value="{Binding CameraContrastPercent, Mode=TwoWay}"
-                           AutomationProperties.Name="Manual contrast input" />
-        </Grid>
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-            <TextBlock Grid.ColumnSpan="2" Text="Saturation (%)" />
-            <Slider Grid.Row="1" Classes="compact"
-                    Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
-                    Value="{Binding CameraSaturationPercent, Mode=TwoWay}"
-                    VerticalAlignment="Center" AutomationProperties.Name="Saturation (percent)" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
-                           ShowButtonSpinner="False"
-                           ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
-                           Value="{Binding CameraSaturationPercent, Mode=TwoWay}"
-                           AutomationProperties.Name="Manual Saturation input" />
-        </Grid>
-        
+
+        <TextBlock Text="Calibration" />
+        <ComboBox HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding CalibrationModes}" SelectedItem="{Binding SelectedCalibrationMode, Mode=TwoWay}"
+                  AutomationProperties.Name="Camera calibration" />
+
         <Button Content="Save webcam settings" Command="{Binding SaveCameraSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
