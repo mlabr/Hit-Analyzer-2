@@ -1,4 +1,4 @@
-using HitAnalyzer2.Services.Repository;
+using HitAnalyzer2.Repository;
 using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;

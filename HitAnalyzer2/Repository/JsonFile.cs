@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace HitAnalyzer2.Services.Repository
+namespace HitAnalyzer2.Repository
 {
     internal static class JsonFile
     {

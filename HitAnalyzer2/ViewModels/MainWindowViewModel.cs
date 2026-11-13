@@ -77,7 +77,7 @@ namespace HitAnalyzer2.ViewModels
             }
 
             if (flareSensitivity is { } sensitivity)
-                FlareDetectionOverlay.Draw(pixels, sensitivity);
+                FlareDetectionRenderer.Draw(pixels, sensitivity);
 
             if (showAllowedArea)
                 AllowedAreaRenderer.Draw(pixels, _detectionSettings);

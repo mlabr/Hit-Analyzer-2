@@ -2,7 +2,7 @@ using OpenCvSharp;
 
 namespace HitAnalyzer2.Services.Detection
 {
-    internal static class FlareDetectionOverlay
+    internal static class FlareDetectionRenderer
     {
         private const int DotRadius = 4;
         //private static readonly Scalar Pink = new(203, 192, 255, 255);

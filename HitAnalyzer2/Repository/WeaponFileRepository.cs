@@ -6,7 +6,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace HitAnalyzer2.Services.Repository
+namespace HitAnalyzer2.Repository
 {
     internal sealed class WeaponFileRepository(string directory)
     {

@@ -119,7 +119,7 @@ namespace HitAnalyzer2.Services.Shooting
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var detectedPosition = _laserDetector.Detect(frame);
+                var detectedPosition = _laserDetector.GetLaserPosition(frame);
                 position = detectedPosition is { } point ? point with { Time = elapsed } : null;
                 bool startFollowPath = false;
                 if (_trigger == TriggerTypeEnum.TimeOut && position is null &&
@@ -185,7 +185,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         private bool IsAimPositionInsideAllowedZone(AimPosition position, Mat frame)
         {
-            var allowedArea = AllowedArea.GetBounds(frame, detectionSettings);
+            var allowedArea = AllowedAreaModel.GetBorders(frame, detectionSettings);
             return position.X >= allowedArea.Left && position.X < allowedArea.Right &&
                 position.Y >= allowedArea.Top && position.Y < allowedArea.Bottom;
         }

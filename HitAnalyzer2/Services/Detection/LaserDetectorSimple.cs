@@ -5,7 +5,7 @@ namespace HitAnalyzer2.Services.Detection
 {
     internal sealed class LaserDetectorSimple(int intensityThreshold) : ILaserDetector
     {
-        public unsafe LaserPosition? Detect(Mat frame)
+        public unsafe LaserPosition? GetLaserPosition(Mat frame)
         {
             if (frame.Empty())
                 return null;

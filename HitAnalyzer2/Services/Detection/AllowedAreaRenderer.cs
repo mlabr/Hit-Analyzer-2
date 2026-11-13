@@ -13,7 +13,7 @@ namespace HitAnalyzer2.Services.Detection
         internal static void Draw(Mat preview, DetectionSettings settings,
             bool showForbiddenHatching = true, int hatchSpacing = 16)
         {
-            var bounds = AllowedArea.GetBounds(preview, settings);
+            var bounds = AllowedAreaModel.GetBorders(preview, settings);
             if (showForbiddenHatching)
                 DrawForbiddenHatching(preview, bounds, hatchSpacing);
 

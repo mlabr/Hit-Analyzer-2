@@ -1,8 +1,8 @@
-namespace HitAnalyzer2.Services.Shooting
+namespace HitAnalyzer2.ViewModels
 {
-    public sealed class WeaponOption
+    public sealed class WeaponProfileItem
     {
-        internal WeaponOption(string fileName, WeaponProfile profile)
+        internal WeaponProfileItem(string fileName, WeaponProfile profile)
         {
             FileName = fileName;
             Profile = profile;

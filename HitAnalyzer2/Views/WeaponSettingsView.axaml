@@ -11,7 +11,7 @@
                   PlaceholderText="Select a weapon" ItemsSource="{Binding Weapons}"
                   SelectedItem="{Binding SelectedWeapon, Mode=TwoWay}">
             <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="shooting:WeaponOption">
+                <DataTemplate x:DataType="vm:WeaponProfileItem">
                     <TextBlock Text="{Binding Label}" />
                 </DataTemplate>
             </ComboBox.ItemTemplate>

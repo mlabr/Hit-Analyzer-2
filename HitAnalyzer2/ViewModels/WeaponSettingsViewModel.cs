@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HitAnalyzer2.Services.Repository;
+using HitAnalyzer2.Repository;
 using HitAnalyzer2.Services.Shooting;
 using System;
 using System.Collections.Generic;
@@ -50,7 +50,7 @@ namespace HitAnalyzer2.ViewModels
             settingsMessage = settings.LoadError;
             var profiles = weaponProfiles.LoadProfileList(out var loadError);
             Weapons = Array.AsReadOnly(profiles
-                .Select(profile => new WeaponOption(profile.FileName, profile.Profile))
+                .Select(profile => new WeaponProfileItem(profile.FileName, profile.Profile))
                 .ToArray());
             if (loadError is not null)
                 SettingsMessage ??= $"Profily zbraní se nepodařilo načíst. {loadError}";
@@ -71,12 +71,12 @@ namespace HitAnalyzer2.ViewModels
             }
         }
 
-        public IReadOnlyList<WeaponOption> Weapons { get; }
+        public IReadOnlyList<WeaponProfileItem> Weapons { get; }
         public IReadOnlyList<TriggerTypeEnum> Triggers { get; } = Array.AsReadOnly(Enum.GetValues<TriggerTypeEnum>());
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(SaveWeaponCommand))]
-        private WeaponOption? selectedWeapon;
+        private WeaponProfileItem? selectedWeapon;
 
         [ObservableProperty]
         private TriggerTypeEnum selectedTrigger;
@@ -84,7 +84,7 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private string? settingsMessage;
 
-        partial void OnSelectedWeaponChanged(WeaponOption? value)
+        partial void OnSelectedWeaponChanged(WeaponProfileItem? value)
         {
             if (value is null)
                 return;

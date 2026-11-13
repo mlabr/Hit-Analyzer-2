@@ -9,6 +9,6 @@ namespace HitAnalyzer2.Services.Detection
 
     internal interface ILaserDetector
     {
-        LaserPosition? Detect(Mat frame);
+        LaserPosition? GetLaserPosition(Mat frame);
     }
 }

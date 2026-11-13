@@ -1,11 +1,11 @@
 using OpenCvSharp;
 using System;
 
-namespace HitAnalyzer2.Services.Detection
+namespace HitAnalyzer2
 {
-    internal static class AllowedArea
+    internal static class AllowedAreaModel
     {
-        internal static Rect GetBounds(Mat frame, DetectionSettings settings)
+        internal static Rect GetBorders(Mat frame, DetectionSettings settings)
         {
             int horizontalMargin = Math.Clamp(settings.HorizontalForbiddenZoneSize, 0, frame.Width);
             int verticalMargin = Math.Clamp(settings.VerticalForbiddenZoneSize, 0, frame.Height);
