@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Repository;
 using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.ViewModels;
@@ -22,8 +23,9 @@ namespace HitAnalyzer2
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var settings = new SettingsService(GetSettingsPath(AppContext.BaseDirectory),
-                    Path.Combine(AppContext.BaseDirectory, "Data", "Weapons"));
+                var weaponsDirectory = Path.Combine(AppContext.BaseDirectory, "Data", "Weapons");
+                var weaponProfiles = new WeaponFileRepository(weaponsDirectory);
+                var settings = new SettingsService(GetSettingsPath(AppContext.BaseDirectory), weaponProfiles);
                 var detection = settings.Current.Detection;
                 ILaserDetector CreateDetector(DetectionMethod method, int sensitivity)
                 {
@@ -34,14 +36,15 @@ namespace HitAnalyzer2
                 }
 
                 var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
-                var weaponHandler = new WeaponHandler(settings, aimPositionHandler);
+                var initialWeapon = settings.InitialWeapon;
+                var weaponHandler = new WeaponHandler(initialWeapon.OffsetX, initialWeapon.OffsetY, aimPositionHandler);
                 var cameraCalibration = new TargetCalibrationService(settings.Current.Camera.Calibration);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
                     detection, cameraCalibration, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
-                var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler);
+                var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler, weaponProfiles);
                 var mainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,

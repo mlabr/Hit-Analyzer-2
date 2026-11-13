@@ -1,9 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HitAnalyzer2.Services.Repository;
 using HitAnalyzer2.Services.Shooting;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace HitAnalyzer2.ViewModels
@@ -34,7 +36,8 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private string? offsetSettingsMessage;
 
-        internal WeaponSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession, WeaponHandler weaponHandler)
+        internal WeaponSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
+            WeaponHandler weaponHandler, WeaponFileRepository weaponProfiles)
         {
             _settings = settings;
             _shootingSession = shootingSession;
@@ -45,7 +48,10 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession.SetTrigger(weapon.Trigger);
             _shootingSession.NexDetectionInterval = weapon.NexDetectionInterval;
             settingsMessage = settings.LoadError;
-            Weapons = _weaponHandler.LoadWeapons(out var loadError);
+            var profiles = weaponProfiles.LoadProfileList(out var loadError);
+            Weapons = Array.AsReadOnly(profiles
+                .Select(profile => new WeaponOption(profile.FileName, profile.Profile))
+                .ToArray());
             if (loadError is not null)
                 SettingsMessage ??= $"Profily zbraní se nepodařilo načíst. {loadError}";
 
