@@ -14,7 +14,7 @@ namespace HitAnalyzer2.Services.Shooting
         {
             window.AddHandler(InputElement.KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
             window.AddHandler(InputElement.KeyUpEvent, OnKeyUp, RoutingStrategies.Tunnel);
-            window.Deactivated += (_, _) => SetPressed(false);
+            window.Deactivated += (_, _) => SetTriggerState(false);
         }
 
         internal event Action<bool, long>? PressChanged;
@@ -22,16 +22,16 @@ namespace HitAnalyzer2.Services.Shooting
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.T)
-                SetPressed(true);
+                SetTriggerState(true);
         }
 
         private void OnKeyUp(object? sender, KeyEventArgs e)
         {
             if (e.Key == Key.T)
-                SetPressed(false);
+                SetTriggerState(false);
         }
 
-        private void SetPressed(bool isPressed)
+        private void SetTriggerState(bool isPressed)
         {
             if (_isPressed == isPressed)
                 return;

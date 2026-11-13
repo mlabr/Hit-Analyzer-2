@@ -281,8 +281,8 @@ namespace HitAnalyzer2
         private static void ValidateWeapon(WeaponSettings weapon)
         {
             if (!Enum.IsDefined(weapon.Trigger)
-                || weapon.NexDetectionInterval is < ShootingSessionService.MinimumDetectionInterval
-                    or > ShootingSessionService.MaximumDetectionInterval
+                || weapon.NexDetectionInterval is < ShootingSessionService.NextDetectionMinimumInterval
+                    or > ShootingSessionService.NextDetectionMaximumInterval
                 || weapon.OffsetX is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset
                 || weapon.OffsetY is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset)
                 throw new JsonException("Neplatné nastavení zbraně.");

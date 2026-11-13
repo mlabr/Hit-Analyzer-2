@@ -34,7 +34,7 @@ namespace HitAnalyzer2
         public int OffsetX { get; init; }
         public int OffsetY { get; init; }
         public TriggerTypeEnum Trigger { get; init; } = TriggerTypeEnum.FirstSpot;
-        public int NexDetectionInterval { get; init; } = ShootingSessionService.MinimumDetectionInterval;
+        public int NexDetectionInterval { get; init; } = ShootingSessionService.NextDetectionMinimumInterval;
     }
 
     internal sealed record WeaponProfile : WeaponSettings

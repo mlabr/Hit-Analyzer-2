@@ -45,7 +45,7 @@ namespace HitAnalyzer2
                         shootingSession),
                 };
                 var externalTriggerHandler = new ExternalTriggerHandler(mainWindow);
-                externalTriggerHandler.PressChanged += shootingSession.OnExternalPressChanged;
+                externalTriggerHandler.PressChanged += shootingSession.OnExternalTriggerChanged;
                 desktop.MainWindow = mainWindow;
             }
 
