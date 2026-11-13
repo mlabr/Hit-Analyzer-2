@@ -8,6 +8,8 @@ using HitAnalyzer2.Services.Target;
 
 namespace HitAnalyzer2.Services.Shooting
 {
+    internal readonly record struct TargetHit(CalibrationPoint? Aim, CalibrationPoint? Laser);
+
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
         DetectionSettings detectionSettings, TargetCalibrationService calibration, long appStartedTimestampMs)
     {
@@ -19,6 +21,7 @@ namespace HitAnalyzer2.Services.Shooting
         private volatile ILaserDetector _laserDetector = laserDetector;
         private volatile int _nextDetectionInterval = NextDetectionMinimumInterval;
         private LaserPosition? _lastHit;
+        private TargetHit? _lastTargetHit;
         private LaserPosition[] _lastHitAimPath = Array.Empty<LaserPosition>();
         private LaserPosition[] _lastHitFollowPath = Array.Empty<LaserPosition>();
         private TriggerTypeEnum _trigger = TriggerTypeEnum.FirstSpot;
@@ -89,12 +92,20 @@ namespace HitAnalyzer2.Services.Shooting
             {
                 aimPositionHandler.ClearAimPaths();
                 _lastHit = null;
+                _lastTargetHit = null;
                 _lastHitAimPath = Array.Empty<LaserPosition>();
                 _lastHitFollowPath = Array.Empty<LaserPosition>();
             }
         }
 
-        internal (AimPosition? Hit, AimPosition? CurrentAim, LaserPosition[] AimPath, LaserPosition[] FollowPath) ProcessFrame(
+        internal void ClearTargetHit()
+        {
+            lock (_hitGate)
+                _lastTargetHit = null;
+        }
+
+        internal (AimPosition? Hit, AimPosition? CurrentAim, LaserPosition[] AimPath, LaserPosition[] FollowPath,
+            TargetHit? LastTargetHit) ProcessFrame(
             Mat frame, long frameCapturedTimestampMs, double detectedFps, CancellationToken cancellationToken)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(appStartedTimestampMs, frameCapturedTimestampMs);
@@ -103,6 +114,8 @@ namespace HitAnalyzer2.Services.Shooting
             LaserPosition? position;
             LaserPosition[] aimPath;
             LaserPosition[] followPath;
+            CalibrationPoint? targetPoint = null;
+            TargetHit? lastTargetHit;
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -141,8 +154,16 @@ namespace HitAnalyzer2.Services.Shooting
                     }
                 }
 
-                if (registeredHit.HasValue)
+                if (registeredHit is { } registered)
+                {
                     _lastHit = registeredHit;
+                    var aim = aimPositionHandler.GetAimPosition(registered);
+                    targetPoint = calibration.MapHit(aim.X / frame.Width, aim.Y / frame.Height);
+                    var laserPoint = aim.X != registered.X || aim.Y != registered.Y
+                        ? calibration.MapHit(registered.X / frame.Width, registered.Y / frame.Height)
+                        : null;
+                    _lastTargetHit = new(targetPoint, laserPoint);
+                }
 
                 lastHit = _lastHit;
                 aimPath = _lastHitAimPath;
@@ -150,13 +171,7 @@ namespace HitAnalyzer2.Services.Shooting
                 if (startFollowPath || updatedFollowPath.Length > 0)
                     _lastHitFollowPath = updatedFollowPath;
                 followPath = _lastHitFollowPath;
-            }
-
-            CalibrationPoint? targetPoint = null;
-            if (registeredHit is { } registered)
-            {
-                var aim = aimPositionHandler.GetAimPosition(registered);
-                targetPoint = calibration.MapHit(aim.X / frame.Width, aim.Y / frame.Height);
+                lastTargetHit = _lastTargetHit;
             }
 
             LaserPositionEvaluated?.Invoke(registeredHit, targetPoint, elapsed);
@@ -165,7 +180,7 @@ namespace HitAnalyzer2.Services.Shooting
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
-                position is { } current ? aimPositionHandler.GetAimPosition(current) : null, aimPath, followPath);
+                position is { } current ? aimPositionHandler.GetAimPosition(current) : null, aimPath, followPath, lastTargetHit);
         }
 
         private bool IsAimPositionInsideAllowedZone(AimPosition position, Mat frame)

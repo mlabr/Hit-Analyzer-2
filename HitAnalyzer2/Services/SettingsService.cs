@@ -19,7 +19,6 @@ namespace HitAnalyzer2
             {
                 new JsonStringEnumConverter<FlipMode>(),
                 new JsonStringEnumConverter<DetectionMethod>(),
-                new JsonStringEnumConverter<CameraCalibrationMode>(),
                 new JsonStringEnumConverter<TriggerTypeEnum>()
             }
         };
@@ -86,7 +85,7 @@ namespace HitAnalyzer2
         }
 
         public void SaveCamera(CameraDevice device, CameraMode? mode, FlipMode? flip,
-            bool? showAimPointPreview = null, CameraCalibrationSettings? calibration = null)
+            CameraCalibrationSettings? calibration = null)
         {
             lock (_saveGate)
             {
@@ -100,10 +99,7 @@ namespace HitAnalyzer2
                         Flip = flip,
                         Calibration = calibration ?? (MatchesCamera(_current.Camera, device, mode, flip)
                             ? _current.Camera.Calibration : new())
-                    },
-                    Detection = showAimPointPreview is { } show
-                        ? _current.Detection with { ShowAimPointPreview = show }
-                        : _current.Detection
+                    }
                 };
                 Write(settings, overwrite: true);
                 _current = settings;
@@ -309,7 +305,7 @@ namespace HitAnalyzer2
                 throw new JsonException("Chybí nastavení kamery nebo detekce.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
-                || camera.Calibration is null || !Enum.IsDefined(camera.Calibration.Mode)
+                || camera.Calibration is null
                 || camera.Mode is { } mode && (mode.Width <= 0 || mode.Height <= 0
                     || mode.FpsNumerator == 0 || mode.FpsDenominator == 0))
                 throw new JsonException("Neplatné nastavení kamery.");

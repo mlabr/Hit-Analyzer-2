@@ -3,12 +3,6 @@ using System;
 
 namespace HitAnalyzer2.Services.Target
 {
-    public enum CameraCalibrationMode
-    {
-        None,
-        HitOnly
-    }
-
     internal readonly record struct CalibrationPoint(double X, double Y);
 
     internal sealed record CalibrationCorners(
@@ -27,7 +21,6 @@ namespace HitAnalyzer2.Services.Target
 
     internal sealed record CameraCalibrationSettings
     {
-        public CameraCalibrationMode Mode { get; init; }
         public CalibrationCorners? Corners { get; init; }
     }
 
@@ -46,6 +39,16 @@ namespace HitAnalyzer2.Services.Target
         internal ReadOnlySpan<CalibrationPoint> CameraTargetOutline => _snapshot.CameraTargetOutline;
 
         internal void Update(CameraCalibrationSettings settings) => _snapshot = CreateSnapshot(settings);
+
+        internal void EnsureDefault(int width, int height)
+        {
+            var snapshot = _snapshot;
+            if (snapshot.Settings.Corners is not null || width <= 0 || height <= 0)
+                return;
+
+            var settings = snapshot.Settings with { Corners = CalibrationCorners.CenteredSquare(width, height) };
+            System.Threading.Interlocked.CompareExchange(ref _snapshot, CreateSnapshot(settings), snapshot);
+        }
 
         // Both input and output are relative coordinates with the origin at the top left.
         internal CalibrationPoint? MapHit(double x, double y) => Project(_snapshot.Matrix, x, y);
@@ -66,7 +69,7 @@ namespace HitAnalyzer2.Services.Target
 
         private static CalibrationSnapshot CreateSnapshot(CameraCalibrationSettings settings)
         {
-            if (settings.Mode != CameraCalibrationMode.HitOnly || settings.Corners is not { } corners)
+            if (settings.Corners is not { } corners)
                 return new(settings, null, null, []);
 
             CalibrationPoint[] points = [corners.TopLeft, corners.TopRight, corners.BottomRight, corners.BottomLeft];

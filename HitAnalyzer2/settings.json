@@ -16,8 +16,24 @@
     },
     "Flip": "X",
     "Calibration": {
-      "Mode": "None",
-      "Corners": null
+      "Corners": {
+        "TopLeft": {
+          "X": 0.37812500000000004,
+          "Y": 0.22499999999999998
+        },
+        "TopRight": {
+          "X": 0.7203125000000001,
+          "Y": 0.24999999999999997
+        },
+        "BottomRight": {
+          "X": 0.7187500000000001,
+          "Y": 0.7083333333333334
+        },
+        "BottomLeft": {
+          "X": 0.3703125,
+          "Y": 0.7125
+        }
+      }
     }
   },
   "Detection": {
@@ -29,19 +45,19 @@
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
     "ShowAllowedArea": false,
-    "ShowAimPointPreview": true,
+    "ShowAimPointPreview": false,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },
   "SelectedWeapon": {
-    "FileName": "weapon1.json",
+    "FileName": "weapon4.json",
     "Profile": {
       "Type": "ha_weapon",
-      "Name": "weapon1",
+      "Name": "weapon4",
       "Caliber": 0,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "TimeOut",
+      "Trigger": "ExternalEvent",
       "NexDetectionInterval": 500
     }
   }

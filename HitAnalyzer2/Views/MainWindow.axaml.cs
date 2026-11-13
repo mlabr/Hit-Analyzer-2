@@ -29,11 +29,7 @@ namespace HitAnalyzer2.Views
             TargetSettings.ResetCalibrationButton.Click += (_, _) => CalibrationOverlay.ResetToSquare();
             DataContextChanged += (_, _) =>
             {
-                if (_cameraSettingsViewModel is { } previous)
-                    previous.PropertyChanged -= OnCameraSettingsChanged;
                 _cameraSettingsViewModel = (DataContext as MainWindowViewModel)?.CameraSettings;
-                if (_cameraSettingsViewModel is { } current)
-                    current.PropertyChanged += OnCameraSettingsChanged;
                 UpdateCalibrationOverlay();
             };
             ScalingChanged += (_, _) => FitWindowToPreview();
@@ -111,18 +107,14 @@ namespace HitAnalyzer2.Views
         private void ShowSettings(Control view)
         {
 			ShootingSettings.IsVisible = view == ShootingSettings;
+            if (DataContext is MainWindowViewModel viewModel)
+                viewModel.IsShootingTabActive = view == ShootingSettings;
 			CameraSettings.IsVisible = view == CameraSettings;
             DetectionSettings.IsVisible = view == DetectionSettings;
             WeaponSettings.IsVisible = view == WeaponSettings;
             
             TargetSettings.IsVisible = view == TargetSettings;
             UpdateCalibrationOverlay();
-        }
-
-        private void OnCameraSettingsChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(CameraSettingsViewModel.SelectedCalibrationMode))
-                UpdateCalibrationOverlay();
         }
 
         private void UpdateCalibrationOverlay()

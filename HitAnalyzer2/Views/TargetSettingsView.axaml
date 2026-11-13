@@ -5,11 +5,7 @@
              x:DataType="vm:CameraSettingsViewModel">
     <StackPanel Spacing="8">
         <TextBlock Text="Calibration" FontWeight="SemiBold" />
-        <ComboBox HorizontalAlignment="Stretch"
-                  ItemsSource="{Binding CalibrationModes}" SelectedItem="{Binding SelectedCalibrationMode, Mode=TwoWay}"
-                  AutomationProperties.Name="Target calibration" />
         <Button x:Name="ResetCalibrationButton" Content="Reset to square" IsEnabled="False" />
-        <CheckBox Content="Show AimPoint Preview" IsChecked="{Binding ShowAimPointPreview, Mode=TwoWay}" />
         <Button Content="Save target settings" Command="{Binding SaveTargetSettingsCommand}" />
         <TextBlock Text="{Binding TargetSettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding TargetSettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

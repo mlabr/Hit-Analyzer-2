@@ -17,11 +17,6 @@ namespace HitAnalyzer2.ViewModels
         public override string ToString() => Label;
     }
 
-    public sealed record CameraCalibrationOption(string Label, CameraCalibrationMode Mode)
-    {
-        public override string ToString() => Label;
-    }
-
     public partial class CameraSettingsViewModel : ViewModelBase
     {
         private readonly SettingsService _settings;
@@ -37,17 +32,12 @@ namespace HitAnalyzer2.ViewModels
             new("Flip Vertical & Horizontal", FlipMode.XY)
         });
 
-        public IReadOnlyList<CameraCalibrationOption> CalibrationModes { get; } = Array.AsReadOnly(
-            new CameraCalibrationOption[] { new("None", CameraCalibrationMode.None), new("Hit only", CameraCalibrationMode.HitOnly) });
-
         internal CameraSettingsViewModel(SettingsService settings, CameraCaptureSession captureSession,
             TargetCalibrationService calibration)
         {
             _settings = settings;
             _captureSession = captureSession;
             Calibration = calibration;
-            showAimPointPreview = settings.Current.Detection.ShowAimPointPreview;
-            selectedCalibrationMode = CalibrationModes.First(option => option.Mode == calibration.Settings.Mode);
             selectedCameraFlip = CameraFlipOptions.First(option => option.Mode == settings.Current.Camera.Flip);
             SettingsMessage = settings.LoadError;
         }
@@ -70,21 +60,7 @@ namespace HitAnalyzer2.ViewModels
         private CameraFlipOption selectedCameraFlip;
 
         [ObservableProperty]
-        private CameraCalibrationOption selectedCalibrationMode;
-
-        [ObservableProperty]
-        private bool showAimPointPreview;
-
-        [ObservableProperty]
         private string? targetSettingsMessage;
-
-        partial void OnShowAimPointPreviewChanged(bool value) => TargetSettingsMessage = null;
-
-        partial void OnSelectedCalibrationModeChanged(CameraCalibrationOption value)
-        {
-            Calibration.Update(Calibration.Settings with { Mode = value.Mode });
-            TargetSettingsMessage = null;
-        }
 
         internal void SetCalibrationSquare(double width, double height)
             => SetCalibrationCorners(CalibrationCorners.CenteredSquare(width, height));
@@ -195,13 +171,12 @@ namespace HitAnalyzer2.ViewModels
                 if (!IsDiscoveringCameras && SelectedCamera is { } camera)
                 {
                     _settings.SaveCamera(camera, SelectedCameraMode, SelectedCameraFlip.Mode,
-                        ShowAimPointPreview, Calibration.Settings);
+                        Calibration.Settings);
                     TargetSettingsMessage = "Nastavení terče uloženo.";
                 }
                 else
                 {
-                    _settings.SaveAimPointPreview(ShowAimPointPreview);
-                    TargetSettingsMessage = "Volba náhledu uložena. Kalibraci uložte po výběru kamery.";
+                    TargetSettingsMessage = "Kalibraci uložte po výběru kamery.";
                 }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
@@ -239,7 +214,6 @@ namespace HitAnalyzer2.ViewModels
 
         private void ResetCalibration()
         {
-            SelectedCalibrationMode = CalibrationModes[0];
             Calibration.Update(new CameraCalibrationSettings());
         }
 

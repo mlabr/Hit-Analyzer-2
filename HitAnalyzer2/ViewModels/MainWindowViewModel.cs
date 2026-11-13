@@ -13,6 +13,7 @@ namespace HitAnalyzer2.ViewModels
     {
         private readonly ShootingSessionService _shootingSession;
         private readonly DetectionSettings _detectionSettings;
+        internal volatile bool IsShootingTabActive = true;
 
         public CameraSettingsViewModel CameraSettings { get; }
         public CameraPreviewViewModel CameraPreview { get; } = new();
@@ -28,7 +29,7 @@ namespace HitAnalyzer2.ViewModels
             _detectionSettings = settings.Current.Detection;
             WeaponSettings = weaponSettings;
             _shootingSession = shootingSession;
-            ShootingSettings = new ShootingSettingsViewModel(shootingSession);
+            ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
                 () =>
@@ -48,20 +49,28 @@ namespace HitAnalyzer2.ViewModels
         private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double? fps, double detectedFps,
             CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            CameraSettings.Calibration.EnsureDefault(frame.Width, frame.Height);
             using var output = new Mat();
             var pixels = PreviewFrameProcessor.Process(frame, output, DetectionSettings.BrightnessPercent,
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
-            var (lastHit, currentAim, aimPath, followPath) =
+            bool showAimPointPreview = IsShootingTabActive && ShootingSettings.ShowAimPointPreview;
+            var (lastHit, currentAim, aimPath, followPath, lastTargetHit) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
+            if (showAimPointPreview)
+            {
+                using var target = new Mat(pixels.Rows, pixels.Cols, pixels.Type(), Scalar.Black);
+                AimRenderer.DrawAimPointPreview(target, currentAim, lastHit, aimPath, followPath,
+                    lastTargetHit, CameraSettings.Calibration);
+                await CameraPreview.ShowFrameAsync(target, fps, cancellationToken);
+                return;
+            }
+
             int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
             bool showAllowedArea = DetectionSettings.ShowAllowedArea;
-            bool showAimPoint = CameraSettings.ShowAimPointPreview;
-            var calibration = CameraSettings.Calibration;
-            bool showTarget = showAimPoint && calibration.IsValid;
 
             if (ReferenceEquals(pixels, frame) &&
-                (lastHit.HasValue || flareSensitivity.HasValue || showAllowedArea ||
-                    showTarget || (showAimPoint && currentAim.HasValue)))
+                (lastHit.HasValue || flareSensitivity.HasValue || showAllowedArea))
             {
                 frame.CopyTo(output);
                 pixels = output;
@@ -75,18 +84,6 @@ namespace HitAnalyzer2.ViewModels
 
             if (lastHit is { } hit)
                 AimRenderer.Draw(pixels, hit, aimPath, followPath);
-
-            if (showTarget)
-            {
-                var targetPoint = currentAim is { } aim
-                    ? calibration.MapHit(aim.X / pixels.Width, aim.Y / pixels.Height)
-                    : null;
-                AimRenderer.DrawTargetPreview(pixels, targetPoint);
-            }
-            else if (showAimPoint && currentAim is { } aim)
-            {
-                AimRenderer.DrawAimPointPreview(pixels, new CalibrationPoint(aim.X / pixels.Width, aim.Y / pixels.Height));
-            }
 
             await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
         }

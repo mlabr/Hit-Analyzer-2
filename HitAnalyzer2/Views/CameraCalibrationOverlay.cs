@@ -23,15 +23,12 @@ namespace HitAnalyzer2.Views
 
         internal void Update(CameraSettingsViewModel? settings, Rect imageBounds)
         {
-            bool visible = settings?.SelectedCalibrationMode.Mode == CameraCalibrationMode.HitOnly &&
-                imageBounds.Width > 0 && imageBounds.Height > 0;
+            bool visible = settings is not null && imageBounds.Width > 0 && imageBounds.Height > 0;
             if ((!visible || settings != _settings || imageBounds != _imageBounds) && _dragPointer is { } pointer)
                 pointer.Capture(null);
 
             _settings = settings;
             _imageBounds = imageBounds;
-            if (visible && settings!.Calibration.Settings.Corners is null)
-                settings.SetCalibrationSquare(imageBounds.Width, imageBounds.Height);
             IsVisible = visible;
             InvalidateVisual();
         }
@@ -82,7 +79,7 @@ namespace HitAnalyzer2.Views
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             base.OnPointerPressed(e);
-            if (_settings is not { } settings || _dragPointer is not null ||
+            if (!IsVisible || _settings is not { } settings || _dragPointer is not null ||
                 e.GetCurrentPoint(this).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed)
                 return;
 
