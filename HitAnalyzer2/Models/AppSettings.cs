@@ -1,4 +1,5 @@
 using HitAnalyzer2.Services.Shooting;
+using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;

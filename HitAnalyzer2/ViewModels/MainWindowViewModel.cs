@@ -1,4 +1,5 @@
 using HitAnalyzer2.Services.Shooting;
+using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
 using HitAnalyzer2.Services.Detection;
 using OpenCvSharp;
@@ -21,7 +22,7 @@ namespace HitAnalyzer2.ViewModels
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
             WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession,
-            CameraCalibrationService cameraCalibration)
+            TargetCalibrationService cameraCalibration)
         {
             DetectionSettings = detectionSettings;
             _detectionSettings = settings.Current.Detection;
@@ -54,7 +55,7 @@ namespace HitAnalyzer2.ViewModels
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
             bool showAllowedArea = DetectionSettings.ShowAllowedArea;
-            bool showAimPoint = DetectionSettings.ShowAimPointPreview;
+            bool showAimPoint = CameraSettings.ShowAimPointPreview;
             var calibration = CameraSettings.Calibration;
             bool showTarget = showAimPoint && calibration.IsValid;
 

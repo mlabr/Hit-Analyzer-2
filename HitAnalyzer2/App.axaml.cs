@@ -3,7 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Shooting;
-using HitAnalyzer2.Services.Video;
+using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.ViewModels;
 using HitAnalyzer2.Views;
 using System;
@@ -35,7 +35,7 @@ namespace HitAnalyzer2
 
                 var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
                 var weaponHandler = new WeaponHandler(settings, aimPositionHandler);
-                var cameraCalibration = new CameraCalibrationService(settings.Current.Camera.Calibration);
+                var cameraCalibration = new TargetCalibrationService(settings.Current.Camera.Calibration);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
                     detection, cameraCalibration, Program.StartedAt);

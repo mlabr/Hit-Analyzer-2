@@ -1,4 +1,5 @@
 using HitAnalyzer2.Services.Shooting;
+using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
@@ -85,7 +86,7 @@ namespace HitAnalyzer2
         }
 
         public void SaveCamera(CameraDevice device, CameraMode? mode, FlipMode? flip,
-            CameraCalibrationSettings calibration)
+            bool? showAimPointPreview = null, CameraCalibrationSettings? calibration = null)
         {
             lock (_saveGate)
             {
@@ -97,16 +98,34 @@ namespace HitAnalyzer2
                         DeviceIndex = device.DeviceId is null ? device.Index : null,
                         Mode = mode,
                         Flip = flip,
-                        Calibration = calibration
-                    }
+                        Calibration = calibration ?? (MatchesCamera(_current.Camera, device, mode, flip)
+                            ? _current.Camera.Calibration : new())
+                    },
+                    Detection = showAimPointPreview is { } show
+                        ? _current.Detection with { ShowAimPointPreview = show }
+                        : _current.Detection
                 };
                 Write(settings, overwrite: true);
                 _current = settings;
             }
         }
 
+        private static bool MatchesCamera(CameraSettings camera, CameraDevice device, CameraMode? mode, FlipMode? flip) =>
+            camera.DeviceId == device.DeviceId && (device.DeviceId is not null || camera.DeviceIndex == device.Index) &&
+            camera.Mode == mode && camera.Flip == flip;
+
+        public void SaveAimPointPreview(bool show)
+        {
+            lock (_saveGate)
+            {
+                var settings = _current with { Detection = _current.Detection with { ShowAimPointPreview = show } };
+                Write(settings, overwrite: true);
+                _current = settings;
+            }
+        }
+
         public void SaveDetection(DetectionMethod method, int sensitivity, bool showFlares, bool showAllowedArea,
-            bool showAimPointPreview, int brightnessPercent, int contrastPercent, int saturationPercent)
+            int brightnessPercent, int contrastPercent, int saturationPercent)
         {
             lock (_saveGate)
             {
@@ -118,7 +137,6 @@ namespace HitAnalyzer2
                         DetectionSensitivity = sensitivity,
                         ShowFlares = showFlares,
                         ShowAllowedArea = showAllowedArea,
-                        ShowAimPointPreview = showAimPointPreview,
                         BrightnessPercent = brightnessPercent,
                         ContrastPercent = contrastPercent,
                         SaturationPercent = saturationPercent

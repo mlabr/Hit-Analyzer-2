@@ -5,7 +5,7 @@
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_328f\u0026pid_006d\u0026mi_00#7\u002634c3077b\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u002622fbc4d2\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
       "Width": 640,
@@ -29,15 +29,15 @@
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
     "ShowAllowedArea": false,
-    "ShowAimPointPreview": false,
+    "ShowAimPointPreview": true,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },
   "SelectedWeapon": {
-    "FileName": "weapon4.json",
+    "FileName": "weapon1.json",
     "Profile": {
       "Type": "ha_weapon",
-      "Name": "weapon4",
+      "Name": "weapon1",
       "Caliber": 0,
       "OffsetX": 0,
       "OffsetY": 0,

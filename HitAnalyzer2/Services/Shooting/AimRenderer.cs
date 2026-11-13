@@ -1,5 +1,5 @@
 using HitAnalyzer2.Services.Detection;
-using HitAnalyzer2.Services.Video;
+using HitAnalyzer2.Services.Target;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -42,8 +42,8 @@ namespace HitAnalyzer2.Services.Shooting
             var end = new Point(origin.X + side, origin.Y + side);
             Cv2.Rectangle(preview, origin, end, new Scalar(25, 25, 25, 255), -1);
             Cv2.Rectangle(preview, origin, end, TargetGuideColor, 1);
-            var center = ToPreviewPoint(CameraCalibrationService.TargetCenter, origin, side, side);
-            Cv2.Circle(preview, center, (int)(side * CameraCalibrationService.TargetRadius), TargetGuideColor, 1);
+            var center = ToPreviewPoint(TargetCalibrationService.TargetCenter, origin, side, side);
+            Cv2.Circle(preview, center, (int)(side * TargetCalibrationService.TargetRadius), TargetGuideColor, 1);
             Cv2.Circle(preview, center, 2, TargetGuideColor, -1);
 
             if (aim is { X: >= -0.000001 and <= 1.000001, Y: >= -0.000001 and <= 1.000001 } point)

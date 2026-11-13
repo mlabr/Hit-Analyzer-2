@@ -47,7 +47,8 @@
                                                   DataContext="{Binding WeaponSettings}" />
                         <views:ShootingSettingsView x:Name="ShootingSettings" 
                                                     DataContext="{Binding ShootingSettings}" />
-                        <TextBlock x:Name="SettingsPlaceholder" TextWrapping="Wrap" IsVisible="False" />
+                        <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
+                                                  DataContext="{Binding CameraSettings}" />
                     </Grid>
                 </ScrollViewer>
             </Border>

@@ -2,9 +2,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using HitAnalyzer2.Services.Video;
+using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.ViewModels;
 using System;
+using System.Linq;
 
 namespace HitAnalyzer2.Views
 {
@@ -17,6 +18,8 @@ namespace HitAnalyzer2.Views
         private IPointer? _dragPointer;
         private int _dragCorner;
         private Vector _dragOffset;
+        private CalibrationCorners? _translationStart;
+        private Point _translationPointerStart;
 
         internal void Update(CameraSettingsViewModel? settings, Rect imageBounds)
         {
@@ -55,11 +58,25 @@ namespace HitAnalyzer2.Views
             for (int i = 0; i < points.Length; i++)
                 context.DrawLine(pen, points[i], points[(i + 1) % points.Length]);
 
+            var outline = settings.Calibration.CameraTargetOutline;
+            if (!outline.IsEmpty)
+            {
+                var geometry = new StreamGeometry();
+                using (var path = geometry.Open())
+                {
+                    path.BeginFigure(ToPreview(outline[0]), isFilled: false);
+                    foreach (var point in outline[1..])
+                        path.LineTo(ToPreview(point));
+                    path.EndFigure(isClosed: true);
+                }
+                context.DrawGeometry(null, pen, geometry);
+            }
+
             foreach (var point in points)
                 context.DrawEllipse(brush, null, point, HandleRadius, HandleRadius);
 
             if (settings.Calibration.CameraTargetCenter is { } center)
-                context.DrawEllipse(brush, null, ToPreview(center), 3, 3);
+                context.DrawEllipse(brush, null, ToPreview(center), HandleRadius, HandleRadius);
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)
@@ -75,8 +92,7 @@ namespace HitAnalyzer2.Views
             int corner = -1;
             for (int i = 0; i < points.Length; i++)
             {
-                var delta = points[i] - pointerPosition;
-                double distanceSquared = delta.X * delta.X + delta.Y * delta.Y;
+                double distanceSquared = DistanceSquared(points[i], pointerPosition);
                 if (distanceSquared < closestSquared)
                 {
                     closestSquared = distanceSquared;
@@ -84,11 +100,21 @@ namespace HitAnalyzer2.Views
                 }
             }
 
-            if (corner < 0)
+            if (settings.Calibration.CameraTargetCenter is { } center &&
+                settings.Calibration.Settings.Corners is { } corners &&
+                DistanceSquared(ToPreview(center), pointerPosition) < closestSquared)
+            {
+                _translationStart = corners;
+                _translationPointerStart = pointerPosition;
+            }
+            else if (corner >= 0)
+            {
+                _dragCorner = corner;
+                _dragOffset = points[corner] - pointerPosition;
+            }
+            else
                 return;
 
-            _dragCorner = corner;
-            _dragOffset = points[corner] - pointerPosition;
             _dragPointer = e.Pointer;
             e.Pointer.Capture(this);
             e.Handled = true;
@@ -100,10 +126,25 @@ namespace HitAnalyzer2.Views
             if (_dragPointer != e.Pointer || _settings is not { } settings)
                 return;
 
-            var position = e.GetPosition(this) + _dragOffset;
-            settings.MoveCalibrationCorner(_dragCorner, new CalibrationPoint(
-                Math.Clamp((position.X - _imageBounds.X) / _imageBounds.Width, 0, 1),
-                Math.Clamp((position.Y - _imageBounds.Y) / _imageBounds.Height, 0, 1)));
+            var pointer = e.GetPosition(this);
+            if (_translationStart is { } start)
+            {
+                CalibrationPoint[] corners = [start.TopLeft, start.TopRight, start.BottomRight, start.BottomLeft];
+                double dx = Math.Clamp((pointer.X - _translationPointerStart.X) / _imageBounds.Width,
+                    -corners.Min(point => point.X), 1 - corners.Max(point => point.X));
+                double dy = Math.Clamp((pointer.Y - _translationPointerStart.Y) / _imageBounds.Height,
+                    -corners.Min(point => point.Y), 1 - corners.Max(point => point.Y));
+                CalibrationPoint Translate(CalibrationPoint point) => new(point.X + dx, point.Y + dy);
+                settings.SetCalibrationCorners(new(Translate(start.TopLeft), Translate(start.TopRight),
+                    Translate(start.BottomRight), Translate(start.BottomLeft)));
+            }
+            else
+            {
+                var position = pointer + _dragOffset;
+                settings.MoveCalibrationCorner(_dragCorner, new CalibrationPoint(
+                    Math.Clamp((position.X - _imageBounds.X) / _imageBounds.Width, 0, 1),
+                    Math.Clamp((position.Y - _imageBounds.Y) / _imageBounds.Height, 0, 1)));
+            }
             InvalidateVisual();
             e.Handled = true;
         }
@@ -122,9 +163,17 @@ namespace HitAnalyzer2.Views
         {
             base.OnPointerCaptureLost(e);
             if (_dragPointer == e.Pointer)
+            {
                 _dragPointer = null;
+                _translationStart = null;
+            }
         }
 
+        private static double DistanceSquared(Point a, Point b)
+        {
+            var delta = a - b;
+            return delta.X * delta.X + delta.Y * delta.Y;
+        }
         private Point[] GetPreviewCorners(CameraSettingsViewModel settings)
         {
             if (settings.Calibration.Settings.Corners is not { } corners)

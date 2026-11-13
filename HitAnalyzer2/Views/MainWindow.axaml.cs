@@ -26,7 +26,7 @@ namespace HitAnalyzer2.Views
             InitializeComponent();
             CameraPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
-            CameraSettings.ResetCalibrationButton.Click += (_, _) => CalibrationOverlay.ResetToSquare();
+            TargetSettings.ResetCalibrationButton.Click += (_, _) => CalibrationOverlay.ResetToSquare();
             DataContextChanged += (_, _) =>
             {
                 if (_cameraSettingsViewModel is { } previous)
@@ -57,7 +57,7 @@ namespace HitAnalyzer2.Views
         private void ShowDetectionSettings(object? sender, RoutedEventArgs e) => ShowSettings(DetectionSettings);
 
         private void ShowTargetSettings(object? sender, RoutedEventArgs e) =>
-            ShowSettings(SettingsPlaceholder, "Target settings not implementet yet.");
+            ShowSettings(TargetSettings);
 
         private void ShowWeaponSettings(object? sender, RoutedEventArgs e) =>
             ShowSettings(WeaponSettings);
@@ -108,15 +108,14 @@ namespace HitAnalyzer2.Views
             await dialog.ShowDialog(this);
         }
 
-        private void ShowSettings(Control view, string? placeholder = null)
+        private void ShowSettings(Control view)
         {
 			ShootingSettings.IsVisible = view == ShootingSettings;
 			CameraSettings.IsVisible = view == CameraSettings;
             DetectionSettings.IsVisible = view == DetectionSettings;
             WeaponSettings.IsVisible = view == WeaponSettings;
             
-            SettingsPlaceholder.Text = placeholder;
-            SettingsPlaceholder.IsVisible = view == SettingsPlaceholder;
+            TargetSettings.IsVisible = view == TargetSettings;
             UpdateCalibrationOverlay();
         }
 
@@ -128,10 +127,10 @@ namespace HitAnalyzer2.Views
 
         private void UpdateCalibrationOverlay()
         {
-            if (!CameraSettings.IsVisible || PreviewImage.Source is not Bitmap bitmap)
+            if (!TargetSettings.IsVisible || PreviewImage.Source is not Bitmap bitmap)
             {
                 CalibrationOverlay.Update(null, default);
-                CameraSettings.ResetCalibrationButton.IsEnabled = false;
+                TargetSettings.ResetCalibrationButton.IsEnabled = false;
                 return;
             }
 
@@ -140,7 +139,7 @@ namespace HitAnalyzer2.Views
             var imageBounds = new Rect(bounds.X + (bounds.Width - size.Width) / 2,
                 bounds.Y + (bounds.Height - size.Height) / 2, size.Width, size.Height);
             CalibrationOverlay.Update(_cameraSettingsViewModel, imageBounds);
-            CameraSettings.ResetCalibrationButton.IsEnabled = CalibrationOverlay.IsVisible;
+            TargetSettings.ResetCalibrationButton.IsEnabled = CalibrationOverlay.IsVisible;
         }
 
         private void OnPreviewImageChanged(object? sender, AvaloniaPropertyChangedEventArgs e)

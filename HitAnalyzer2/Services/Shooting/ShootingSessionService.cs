@@ -4,12 +4,12 @@ using System.Diagnostics;
 using System.Threading;
 
 using HitAnalyzer2.Services.Detection;
-using HitAnalyzer2.Services.Video;
+using HitAnalyzer2.Services.Target;
 
 namespace HitAnalyzer2.Services.Shooting
 {
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
-        DetectionSettings detectionSettings, CameraCalibrationService calibration, long appStartedTimestampMs)
+        DetectionSettings detectionSettings, TargetCalibrationService calibration, long appStartedTimestampMs)
     {
         internal const int NextDetectionMinimumInterval = 100;
         internal const int NextDetectionMaximumInterval = 5000;

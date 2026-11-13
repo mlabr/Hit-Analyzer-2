@@ -27,7 +27,6 @@ namespace HitAnalyzer2.ViewModels
             _saturationPercent = settings.Current.Detection.SaturationPercent;
             showFlares = settings.Current.Detection.ShowFlares;
             showAllowedArea = settings.Current.Detection.ShowAllowedArea;
-            showAimPointPreview = settings.Current.Detection.ShowAimPointPreview;
             settingsMessage = settings.LoadError;
         }
 
@@ -44,9 +43,6 @@ namespace HitAnalyzer2.ViewModels
 
         [ObservableProperty]
         private bool showAllowedArea;
-
-        [ObservableProperty]
-        private bool showAimPointPreview;
 
         public int DetectionSensitivity
         {
@@ -106,7 +102,6 @@ namespace HitAnalyzer2.ViewModels
         partial void OnSelectedMethodChanged(DetectionMethod value) => ApplyDetection();
         partial void OnShowFlaresChanged(bool value) => SettingsMessage = null;
         partial void OnShowAllowedAreaChanged(bool value) => SettingsMessage = null;
-        partial void OnShowAimPointPreviewChanged(bool value) => SettingsMessage = null;
 
         private void ApplyDetection()
         {
@@ -120,7 +115,7 @@ namespace HitAnalyzer2.ViewModels
             try
             {
                 _settings.SaveDetection(SelectedMethod, DetectionSensitivity, ShowFlares, ShowAllowedArea,
-                    ShowAimPointPreview, BrightnessPercent, ContrastPercent, SaturationPercent);
+                    BrightnessPercent, ContrastPercent, SaturationPercent);
                 SettingsMessage = "Nastavení detekce uloženo.";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
