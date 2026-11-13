@@ -105,7 +105,7 @@ namespace HitAnalyzer2
             }
         }
 
-        public void SaveDetection(DetectionMethod method, int sensitivity, bool showFlares)
+        public void SaveDetection(DetectionMethod method, int sensitivity, bool showFlares, bool showAllowedArea)
         {
             lock (_saveGate)
             {
@@ -115,7 +115,8 @@ namespace HitAnalyzer2
                     {
                         Method = method,
                         DetectionSensitivity = sensitivity,
-                        ShowFlares = showFlares
+                        ShowFlares = showFlares,
+                        ShowAllowedArea = showAllowedArea
                     }
                 };
                 Write(settings, overwrite: true);

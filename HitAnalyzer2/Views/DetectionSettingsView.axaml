@@ -22,6 +22,7 @@
                            AutomationProperties.Name="Manual sensitivity input" />
         </Grid>
         <CheckBox Content="Show flares" IsChecked="{Binding ShowFlares, Mode=TwoWay}" />
+        <CheckBox Content="Show Allowed Area" IsChecked="{Binding ShowAllowedArea, Mode=TwoWay}" />
         <Button Content="Save detection  settings" Command="{Binding SaveDetectionSettingsCommand}" />
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

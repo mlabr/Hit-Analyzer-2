@@ -24,6 +24,7 @@
     "DetectionSensitivity": 1,
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
+    "ShowAllowedArea": false,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },

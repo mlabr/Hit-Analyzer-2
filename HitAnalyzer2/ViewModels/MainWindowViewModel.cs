@@ -11,6 +11,7 @@ namespace HitAnalyzer2.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         private readonly ShootingSessionService _shootingSession;
+        private readonly DetectionSettings _detectionSettings;
 
         public CameraSettingsViewModel CameraSettings { get; }
         public CameraPreviewViewModel CameraPreview { get; } = new();
@@ -22,6 +23,7 @@ namespace HitAnalyzer2.ViewModels
             WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession)
         {
             DetectionSettings = detectionSettings;
+            _detectionSettings = settings.Current.Detection;
             WeaponSettings = weaponSettings;
             _shootingSession = shootingSession;
             ShootingSettings = new ShootingSettingsViewModel(shootingSession);
@@ -50,8 +52,9 @@ namespace HitAnalyzer2.ViewModels
             var (lastHit, aimPath, followPath) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             int? flareSensitivity = DetectionSettings.ShowFlares ? DetectionSettings.DetectionSensitivity : null;
+            bool showAllowedArea = DetectionSettings.ShowAllowedArea;
 
-            if (ReferenceEquals(pixels, frame) && (lastHit.HasValue || flareSensitivity.HasValue))
+            if (ReferenceEquals(pixels, frame) && (lastHit.HasValue || flareSensitivity.HasValue || showAllowedArea))
             {
                 frame.CopyTo(output);
                 pixels = output;
@@ -59,6 +62,9 @@ namespace HitAnalyzer2.ViewModels
 
             if (flareSensitivity is { } sensitivity)
                 FlareDetectionOverlay.Draw(pixels, sensitivity);
+
+            if (showAllowedArea)
+                AllowedAreaRenderer.Draw(pixels, _detectionSettings);
 
             if (lastHit is { } hit)
                 AimRenderer.Draw(pixels, hit, aimPath, followPath);

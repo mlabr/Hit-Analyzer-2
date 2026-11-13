@@ -159,10 +159,9 @@ namespace HitAnalyzer2.Services.Shooting
 
         private bool IsAimPositionInsideAllowedZone(AimPosition position, Mat frame)
         {
-            int horizontalMargin = Math.Max(0, detectionSettings.HorizontalForbiddenZoneSize);
-            int verticalMargin = Math.Max(0, detectionSettings.VerticalForbiddenZoneSize);
-            return position.X >= horizontalMargin && position.X < frame.Width - horizontalMargin &&
-                position.Y >= verticalMargin && position.Y < frame.Height - verticalMargin;
+            var allowedArea = AllowedArea.GetBounds(frame, detectionSettings);
+            return position.X >= allowedArea.Left && position.X < allowedArea.Right &&
+                position.Y >= allowedArea.Top && position.Y < allowedArea.Bottom;
         }
 
         private bool IsTriggered(LaserPosition? position, long capturedAt, bool intervalElapsed)
