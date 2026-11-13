@@ -35,7 +35,8 @@ namespace HitAnalyzer2
                 var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
                 var weaponHandler = new WeaponHandler(settings, aimPositionHandler);
                 var shootingSession = new ShootingSessionService(
-                    CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler, Program.StartedAt);
+                    CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
+                    detection, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler);

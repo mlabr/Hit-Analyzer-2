@@ -23,7 +23,9 @@
     "Method": "Simple",
     "DetectionSensitivity": 1,
     "MinimumHitAreaPixels": null,
-    "ShowFlares": false
+    "ShowFlares": false,
+    "VerticalForbiddenZoneSize": 50,
+    "HorizontalForbiddenZoneSize": 50
   },
   "SelectedWeapon": {
     "FileName": "weapon4.json",
@@ -33,7 +35,7 @@
       "Caliber": 0,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "ExternalEvent",
+      "Trigger": "TimeOut",
       "NexDetectionInterval": 500
     }
   }

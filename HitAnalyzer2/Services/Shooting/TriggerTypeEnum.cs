@@ -4,6 +4,7 @@ namespace HitAnalyzer2.Services.Shooting
     {
         FirstSpot,
         NewSpot,
-        ExternalEvent
+        ExternalEvent,
+        TimeOut
     }
 }

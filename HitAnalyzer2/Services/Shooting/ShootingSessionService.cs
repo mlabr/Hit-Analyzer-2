@@ -7,10 +7,12 @@ using HitAnalyzer2.Services.Detection;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler, long appStartedTimestampMs)
+    internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
+        DetectionSettings detectionSettings, long appStartedTimestampMs)
     {
         internal const int NextDetectionMinimumInterval = 100;
         internal const int NextDetectionMaximumInterval = 5000;
+        private static readonly TimeSpan MinimumTimeoutAimPathDuration = TimeSpan.FromSeconds(2);
 
         private readonly object _hitGate = new();
         private volatile ILaserDetector _laserDetector = laserDetector;
@@ -35,10 +37,14 @@ namespace HitAnalyzer2.Services.Shooting
         {
             lock (_hitGate)
             {
+                bool resetTimeoutPath = _trigger == TriggerTypeEnum.TimeOut || trigger == TriggerTypeEnum.TimeOut;
+                if (resetTimeoutPath)
+                    aimPositionHandler.ClearAimPaths();
+
                 _trigger = trigger;
                 _spotWasVisible = false;
                 _externalPressedAt = null;
-                if (trigger != TriggerTypeEnum.ExternalEvent)
+                if (trigger != TriggerTypeEnum.ExternalEvent || resetTimeoutPath)
                 {
                     _lastHitAimPath = Array.Empty<LaserPosition>();
                     _lastHitFollowPath = Array.Empty<LaserPosition>();
@@ -99,27 +105,46 @@ namespace HitAnalyzer2.Services.Shooting
                 cancellationToken.ThrowIfCancellationRequested();
                 var detectedPosition = _laserDetector.Detect(frame);
                 LaserPosition? position = detectedPosition is { } point ? point with { Time = elapsed } : null;
-                aimPositionHandler.UpdateAimPath(position, elapsed, detectedFps);
-                bool intervalElapsed = elapsed >= NextDetectionTimestamp;
-                bool externalHit = false;
-                if (IsTriggered(position, frameCapturedTimestampMs, intervalElapsed))
+                bool startFollowPath = false;
+                if (_trigger == TriggerTypeEnum.TimeOut && position is null &&
+                    aimPositionHandler.GetTimedOutAimPosition(elapsed) is { } timedOutPosition)
                 {
-                    if (_trigger == TriggerTypeEnum.ExternalEvent)
+                    if (aimPositionHandler.AimPathDuration >= MinimumTimeoutAimPathDuration &&
+                        IsAimPositionInsideAllowedZone(aimPositionHandler.GetAimPosition(timedOutPosition), frame))
                     {
-                        _externalPressedAt = null;
+                        registeredHit = timedOutPosition;
                         _lastHitAimPath = aimPositionHandler.GetAimPathSnapshot();
-                        externalHit = true;
                     }
-                    else
-                        NextDetectionTimestamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
 
-                    registeredHit = position;
-                    _lastHit = registeredHit;
+                    aimPositionHandler.ClearAimPath();
                 }
+                else
+                {
+                    aimPositionHandler.UpdateAimPath(position, elapsed, detectedFps);
+                    if (_trigger != TriggerTypeEnum.TimeOut &&
+                        IsTriggered(position, frameCapturedTimestampMs, elapsed >= NextDetectionTimestamp))
+                    {
+                        registeredHit = position;
+                        if (_trigger == TriggerTypeEnum.ExternalEvent)
+                        {
+                            _externalPressedAt = null;
+                            _lastHitAimPath = aimPositionHandler.GetAimPathSnapshot();
+                            startFollowPath = true;
+                        }
+                        else
+                        {
+                            NextDetectionTimestamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
+                        }
+                    }
+                }
+
+                if (registeredHit.HasValue)
+                    _lastHit = registeredHit;
+
                 lastHit = _lastHit;
                 aimPath = _lastHitAimPath;
-                var updatedFollowPath = aimPositionHandler.UpdateFollowPath(position, elapsed, detectedFps, externalHit);
-                if (externalHit || updatedFollowPath.Length > 0)
+                var updatedFollowPath = aimPositionHandler.UpdateFollowPath(position, elapsed, detectedFps, startFollowPath);
+                if (startFollowPath || updatedFollowPath.Length > 0)
                     _lastHitFollowPath = updatedFollowPath;
                 followPath = _lastHitFollowPath;
             }
@@ -130,6 +155,14 @@ namespace HitAnalyzer2.Services.Shooting
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null, aimPath, followPath);
+        }
+
+        private bool IsAimPositionInsideAllowedZone(AimPosition position, Mat frame)
+        {
+            int horizontalMargin = Math.Max(0, detectionSettings.HorizontalForbiddenZoneSize);
+            int verticalMargin = Math.Max(0, detectionSettings.VerticalForbiddenZoneSize);
+            return position.X >= horizontalMargin && position.X < frame.Width - horizontalMargin &&
+                position.Y >= verticalMargin && position.Y < frame.Height - verticalMargin;
         }
 
         private bool IsTriggered(LaserPosition? position, long capturedAt, bool intervalElapsed)
