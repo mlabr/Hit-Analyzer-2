@@ -94,7 +94,7 @@ namespace HitAnalyzer2.ViewModels
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            CameraSettings.Calibration.EnsureDefault(frame.Width, frame.Height);
+            CameraSettings.Calibration.UpdatePreviewGeometry(frame.Width, frame.Height);
             using var output = new Mat();
             var pixels = FramePreprocessor.ApplyImageAdjustments(frame, output, DetectionSettings.BrightnessPercent,
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);

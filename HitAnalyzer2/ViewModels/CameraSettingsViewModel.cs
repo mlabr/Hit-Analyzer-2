@@ -60,7 +60,7 @@ namespace HitAnalyzer2.ViewModels
 
         internal void SetCalibrationCorners(CalibrationCorners corners)
         {
-            Calibration.Update(Calibration.Settings with { Corners = corners });
+            Calibration.SetCorners(corners);
         }
 
         internal void MoveCalibrationCorner(int index, CalibrationPoint point)
@@ -168,7 +168,7 @@ namespace HitAnalyzer2.ViewModels
 
         private void ResetCalibration()
         {
-            Calibration.Update(new CameraCalibrationSettings());
+            Calibration.SetCorners(null);
         }
 
         private void UpdateCameraModes(CameraMode? preferredMode)

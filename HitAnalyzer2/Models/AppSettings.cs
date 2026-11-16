@@ -1,5 +1,5 @@
 using HitAnalyzer2.Services.Shooting;
-using HitAnalyzer2.Services.Target;
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
@@ -55,7 +55,7 @@ namespace HitAnalyzer2
         public int? DeviceIndex { get; init; }
         public CameraMode? Mode { get; init; }
         public FlipMode? Flip { get; init; } = FlipMode.XY;
-        public CameraCalibrationSettings Calibration { get; init; } = new();
+        public TargetModel Calibration { get; init; } = new();
     }
 
     public enum DetectionMethod

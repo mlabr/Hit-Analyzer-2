@@ -1,3 +1,4 @@
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Target;
 using OpenCvSharp;
@@ -8,8 +9,7 @@ namespace HitAnalyzer2.Services.Rendering
 {
     internal static class TargetRender
     {
-        private const double PreviewMargin = 0.25;
-        private const double PreviewSpan = 1 + 2 * PreviewMargin;
+        private const double PreviewMargin = TargetModel.PreviewMargin;
 
         internal static void DrawTargetPreview(Mat preview, AimPosition? aim, AimPosition? lastHit,
             IReadOnlyList<LaserPosition> aimPath, IReadOnlyList<LaserPosition> followPath,
@@ -20,11 +20,12 @@ namespace HitAnalyzer2.Services.Rendering
             if (size < 2)
                 return;
 
+            double diameterPixels = TargetModel.GetPreviewDiameterPixels(size);
             using var target = new Mat(preview, new Rect((preview.Width - size) / 2, (preview.Height - size) / 2, size, size));
             var guide = new Scalar(0, 0, 0, 255);
             Cv2.Rectangle(target, default(Point), new Point(size - 1, size - 1), guide);
             var center = ToTargetPixel(TargetCalibrationService.TargetCenter);
-            int radius = (int)Math.Round(TargetCalibrationService.TargetRadius * (size - 1) / PreviewSpan);
+            int radius = (int)Math.Round(TargetCalibrationService.TargetRadius * diameterPixels);
             Cv2.Circle(target, center, radius, new Scalar(255, 255, 255, 255), -1);
             Cv2.Circle(target, center, radius, guide);
             Cv2.Circle(target, center, 2, guide, -1);
@@ -63,8 +64,8 @@ namespace HitAnalyzer2.Services.Rendering
             }
 
             Point ToTargetPixel(CalibrationPoint point) =>
-                new(Math.Round((point.X + PreviewMargin) * (size - 1) / PreviewSpan),
-                    Math.Round((point.Y + PreviewMargin) * (size - 1) / PreviewSpan));
+                new(Math.Round((point.X + PreviewMargin) * diameterPixels),
+                    Math.Round((point.Y + PreviewMargin) * diameterPixels));
 
             Point? Project(double x, double y)
             {

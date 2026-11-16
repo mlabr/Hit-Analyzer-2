@@ -1,6 +1,8 @@
+using HitAnalyzer2.Models;
 using OpenCvSharp;
 using System;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace HitAnalyzer2.Services.Target
 {
@@ -22,11 +24,6 @@ namespace HitAnalyzer2.Services.Target
         }
     }
 
-    internal sealed record CameraCalibrationSettings
-    {
-        public CalibrationCorners? Corners { get; init; }
-    }
-
     internal sealed class TargetCalibrationService
     {
         internal static readonly CalibrationPoint TargetCenter = new(0.5, 0.5);
@@ -34,23 +31,37 @@ namespace HitAnalyzer2.Services.Target
         private const double MinimumCornerCrossProduct = 0.0001;
         private volatile CalibrationSnapshot _snapshot;
 
-        internal TargetCalibrationService(CameraCalibrationSettings settings) => _snapshot = CreateSnapshot(settings);
+        internal TargetCalibrationService(TargetModel settings) => _snapshot = CreateSnapshot(settings);
 
-        internal CameraCalibrationSettings Settings => _snapshot.Settings;
+        internal TargetModel Settings => _snapshot.Settings;
         internal bool IsValid => _snapshot.Matrix is not null;
         internal CalibrationPoint? CameraTargetCenter => _snapshot.CameraTargetCenter;
         internal ReadOnlySpan<CalibrationPoint> CameraTargetOutline => _snapshot.CameraTargetOutline;
 
-        internal void Update(CameraCalibrationSettings settings) => _snapshot = CreateSnapshot(settings);
+        internal void SetCorners(CalibrationCorners? corners)
+        {
+            CalibrationSnapshot snapshot;
+            CalibrationSnapshot updated;
+            do
+            {
+                snapshot = _snapshot;
+                updated = CreateSnapshot(snapshot.Settings with { Corners = corners });
+            }
+            while (!ReferenceEquals(Interlocked.CompareExchange(ref _snapshot, updated, snapshot), snapshot));
+        }
 
-        internal void EnsureDefault(int width, int height)
+        internal void UpdatePreviewGeometry(int width, int height)
         {
             var snapshot = _snapshot;
-            if (snapshot.Settings.Corners is not null || width <= 0 || height <= 0)
+            int size = Math.Min(width, height);
+            if (size <= 0 || (snapshot.Settings.Corners is not null && snapshot.Settings.PreviewSizePixels == size))
                 return;
 
-            var settings = snapshot.Settings with { Corners = CalibrationCorners.CenteredSquare(width, height) };
-            System.Threading.Interlocked.CompareExchange(ref _snapshot, CreateSnapshot(settings), snapshot);
+            var settings = snapshot.Settings with { PreviewSizePixels = size };
+            var updated = settings.Corners is null
+                ? CreateSnapshot(settings with { Corners = CalibrationCorners.CenteredSquare(width, height) })
+                : snapshot with { Settings = settings };
+            Interlocked.CompareExchange(ref _snapshot, updated, snapshot);
         }
 
         // Both input and output are relative coordinates with the origin at the top left.
@@ -70,7 +81,7 @@ namespace HitAnalyzer2.Services.Target
             return double.IsFinite(targetX) && double.IsFinite(targetY) ? new(targetX, targetY) : null;
         }
 
-        private static CalibrationSnapshot CreateSnapshot(CameraCalibrationSettings settings)
+        private static CalibrationSnapshot CreateSnapshot(TargetModel settings)
         {
             if (settings.Corners is not { } corners)
                 return new(settings, null, null, []);
@@ -122,7 +133,7 @@ namespace HitAnalyzer2.Services.Target
         }
 
         private sealed record CalibrationSnapshot(
-            CameraCalibrationSettings Settings, double[]? Matrix, CalibrationPoint? CameraTargetCenter,
+            TargetModel Settings, double[]? Matrix, CalibrationPoint? CameraTargetCenter,
             CalibrationPoint[] CameraTargetOutline);
     }
 }
