@@ -41,7 +41,7 @@ namespace HitAnalyzer2
                 var cameraCalibration = new TargetCalibrationService(settings.Current.Camera.Calibration);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
-                    detection, cameraCalibration, Program.StartedAt);
+                    settings.Current.Shooting, detection, cameraCalibration, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler, weaponProfiles);

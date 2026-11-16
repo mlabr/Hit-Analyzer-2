@@ -11,11 +11,13 @@ namespace HitAnalyzer2.Services.Shooting
     internal readonly record struct TargetHit(CalibrationPoint? Aim, CalibrationPoint? Laser);
 
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
-        DetectionSettings detectionSettings, TargetCalibrationService calibration, long appStartedTimestampMs)
+        ShootingSettings shootingSettings, DetectionSettings detectionSettings, TargetCalibrationService calibration,
+        long appStartedTimestampMs)
     {
         internal const int NextDetectionMinimumInterval = 100;
         internal const int NextDetectionMaximumInterval = 5000;
-        private static readonly TimeSpan MinimumTimeoutAimPathDuration = TimeSpan.FromSeconds(2);
+        private readonly TimeSpan _aimPathTimeoutMinimumDuration =
+            TimeSpan.FromSeconds(shootingSettings.AimPathTimeoutMinimumDuration);
 
         private readonly object _hitGate = new();
         private volatile ILaserDetector _laserDetector = laserDetector;
@@ -124,7 +126,7 @@ namespace HitAnalyzer2.Services.Shooting
                 if (_trigger == TriggerTypeEnum.TimeOut && position is null &&
                     aimPositionHandler.GetTimedOutAimPosition(elapsed) is { } timedOutPosition)
                 {
-                    if (aimPositionHandler.AimPathDuration >= MinimumTimeoutAimPathDuration &&
+                    if (aimPositionHandler.AimPathDuration >= _aimPathTimeoutMinimumDuration &&
                         IsAimPositionInsideAllowedZone(aimPositionHandler.GetAimPosition(timedOutPosition), frame))
                     {
                         registeredHit = timedOutPosition;

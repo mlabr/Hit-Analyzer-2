@@ -2,6 +2,7 @@
   "Shooting": {
     "AimPathTimeLimit": 15,
     "AimPathTimeoutMs": 400,
+    "AimPathTimeoutMinimumDuration": 1.5,
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {

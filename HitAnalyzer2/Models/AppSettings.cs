@@ -25,6 +25,7 @@ namespace HitAnalyzer2
     {
         public int AimPathTimeLimit { get; init; } = 15;
         public int AimPathTimeoutMs { get; init; } = 400;
+        public double AimPathTimeoutMinimumDuration { get; init; } = 2;
         public int AimPathAfterTimeLimit { get; init; } = 4;
     }
 
