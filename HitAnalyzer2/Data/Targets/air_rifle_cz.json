@@ -1,0 +1,47 @@
+﻿{
+  "TargetName": "Air Rifle CZ",
+  "TargetType": "CircleMetric",
+  "Rings": [
+    {
+      "Diameter": 120,
+      "PointValue": 1
+    },
+    {
+      "Diameter": 108,
+      "PointValue": 2
+    },
+    {
+      "Diameter": 96,
+      "PointValue": 3
+    },
+    {
+      "Diameter": 84,
+      "PointValue": 4
+    },
+    {
+      "Diameter": 72,
+      "PointValue": 5
+    },
+    {
+      "Diameter": 60,
+      "PointValue": 6
+    },
+    {
+      "Diameter": 48,
+      "PointValue": 7
+    },
+    {
+      "Diameter": 36,
+      "PointValue": 8
+    },
+    {
+      "Diameter": 24,
+      "PointValue": 9
+    },
+    {
+      "Diameter": 12,
+      "PointValue": 10
+    }
+  ],
+  "MarkedRingPoints": 7
+}

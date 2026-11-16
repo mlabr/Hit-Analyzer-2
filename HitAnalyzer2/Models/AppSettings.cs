@@ -19,6 +19,8 @@ namespace HitAnalyzer2
         public WeaponSettings? LegacyWeapon { get; init; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public SavedWeaponProfile? SelectedWeapon { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? SelectedTargetFileName { get; init; }
     }
 
     internal sealed record ShootingSettings

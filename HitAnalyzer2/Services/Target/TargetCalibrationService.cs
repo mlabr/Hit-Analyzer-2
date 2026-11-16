@@ -37,6 +37,26 @@ namespace HitAnalyzer2.Services.Target
         internal bool IsValid => _snapshot.Matrix is not null;
         internal CalibrationPoint? CameraTargetCenter => _snapshot.CameraTargetCenter;
         internal ReadOnlySpan<CalibrationPoint> CameraTargetOutline => _snapshot.CameraTargetOutline;
+        internal event Action? PreviewGeometryChanged;
+
+        internal void SetTarget(TargetModel target)
+        {
+            CalibrationSnapshot snapshot;
+            CalibrationSnapshot updated;
+            do
+            {
+                snapshot = _snapshot;
+                updated = snapshot with
+                {
+                    Settings = target with
+                    {
+                        Corners = snapshot.Settings.Corners,
+                        PreviewSizePixels = snapshot.Settings.PreviewSizePixels
+                    }
+                };
+            }
+            while (!ReferenceEquals(Interlocked.CompareExchange(ref _snapshot, updated, snapshot), snapshot));
+        }
 
         internal void SetCorners(CalibrationCorners? corners)
         {
@@ -54,14 +74,15 @@ namespace HitAnalyzer2.Services.Target
         {
             var snapshot = _snapshot;
             int size = Math.Min(width, height);
-            if (size <= 0 || (snapshot.Settings.Corners is not null && snapshot.Settings.PreviewSizePixels == size))
+            if (snapshot.Settings.PreviewSizePixels == size && (size <= 1 || snapshot.Settings.Corners is not null))
                 return;
 
             var settings = snapshot.Settings with { PreviewSizePixels = size };
-            var updated = settings.Corners is null
+            var updated = size > 1 && settings.Corners is null
                 ? CreateSnapshot(settings with { Corners = CalibrationCorners.CenteredSquare(width, height) })
                 : snapshot with { Settings = settings };
-            Interlocked.CompareExchange(ref _snapshot, updated, snapshot);
+            if (ReferenceEquals(Interlocked.CompareExchange(ref _snapshot, updated, snapshot), snapshot))
+                PreviewGeometryChanged?.Invoke();
         }
 
         // Both input and output are relative coordinates with the origin at the top left.

@@ -2,9 +2,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:HitAnalyzer2.ViewModels"
              x:Class="HitAnalyzer2.Views.TargetSettingsView"
-             x:DataType="vm:CameraSettingsViewModel">
+             x:DataType="vm:TargetSettingsViewModel">
     <StackPanel Spacing="8">
+        <TextBlock Text="Target" />
+        <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Target"
+                  PlaceholderText="Select a target" ItemsSource="{Binding Targets}"
+                  SelectedItem="{Binding SelectedTarget, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:TargetOption">
+                    <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBlock Text="{Binding LoadMessage}" TextWrapping="Wrap"
+                   IsVisible="{Binding LoadMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         <TextBlock Text="Calibration" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding ScaleText}" />
         <Button x:Name="ResetCalibrationButton" Content="Reset to square" IsEnabled="False" />
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>

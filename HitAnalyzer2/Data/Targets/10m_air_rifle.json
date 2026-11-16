@@ -1,0 +1,47 @@
+{
+  "TargetName": "10m Air Rifle",
+  "TargetType": "CircleMetric",
+  "Rings": [
+    {
+      "Diameter": 45.5,
+      "PointValue": 1
+    },
+    {
+      "Diameter": 40.5,
+      "PointValue": 2
+    },
+    {
+      "Diameter": 35.5,
+      "PointValue": 3
+    },
+    {
+      "Diameter": 30.5,
+      "PointValue": 4
+    },
+    {
+      "Diameter": 25.5,
+      "PointValue": 5
+    },
+    {
+      "Diameter": 20.5,
+      "PointValue": 6
+    },
+    {
+      "Diameter": 15.5,
+      "PointValue": 7
+    },
+    {
+      "Diameter": 10.5,
+      "PointValue": 8
+    },
+    {
+      "Diameter": 5.5,
+      "PointValue": 9
+    },
+    {
+      "Diameter": 0.5,
+      "PointValue": 10
+    }
+  ],
+  "MarkedRingPoints": 4
+}

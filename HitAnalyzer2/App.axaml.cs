@@ -40,6 +40,9 @@ namespace HitAnalyzer2
                 var initialWeapon = settings.InitialWeapon;
                 var weaponHandler = new WeaponHandler(initialWeapon.OffsetX, initialWeapon.OffsetY, aimPositionHandler);
                 var cameraCalibration = new TargetCalibrationService(settings.Current.Camera.Calibration);
+                var targetFiles = new TargetFileRepository(Path.Combine(AppContext.BaseDirectory, "Data", "Targets"));
+                var targetSettings = new TargetSettingsViewModel(targetFiles, cameraCalibration,
+                    settings.Current.SelectedTargetFileName);
                 var recording = new RecordingService();
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
@@ -50,7 +53,7 @@ namespace HitAnalyzer2
                 var mainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
-                        shootingSession, cameraCalibration),
+                        targetSettings, shootingSession, cameraCalibration),
                 };
                 var externalTriggerHandler = new ExternalTriggerHandler(mainWindow);
                 externalTriggerHandler.PressChanged += shootingSession.OnExternalTriggerChanged;

@@ -13,6 +13,7 @@
     <AvaloniaResource Include="Assets\**" />
     <None Update="Data\Weapons\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="Data\Help\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="Data\Targets\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 
@@ -27,4 +28,6 @@
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.13.0.20261107" />
     <PackageReference Include="OpenCvSharp4.official.runtime.linux-x64" Version="4.13.0.20261107" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
   </ItemGroup>
+
+
 </Project>

@@ -26,12 +26,13 @@ namespace HitAnalyzer2.ViewModels
         public DetectionSettingsViewModel DetectionSettings { get; }
         public ShootingSettingsViewModel ShootingSettings { get; }
         public WeaponSettingsViewModel WeaponSettings { get; }
+        public TargetSettingsViewModel TargetSettings { get; }
 
         [ObservableProperty]
         private string? configurationMessage;
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
-            WeaponSettingsViewModel weaponSettings, ShootingSessionService shootingSession,
+            WeaponSettingsViewModel weaponSettings, TargetSettingsViewModel targetSettings, ShootingSessionService shootingSession,
             TargetCalibrationService cameraCalibration)
         {
             _settings = settings;
@@ -39,6 +40,7 @@ namespace HitAnalyzer2.ViewModels
             DetectionSettings = detectionSettings;
             _detectionSettings = settings.Current.Detection;
             WeaponSettings = weaponSettings;
+            TargetSettings = targetSettings;
             _shootingSession = shootingSession;
             ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession);
             var captureSession = new CameraCaptureSession(
@@ -46,6 +48,7 @@ namespace HitAnalyzer2.ViewModels
                 () =>
                 {
                     shootingSession.ClearAimPaths();
+                    cameraCalibration.UpdatePreviewGeometry(0, 0);
                     CameraPreview.ClearPreview();
                 },
                 message => CameraPreview.StatusMessage = message);
@@ -72,6 +75,7 @@ namespace HitAnalyzer2.ViewModels
                 Camera = camera,
                 Detection = detection,
                 SelectedWeapon = weapon ?? current.SelectedWeapon,
+                SelectedTargetFileName = TargetSettings.SelectedTarget?.FileName ?? current.SelectedTargetFileName,
                 LegacyWeapon = weapon is null && current.SelectedWeapon is null
                     ? WeaponSettings.GetConfiguration(current.LegacyWeapon ?? new WeaponSettings())
                     : null

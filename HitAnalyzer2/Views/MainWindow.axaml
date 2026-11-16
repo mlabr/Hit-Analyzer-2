@@ -49,7 +49,7 @@
                             <views:ShootingSettingsView x:Name="ShootingSettings"
                                                         DataContext="{Binding ShootingSettings}" />
                             <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
-                                                      DataContext="{Binding CameraSettings}" />
+                                                      DataContext="{Binding TargetSettings}" />
                         </Grid>
                         <TextBlock Text="{Binding ConfigurationMessage}" TextWrapping="Wrap"
                                    IsVisible="{Binding ConfigurationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
