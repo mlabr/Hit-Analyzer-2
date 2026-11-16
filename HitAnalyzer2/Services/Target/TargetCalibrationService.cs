@@ -28,16 +28,29 @@ namespace HitAnalyzer2.Services.Target
     {
         internal static readonly CalibrationPoint TargetCenter = new(0.5, 0.5);
         internal const double TargetRadius = 0.5;
+        private const int OutlinePointCount = 128;
         private const double MinimumCornerCrossProduct = 0.0001;
         private volatile CalibrationSnapshot _snapshot;
 
         internal TargetCalibrationService(TargetModel settings) => _snapshot = CreateSnapshot(settings);
 
         internal TargetModel Settings => _snapshot.Settings;
+        internal double? PreviewMmToPixel
+        {
+            get
+            {
+                var snapshot = _snapshot;
+                int size = Math.Min(snapshot.FrameWidth, snapshot.FrameHeight);
+                return size > 1
+                    ? snapshot.Settings.MaxDiameterMm / TargetModel.GetPreviewDiameterPixels(size)
+                    : null;
+            }
+        }
+
         internal bool IsValid => _snapshot.Matrix is not null;
         internal CalibrationPoint? CameraTargetCenter => _snapshot.CameraTargetCenter;
         internal ReadOnlySpan<CalibrationPoint> CameraTargetOutline => _snapshot.CameraTargetOutline;
-        internal event Action? PreviewGeometryChanged;
+        internal event Action? CalibrationGeometryChanged;
 
         internal void SetTarget(TargetModel target)
         {
@@ -51,7 +64,7 @@ namespace HitAnalyzer2.Services.Target
                     Settings = target with
                     {
                         Corners = snapshot.Settings.Corners,
-                        PreviewSizePixels = snapshot.Settings.PreviewSizePixels
+                        CameraTargetDiameterPixels = snapshot.Settings.CameraTargetDiameterPixels
                     }
                 };
             }
@@ -65,24 +78,27 @@ namespace HitAnalyzer2.Services.Target
             do
             {
                 snapshot = _snapshot;
-                updated = CreateSnapshot(snapshot.Settings with { Corners = corners });
+                updated = CreateSnapshot(snapshot.Settings with { Corners = corners })
+                    .WithFrameGeometry(snapshot.FrameWidth, snapshot.FrameHeight);
             }
             while (!ReferenceEquals(Interlocked.CompareExchange(ref _snapshot, updated, snapshot), snapshot));
+            CalibrationGeometryChanged?.Invoke();
         }
 
         internal void UpdatePreviewGeometry(int width, int height)
         {
             var snapshot = _snapshot;
-            int size = Math.Min(width, height);
-            if (snapshot.Settings.PreviewSizePixels == size && (size <= 1 || snapshot.Settings.Corners is not null))
+            bool hasFrame = width > 1 && height > 1;
+            if (snapshot.FrameWidth == width && snapshot.FrameHeight == height &&
+                (!hasFrame || snapshot.Settings.Corners is not null))
                 return;
 
-            var settings = snapshot.Settings with { PreviewSizePixels = size };
-            var updated = size > 1 && settings.Corners is null
-                ? CreateSnapshot(settings with { Corners = CalibrationCorners.CenteredSquare(width, height) })
-                : snapshot with { Settings = settings };
+            var calibration = hasFrame && snapshot.Settings.Corners is null
+                ? CreateSnapshot(snapshot.Settings with { Corners = CalibrationCorners.CenteredSquare(width, height) })
+                : snapshot;
+            var updated = calibration.WithFrameGeometry(width, height);
             if (ReferenceEquals(Interlocked.CompareExchange(ref _snapshot, updated, snapshot), snapshot))
-                PreviewGeometryChanged?.Invoke();
+                CalibrationGeometryChanged?.Invoke();
         }
 
         // Both input and output are relative coordinates with the origin at the top left.
@@ -139,7 +155,7 @@ namespace HitAnalyzer2.Services.Target
             }
 
             var center = Project(inverseMatrix, TargetCenter.X, TargetCenter.Y);
-            var outline = new CalibrationPoint[128];
+            var outline = new CalibrationPoint[OutlinePointCount];
             for (int i = 0; i < outline.Length; i++)
             {
                 double angle = Math.Tau * i / outline.Length;
@@ -155,6 +171,29 @@ namespace HitAnalyzer2.Services.Target
 
         private sealed record CalibrationSnapshot(
             TargetModel Settings, double[]? Matrix, CalibrationPoint? CameraTargetCenter,
-            CalibrationPoint[] CameraTargetOutline);
+            CalibrationPoint[] CameraTargetOutline, int FrameWidth = 0, int FrameHeight = 0)
+        {
+            internal CalibrationSnapshot WithFrameGeometry(int width, int height)
+            {
+                double? diameter = null;
+                if (width > 1 && height > 1 && CameraTargetOutline.Length == OutlinePointCount)
+                {
+                    // Average the two projected diameters along the target's axes.
+                    int quarter = OutlinePointCount / 4;
+                    diameter = (DistanceInPixels(CameraTargetOutline[0], CameraTargetOutline[2 * quarter]) +
+                        DistanceInPixels(CameraTargetOutline[quarter], CameraTargetOutline[3 * quarter])) / 2;
+                }
+
+                return this with
+                {
+                    FrameWidth = width,
+                    FrameHeight = height,
+                    Settings = Settings with { CameraTargetDiameterPixels = diameter }
+                };
+
+                double DistanceInPixels(CalibrationPoint a, CalibrationPoint b) =>
+                    double.Hypot((a.X - b.X) * width, (a.Y - b.Y) * height);
+            }
+        }
     }
 }

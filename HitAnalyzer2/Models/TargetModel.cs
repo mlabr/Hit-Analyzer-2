@@ -15,13 +15,13 @@ namespace HitAnalyzer2.Models
         internal TargetTypeEnum TargetType { get; init; }
         internal IReadOnlyList<TargetRingModel> Rings { get; init; } = [];
         internal double? MarkedRingPoints { get; init; }
-        internal double? MaxDiameterMm => Rings.Count == 0 ? null
-            : Rings.Max(ring => ring.Diameter) * (TargetType == TargetTypeEnum.CircleImperial ? 25.4 : 1);
-        internal int PreviewSizePixels { get; init; }
+        internal double? MaxDiameter => Rings.Count == 0 ? null : Rings.Max(ring => ring.Diameter);
+        internal double? MaxDiameterMm => MaxDiameter * (TargetType == TargetTypeEnum.CircleImperial ? 25.4 : 1);
+        internal double? CameraTargetDiameterPixels { get; init; }
 
-        // Physical millimeters per pixel in the corrected preview bitmap.
-        internal double? MmToPixel => PreviewSizePixels > 1
-            ? MaxDiameterMm / GetPreviewDiameterPixels(PreviewSizePixels)
+        // Physical millimeters per pixel at the calibrated target in the camera frame.
+        internal double? MmToPixel => CameraTargetDiameterPixels is > 0
+            ? MaxDiameterMm / CameraTargetDiameterPixels
             : null;
 
         internal static double GetPreviewDiameterPixels(int size) => (size - 1) / PreviewSpan;

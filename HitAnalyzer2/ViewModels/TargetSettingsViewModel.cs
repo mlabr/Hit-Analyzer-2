@@ -28,9 +28,8 @@ namespace HitAnalyzer2.ViewModels
 
         public IReadOnlyList<TargetOption> Targets { get; }
         public string? LoadMessage { get; }
-        public string ScaleText => _calibration.Settings.MmToPixel is { } scale
-            ? $"MmToPixel: {scale:0.######} mm/px"
-            : "MmToPixel: —";
+        public string PreviewScaleText => $"Preview Ressolution: {FormatScale(_calibration.PreviewMmToPixel)}";
+        public string CalibratedScaleText => $"Calibrated Ressolution: {FormatScale(_calibration.Settings.MmToPixel)}";
 
         [ObservableProperty]
         private TargetOption? selectedTarget;
@@ -43,9 +42,21 @@ namespace HitAnalyzer2.ViewModels
                 .Select(item => new TargetOption(item.FileName, item.Target)).ToList().AsReadOnly();
             LoadMessage = loadError ?? (Targets.Count == 0 ? "No targets found in Data/Targets." : null);
             SelectedTarget = FindTarget(selectedFileName) ?? FindTarget("air_rifle_cz.json") ?? Targets.FirstOrDefault();
-            _calibration.PreviewGeometryChanged += () =>
-                Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(ScaleText)));
+            _calibration.CalibrationGeometryChanged += RefreshScale;
         }
+
+        private void RefreshScale()
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                OnPropertyChanged(nameof(PreviewScaleText));
+                OnPropertyChanged(nameof(CalibratedScaleText));
+            }
+            else
+                Dispatcher.UIThread.Post(RefreshScale);
+        }
+
+        private static string FormatScale(double? scale) => scale is { } value ? $"{value:F3} mm/px" : "—";
 
         private TargetOption? FindTarget(string? fileName) =>
             Targets.FirstOrDefault(option => string.Equals(option.FileName, fileName, StringComparison.OrdinalIgnoreCase));
@@ -53,7 +64,7 @@ namespace HitAnalyzer2.ViewModels
         partial void OnSelectedTargetChanged(TargetOption? value)
         {
             _calibration.SetTarget(value?.Target ?? new TargetModel());
-            OnPropertyChanged(nameof(ScaleText));
+            RefreshScale();
         }
     }
 }
