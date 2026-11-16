@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Rendering;
 using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Target;
@@ -33,7 +34,7 @@ namespace HitAnalyzer2.ViewModels
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
             WeaponSettingsViewModel weaponSettings, TargetSettingsViewModel targetSettings, ShootingSessionService shootingSession,
-            TargetCalibrationService cameraCalibration)
+            TargetCalibrationService cameraCalibration, RecordingService recording)
         {
             _settings = settings;
             configurationMessage = settings.LoadError;
@@ -42,7 +43,7 @@ namespace HitAnalyzer2.ViewModels
             WeaponSettings = weaponSettings;
             TargetSettings = targetSettings;
             _shootingSession = shootingSession;
-            ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession);
+            ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
                 () =>

@@ -53,7 +53,7 @@ namespace HitAnalyzer2
                 var mainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,
-                        targetSettings, shootingSession, cameraCalibration),
+                        targetSettings, shootingSession, cameraCalibration, recording),
                 };
                 var externalTriggerHandler = new ExternalTriggerHandler(mainWindow);
                 externalTriggerHandler.PressChanged += shootingSession.OnExternalTriggerChanged;

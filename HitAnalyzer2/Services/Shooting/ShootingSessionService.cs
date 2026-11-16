@@ -96,20 +96,26 @@ namespace HitAnalyzer2.Services.Shooting
         internal void ClearAimPaths()
         {
             lock (_hitGate)
+                ClearShotState();
+        }
+
+        internal void Reset()
+        {
+            lock (_hitGate)
             {
-                aimPositionHandler.ClearAimPaths();
-                _lastHit = null;
-                _lastTargetHit = null;
-                _lastHitAimPath = Array.Empty<LaserPosition>();
-                _lastHitFollowPath = Array.Empty<LaserPosition>();
-                _recordingFollowPath = null;
+                ClearShotState();
+                recording.ClearHitRecordsList();
             }
         }
 
-        internal void ClearTargetHit()
+        private void ClearShotState()
         {
-            lock (_hitGate)
-                _lastTargetHit = null;
+            aimPositionHandler.ClearAimPaths();
+            _lastHit = null;
+            _lastTargetHit = null;
+            _lastHitAimPath = Array.Empty<LaserPosition>();
+            _lastHitFollowPath = Array.Empty<LaserPosition>();
+            _recordingFollowPath = null;
         }
 
         internal (AimPosition? Hit, AimPosition? CurrentAim, LaserPosition[] AimPath, LaserPosition[] FollowPath,
