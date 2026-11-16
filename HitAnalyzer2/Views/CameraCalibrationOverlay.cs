@@ -39,8 +39,7 @@ namespace HitAnalyzer2.Views
                 return;
 
             _dragPointer?.Capture(null);
-            settings.SetCalibrationSquare(_imageBounds.Width, _imageBounds.Height);
-            InvalidateVisual();
+            settings.Calibration.ResetCalibration();
         }
 
         public override void Render(DrawingContext context)

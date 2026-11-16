@@ -55,9 +55,6 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private CameraFlipOption selectedCameraFlip;
 
-        internal void SetCalibrationSquare(double width, double height)
-            => SetCalibrationCorners(CalibrationCorners.CenteredSquare(width, height));
-
         internal void SetCalibrationCorners(CalibrationCorners corners)
         {
             Calibration.SetCorners(corners);

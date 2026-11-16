@@ -29,7 +29,11 @@ namespace HitAnalyzer2.Views
             TargetSettings.ResetCalibrationButton.Click += (_, _) => CalibrationOverlay.ResetToSquare();
             DataContextChanged += (_, _) =>
             {
+                if (_cameraSettingsViewModel is { } previous)
+                    previous.Calibration.CalibrationGeometryChanged -= InvalidateCalibrationOverlay;
                 _cameraSettingsViewModel = (DataContext as MainWindowViewModel)?.CameraSettings;
+                if (_cameraSettingsViewModel is { } current)
+                    current.Calibration.CalibrationGeometryChanged += InvalidateCalibrationOverlay;
                 UpdateCalibrationOverlay();
             };
             ScalingChanged += (_, _) => FitWindowToPreview();
@@ -115,6 +119,14 @@ namespace HitAnalyzer2.Views
             
             TargetSettings.IsVisible = view == TargetSettings;
             UpdateCalibrationOverlay();
+        }
+
+        private void InvalidateCalibrationOverlay()
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+                CalibrationOverlay.InvalidateVisual();
+            else
+                Dispatcher.UIThread.Post(CalibrationOverlay.InvalidateVisual);
         }
 
         private void UpdateCalibrationOverlay()

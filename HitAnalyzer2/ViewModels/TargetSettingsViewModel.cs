@@ -41,7 +41,9 @@ namespace HitAnalyzer2.ViewModels
             Targets = repository.LoadTargets(out var loadError)
                 .Select(item => new TargetOption(item.FileName, item.Target)).ToList().AsReadOnly();
             LoadMessage = loadError ?? (Targets.Count == 0 ? "No targets found in Data/Targets." : null);
-            SelectedTarget = FindTarget(selectedFileName) ?? FindTarget("air_rifle_cz.json") ?? Targets.FirstOrDefault();
+            selectedTarget = FindTarget(selectedFileName) ?? FindTarget("air_rifle_cz.json") ?? Targets.FirstOrDefault();
+            if (selectedTarget is { } initialTarget)
+                _calibration.SetTarget(initialTarget.Target);
             _calibration.CalibrationGeometryChanged += RefreshScale;
         }
 
@@ -63,8 +65,10 @@ namespace HitAnalyzer2.ViewModels
 
         partial void OnSelectedTargetChanged(TargetOption? value)
         {
-            _calibration.SetTarget(value?.Target ?? new TargetModel());
-            RefreshScale();
+            if (value is null)
+                _calibration.SetTarget(new TargetModel());
+            else
+                _calibration.ResetCalibration(value.Target);
         }
     }
 }

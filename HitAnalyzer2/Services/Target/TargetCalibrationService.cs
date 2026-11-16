@@ -52,23 +52,40 @@ namespace HitAnalyzer2.Services.Target
         internal ReadOnlySpan<CalibrationPoint> CameraTargetOutline => _snapshot.CameraTargetOutline;
         internal event Action? CalibrationGeometryChanged;
 
-        internal void SetTarget(TargetModel target)
+        internal void SetTarget(TargetModel target) => UpdateTarget(target, resetCalibration: false);
+
+        internal void ResetCalibration(TargetModel? target = null) => UpdateTarget(target, resetCalibration: true);
+
+        private void UpdateTarget(TargetModel? target, bool resetCalibration)
         {
             CalibrationSnapshot snapshot;
             CalibrationSnapshot updated;
             do
             {
                 snapshot = _snapshot;
-                updated = snapshot with
+                var settings = target ?? snapshot.Settings;
+                if (resetCalibration)
                 {
-                    Settings = target with
+                    var corners = snapshot.FrameWidth > 1 && snapshot.FrameHeight > 1
+                        ? CalibrationCorners.CenteredSquare(snapshot.FrameWidth, snapshot.FrameHeight)
+                        : null;
+                    updated = CreateSnapshot(settings with { Corners = corners })
+                        .WithFrameGeometry(snapshot.FrameWidth, snapshot.FrameHeight);
+                }
+                else
+                {
+                    updated = snapshot with
                     {
-                        Corners = snapshot.Settings.Corners,
-                        CameraTargetDiameterPixels = snapshot.Settings.CameraTargetDiameterPixels
-                    }
-                };
+                        Settings = settings with
+                        {
+                            Corners = snapshot.Settings.Corners,
+                            CameraTargetDiameterPixels = snapshot.Settings.CameraTargetDiameterPixels
+                        }
+                    };
+                }
             }
             while (!ReferenceEquals(Interlocked.CompareExchange(ref _snapshot, updated, snapshot), snapshot));
+            CalibrationGeometryChanged?.Invoke();
         }
 
         internal void SetCorners(CalibrationCorners? corners)

@@ -19,12 +19,12 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.3748,
-          "Y": 0.2565
+          "X": 0.2000,
+          "Y": 0.1000
         },
         "TopRight": {
-          "X": 0.6699,
-          "Y": 0.2498
+          "X": 0.8000,
+          "Y": 0.1000
         },
         "BottomRight": {
           "X": 0.8000,
@@ -58,9 +58,9 @@
       "Caliber": 0,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "NewSpot",
+      "Trigger": "FirstSpot",
       "NexDetectionInterval": 500
     }
   },
-  "SelectedTargetFileName": "air_rifle_cz.json"
+  "SelectedTargetFileName": "10m_air_rifle.json"
 }
