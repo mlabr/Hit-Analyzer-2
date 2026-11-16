@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Repository;
+using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.ViewModels;
@@ -39,9 +40,10 @@ namespace HitAnalyzer2
                 var initialWeapon = settings.InitialWeapon;
                 var weaponHandler = new WeaponHandler(initialWeapon.OffsetX, initialWeapon.OffsetY, aimPositionHandler);
                 var cameraCalibration = new TargetCalibrationService(settings.Current.Camera.Calibration);
+                var recording = new RecordingService();
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
-                    settings.Current.Shooting, detection, cameraCalibration, Program.StartedAt);
+                    settings.Current.Shooting, detection, cameraCalibration, recording, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
                 var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler, weaponProfiles);

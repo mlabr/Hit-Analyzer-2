@@ -1,9 +1,12 @@
 using OpenCvSharp;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Target;
 
 namespace HitAnalyzer2.Services.Shooting
@@ -12,7 +15,7 @@ namespace HitAnalyzer2.Services.Shooting
 
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
         ShootingSettings shootingSettings, DetectionSettings detectionSettings, TargetCalibrationService calibration,
-        long appStartedTimestampMs)
+        RecordingService recording, long appStartedTimestampMs)
     {
         internal const int NextDetectionMinimumInterval = 100;
         internal const int NextDetectionMaximumInterval = 5000;
@@ -26,6 +29,7 @@ namespace HitAnalyzer2.Services.Shooting
         private TargetHit? _lastTargetHit;
         private LaserPosition[] _lastHitAimPath = Array.Empty<LaserPosition>();
         private LaserPosition[] _lastHitFollowPath = Array.Empty<LaserPosition>();
+        private (HitRecord Record, double OffsetX, double OffsetY)? _recordingFollowPath;
         private TriggerTypeEnum _trigger = TriggerTypeEnum.FirstSpot;
         private bool _spotWasVisible;
         private long? _lastAcceptedExternalTriggerEventTimestamp;
@@ -54,6 +58,7 @@ namespace HitAnalyzer2.Services.Shooting
                 {
                     _lastHitAimPath = Array.Empty<LaserPosition>();
                     _lastHitFollowPath = Array.Empty<LaserPosition>();
+                    _recordingFollowPath = null;
                     aimPositionHandler.ClearFollowPath();
                 }
             }
@@ -97,6 +102,7 @@ namespace HitAnalyzer2.Services.Shooting
                 _lastTargetHit = null;
                 _lastHitAimPath = Array.Empty<LaserPosition>();
                 _lastHitFollowPath = Array.Empty<LaserPosition>();
+                _recordingFollowPath = null;
             }
         }
 
@@ -123,6 +129,7 @@ namespace HitAnalyzer2.Services.Shooting
                 cancellationToken.ThrowIfCancellationRequested();
                 position = _laserDetector.GetLaserPosition(frame, elapsed);
                 bool startFollowPath = false;
+                HitRecord? hitRecord = null;
                 if (_trigger == TriggerTypeEnum.TimeOut && position is null &&
                     aimPositionHandler.GetTimedOutAimPosition(elapsed) is { } timedOutPosition)
                 {
@@ -164,13 +171,30 @@ namespace HitAnalyzer2.Services.Shooting
                         ? calibration.MapHit(registered.X / frame.Width, registered.Y / frame.Height)
                         : null;
                     _lastTargetHit = new(targetPoint, laserPoint);
+                    LaserPosition? recordedPosition = targetPoint is { } mapped
+                        ? new LaserPosition(mapped.X, mapped.Y, registered.Time)
+                        : null;
+                    double offsetX = aim.X - registered.X;
+                    double offsetY = aim.Y - registered.Y;
+                    var recordedAimPath = MapAimPath(_lastHitAimPath, offsetX, offsetY, frame.Width, frame.Height);
+                    hitRecord = new HitRecord(recordedPosition, registered.Time, recordedAimPath);
+                    _recordingFollowPath = startFollowPath ? (hitRecord, offsetX, offsetY) : null;
                 }
 
                 lastHit = _lastHit;
                 aimPath = _lastHitAimPath;
                 var updatedFollowPath = aimPositionHandler.UpdateFollowPath(position, elapsed, detectedFps, startFollowPath);
                 if (startFollowPath || updatedFollowPath.Length > 0)
+                {
                     _lastHitFollowPath = updatedFollowPath;
+                    if (_recordingFollowPath is { } pending)
+                        pending.Record.AimPathAfter = MapAimPath(updatedFollowPath, pending.OffsetX, pending.OffsetY,
+                            frame.Width, frame.Height);
+                }
+
+                if (hitRecord is not null)
+                    recording.AddHitRecord(hitRecord);
+
                 followPath = _lastHitFollowPath;
                 lastTargetHit = _lastTargetHit;
             }
@@ -182,6 +206,23 @@ namespace HitAnalyzer2.Services.Shooting
 
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
                 position is { } current ? aimPositionHandler.GetAimPosition(current) : null, aimPath, followPath, lastTargetHit);
+        }
+
+        private IReadOnlyList<LaserPosition> MapAimPath(LaserPosition[] path, double offsetX, double offsetY,
+            int frameWidth, int frameHeight)
+        {
+            if (path.Length == 0)
+                return Array.Empty<LaserPosition>();
+
+            var mappedPath = new List<LaserPosition>(path.Length);
+            foreach (var point in path)
+            {
+                if (calibration.MapHit((point.X + offsetX) / frameWidth,
+                    (point.Y + offsetY) / frameHeight) is { } mapped)
+                    mappedPath.Add(new LaserPosition(mapped.X, mapped.Y, point.Time));
+            }
+
+            return mappedPath.AsReadOnly();
         }
 
         private bool IsAimPositionInsideAllowedZone(AimPosition position, Mat frame)
