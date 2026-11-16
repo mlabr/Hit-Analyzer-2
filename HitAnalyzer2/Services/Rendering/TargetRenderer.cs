@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace HitAnalyzer2.Services.Rendering
 {
-    internal static class TargetRender
+    internal static class TargetRenderer
     {
         private const double PreviewMargin = TargetModel.PreviewMargin;
         private static readonly Scalar AimMarkerOutline = new(20, 20, 20, 255);

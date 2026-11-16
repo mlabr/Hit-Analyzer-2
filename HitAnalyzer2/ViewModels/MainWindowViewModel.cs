@@ -109,7 +109,7 @@ namespace HitAnalyzer2.ViewModels
             if (showTargetPreview)
             {
                 using var target = new Mat(pixels.Rows, pixels.Cols, pixels.Type());
-                TargetRender.DrawTargetPreview(target, currentAim, lastHit, aimPath, followPath,
+                TargetRenderer.DrawTargetPreview(target, currentAim, lastHit, aimPath, followPath,
                     lastTargetHit, CameraSettings.Calibration);
                 await CameraPreview.ShowFrameAsync(target, fps, cancellationToken);
                 return;
