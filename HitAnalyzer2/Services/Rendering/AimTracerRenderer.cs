@@ -65,14 +65,23 @@ namespace HitAnalyzer2.Services.Rendering
             }
         }
 
-        internal static void DrawAimPosition(Mat preview, double positionX, double positionY, int size, Scalar color)
+        internal static void DrawAimPosition(Mat preview, double positionX, double positionY, int size, Scalar color,
+            Scalar? outline = null)
         {
             int x = (int)Math.Round(positionX);
             int y = (int)Math.Round(positionY);
             int startOffset = (size - 1) / 2;
             int endOffset = size / 2;
-            Cv2.Line(preview, new Point(x - startOffset, y), new Point(x + endOffset, y), color, 2);
-            Cv2.Line(preview, new Point(x, y - startOffset), new Point(x, y + endOffset), color, 2);
+            if (outline is { } border)
+                DrawCross(border, 4);
+
+            DrawCross(color, 2);
+
+            void DrawCross(Scalar stroke, int thickness)
+            {
+                Cv2.Line(preview, new Point(x - startOffset, y), new Point(x + endOffset, y), stroke, thickness);
+                Cv2.Line(preview, new Point(x, y - startOffset), new Point(x, y + endOffset), stroke, thickness);
+            }
         }
 
 		internal static void DrawLaserPosition(Mat preview, double positionX, double positionY, int size, Scalar color)

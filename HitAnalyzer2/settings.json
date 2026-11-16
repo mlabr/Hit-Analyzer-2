@@ -9,22 +9,22 @@
     "DeviceId": "\\\\?\\usb#vid_328f\u0026pid_006d\u0026mi_00#6\u002634c3077b\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
-      "Width": 800,
-      "Height": 600,
+      "Width": 1280,
+      "Height": 960,
       "FpsNumerator": 30,
       "FpsDenominator": 1,
-      "Format": "3231564e-0000-0010-8000-00aa00389b71"
+      "Format": "47504a4d-0000-0010-8000-00aa00389b71"
     },
     "Flip": "X",
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2000,
-          "Y": 0.1000
+          "X": 0.3748,
+          "Y": 0.2565
         },
         "TopRight": {
-          "X": 0.8000,
-          "Y": 0.1000
+          "X": 0.6699,
+          "Y": 0.2498
         },
         "BottomRight": {
           "X": 0.8000,
@@ -46,7 +46,7 @@
     "MinimumHitAreaPixels": null,
     "ShowFlares": false,
     "ShowAllowedArea": false,
-    "ShowTargetPreview": false,
+    "ShowTargetPreview": true,
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },
@@ -61,5 +61,6 @@
       "Trigger": "NewSpot",
       "NexDetectionInterval": 500
     }
-  }
+  },
+  "SelectedTargetFileName": "air_rifle_cz.json"
 }

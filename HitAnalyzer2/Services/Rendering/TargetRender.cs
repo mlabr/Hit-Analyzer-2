@@ -12,6 +12,7 @@ namespace HitAnalyzer2.Services.Rendering
     internal static class TargetRender
     {
         private const double PreviewMargin = TargetModel.PreviewMargin;
+        private static readonly Scalar AimMarkerOutline = new(20, 20, 20, 255);
 
         internal static void DrawTargetPreview(Mat preview, AimPosition? aim, AimPosition? lastHit,
             IReadOnlyList<LaserPosition> aimPath, IReadOnlyList<LaserPosition> followPath,
@@ -48,7 +49,8 @@ namespace HitAnalyzer2.Services.Rendering
                 if (hit.Aim is { } hitAim && IsInsidePreview(hitAim))
                 {
                     var marker = ToTargetPixel(hitAim);
-                    AimTracerRenderer.DrawAimPosition(target, marker.X, marker.Y, markerSize, AimTracerRenderer.AimPositionMarkerColor);
+                    AimTracerRenderer.DrawAimPosition(target, marker.X, marker.Y, markerSize,
+                        AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
                 }
             }
 
@@ -59,7 +61,8 @@ namespace HitAnalyzer2.Services.Rendering
                     AimTracerRenderer.DrawLaserPosition(target, laserMarker.X, laserMarker.Y, markerSize, AimTracerRenderer.LaserPositionMarkerColor);
 
                 if (Project(current.X, current.Y) is { } aimMarker)
-                    AimTracerRenderer.DrawAimPosition(target, aimMarker.X, aimMarker.Y, markerSize, AimTracerRenderer.AimPositionMarkerColor);
+                    AimTracerRenderer.DrawAimPosition(target, aimMarker.X, aimMarker.Y, markerSize,
+                        AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
             }
 
             Point ToTargetPixel(CalibrationPoint point) =>
@@ -114,6 +117,9 @@ namespace HitAnalyzer2.Services.Rendering
         private static void DrawRingValue(Mat preview, Point center, double innerRadius, double outerRadius,
             double pointValue, Scalar color)
         {
+            if (pointValue == 10)
+                return;
+
             const HersheyFonts font = HersheyFonts.HersheySimplex;
             const int thickness = 1;
             string text = pointValue.ToString("G", CultureInfo.InvariantCulture);
