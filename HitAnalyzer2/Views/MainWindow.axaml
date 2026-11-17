@@ -20,8 +20,8 @@
             <MenuItem Header="_Weapon" Click="ShowWeaponSettings" />
             <MenuItem Header="_Help" HotKey="F1" Click="ShowHelp" />
         </Menu>
-        <Grid Grid.Row="1" RowDefinitions="*,Auto" ColumnDefinitions="*,Auto">
-            <Grid x:Name="CameraPreview">
+        <Grid Grid.Row="1" RowDefinitions="*,Auto" ColumnDefinitions="Auto,*">
+            <Grid x:Name="CameraPreview" Grid.Column="1">
                 <Image x:Name="PreviewImage" Source="{Binding CameraPreview.WebcamImage}" Stretch="Uniform"
                        StretchDirection="DownOnly" />
                 <TextBlock Text="{Binding CameraPreview.StatusMessage}" TextWrapping="Wrap" Margin="16"
@@ -31,11 +31,11 @@
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
             </Grid>
-            <StackPanel x:Name="HitCounter" Grid.Row="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
+            <StackPanel x:Name="HitCounter" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
                 <TextBlock Text="Hits:" FontSize="32" />
                 <TextBlock Text="{Binding ShootingSettings.HitCount}" FontSize="32" FontWeight="SemiBold" />
             </StackPanel>
-            <Border x:Name="SettingsPanel" Grid.Column="1" Grid.RowSpan="2" Width="280" BorderThickness="1,0,0,0"
+            <Border x:Name="SettingsPanel" Grid.RowSpan="2" Width="280" BorderThickness="0,0,1,0"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                 <ScrollViewer Padding="12" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Spacing="8">

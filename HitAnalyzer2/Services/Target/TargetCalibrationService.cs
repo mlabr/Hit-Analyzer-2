@@ -15,18 +15,6 @@ namespace HitAnalyzer2.Services.Target
         internal TargetCalibrationService(TargetPreviewModel settings) => _snapshot = CreateSnapshot(settings);
 
         internal TargetPreviewModel Settings => _snapshot.Settings;
-        internal double? PreviewMmToPixel
-        {
-            get
-            {
-                var snapshot = _snapshot;
-                int size = Math.Min(snapshot.FrameWidth, snapshot.FrameHeight);
-                return size > 1
-                    ? snapshot.Settings.MaxDiameterMm / TargetPreviewModel.GetPreviewDiameterPixels(size)
-                    : null;
-            }
-        }
-
         internal bool IsValid => _snapshot.Matrix is not null;
         internal Position? CameraTargetCenter => _snapshot.CameraTargetCenter;
         internal ReadOnlySpan<Position> CameraTargetOutline => _snapshot.CameraTargetOutline;

@@ -9,7 +9,6 @@
         <Button Content="Reset shooting" Command="{Binding ResetCommand}" />
         <CheckBox Content="Show Target Preview" IsChecked="{Binding ShowTargetPreview, Mode=TwoWay}" />
         <TextBlock Text="{Binding LastHitDistanceText}" TextWrapping="Wrap" />
-        <TextBlock Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TargetSettings.PreviewScaleText}" />
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>
 

@@ -28,7 +28,6 @@ namespace HitAnalyzer2.ViewModels
 
         public IReadOnlyList<TargetOption> Targets { get; }
         public string? LoadMessage { get; }
-        public string PreviewScaleText => $"Preview Ressolution: {FormatScale(_calibration.PreviewMmToPixel)}";
         public string CalibratedScaleText => $"Calibrated Ressolution: {FormatScale(_calibration.Settings.MmToPixel)}";
 
         [ObservableProperty]
@@ -50,10 +49,7 @@ namespace HitAnalyzer2.ViewModels
         private void RefreshScale()
         {
             if (Dispatcher.UIThread.CheckAccess())
-            {
-                OnPropertyChanged(nameof(PreviewScaleText));
                 OnPropertyChanged(nameof(CalibratedScaleText));
-            }
             else
                 Dispatcher.UIThread.Post(RefreshScale);
         }
