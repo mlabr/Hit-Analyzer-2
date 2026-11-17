@@ -20,7 +20,7 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private string? fpsText;
 
-        internal async Task ShowFrameAsync(Mat pixels, double? fps, CancellationToken cancellationToken)
+        internal async Task ShowFrameAsync(Mat pixels, string measuredFps, CancellationToken cancellationToken)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
@@ -40,7 +40,7 @@ namespace HitAnalyzer2.ViewModels
                     published = true;
                     WebcamImage = bitmap;
                     previous?.Dispose();
-                    FpsText = fps is { } value ? $"FPS: {value:0.0}" : null;
+                    FpsText = $"FPS: {measuredFps}";
                     StatusMessage = null;
                 }, DispatcherPriority.Background);
             }

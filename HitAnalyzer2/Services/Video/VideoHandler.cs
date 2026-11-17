@@ -1,3 +1,4 @@
+using HitAnalyzer2.Models;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
@@ -63,7 +64,7 @@ namespace HitAnalyzer2.Services.Video
         public Task CaptureAsync(
             CameraDevice camera,
             CameraMode? mode,
-            Func<Mat, long, double?, Task> onFrame,
+            Func<Mat, long, string, Task> onFrame,
             CancellationToken cancellationToken,
             FlipMode? flip = null)
         {
@@ -73,7 +74,11 @@ namespace HitAnalyzer2.Services.Video
                 if (camera.DeviceId is { } deviceId)
                 {
                     using var windowsCapture = new WindowsCamera(deviceId, mode);
-                    CaptureFrames(frame => windowsCapture.Read(frame, cancellationToken));
+                    CaptureFrames<long>(frame =>
+                    {
+                        bool hasFrame = windowsCapture.Read(frame, cancellationToken, out long currentFrameTimeStamp);
+                        return (hasFrame, currentFrameTimeStamp);
+                    });
                     return;
                 }
 
@@ -81,20 +86,38 @@ namespace HitAnalyzer2.Services.Video
                 if (!capture.IsOpened())
                     throw new InvalidOperationException($"Nepodařilo se otevřít kameru s indexem {camera.Index}.");
 
-                if (OperatingSystem.IsLinux() && mode is not null)
-                    ApplyLinuxMode(capture, mode);
+                if (OperatingSystem.IsLinux())
+                {
+                    if (mode is not null)
+                        ApplyLinuxMode(capture, mode);
 
-                CaptureFrames(capture.Read);
+                    CaptureFrames<double>(frame =>
+                    {
+                        if (!capture.Read(frame))
+                            return (false, null);
+
+                        // V4L2 exposes the timestamp of the last captured buffer through PosMsec.
+                        double currentFrameTimeStamp = capture.Get(VideoCaptureProperties.PosMsec);
+                        return (true, currentFrameTimeStamp > 0 && double.IsFinite(currentFrameTimeStamp)
+                            ? currentFrameTimeStamp : null);
+                    });
+                }
+                else
+                {
+                    CaptureFrames<long>(frame => (capture.Read(frame), null));
+                }
             }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
-            void CaptureFrames(Func<Mat, bool> readFrame)
+            void CaptureFrames<TTimestamp>(Func<Mat, (bool HasFrame, TTimestamp? CurrentFrameTimeStamp)> readFrame)
+                where TTimestamp : struct
             {
                 using var frame = new Mat();
-                long? previousFrameTime = null;
+                var fps = new FpsValueModel();
+                TTimestamp? lastFrameTimestamp = null;
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    bool hasFrame = readFrame(frame);
+                    var (hasFrame, currentFrameTimeStamp) = readFrame(frame);
                     if (cancellationToken.IsCancellationRequested)
                         return;
 
@@ -102,16 +125,22 @@ namespace HitAnalyzer2.Services.Video
                         throw new InvalidOperationException("Z kamery se nepodařilo načíst snímek.");
 
                     long frameTime = Stopwatch.GetTimestamp();
-                    double? fps = previousFrameTime is { } previous && frameTime > previous
-                        ? 1 / Stopwatch.GetElapsedTime(previous, frameTime).TotalSeconds
-                        : null;
-                    previousFrameTime = frameTime;
+                    if (currentFrameTimeStamp.HasValue)
+                    {
+                        if (Nullable.Equals(currentFrameTimeStamp, lastFrameTimestamp))
+                            continue;
+
+                        lastFrameTimestamp = currentFrameTimeStamp;
+                        int timeSinceAppStartMs = (int)Stopwatch.GetElapsedTime(Program.StartedAt).TotalMilliseconds;
+                        //Console.WriteLine(timeSinceAppStartMs + ", " + currentFrameTimeStamp);
+                        fps.Update(timeSinceAppStartMs);
+                    }
 
                     if (flip is { } direction)
                         Cv2.Flip(frame, frame, direction);
 
                     // The frame remains valid until the consumer's task completes.
-                    onFrame(frame, frameTime, fps).GetAwaiter().GetResult();
+                    onFrame(frame, frameTime, fps.GetFpsString()).GetAwaiter().GetResult();
                 }
             }
         }

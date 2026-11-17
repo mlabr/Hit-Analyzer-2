@@ -95,7 +95,7 @@ namespace HitAnalyzer2.ViewModels
             }
         }
 
-        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double? fps, double detectedFps,
+        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double detectedFps, string measuredFps,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -111,7 +111,7 @@ namespace HitAnalyzer2.ViewModels
                 using var target = new Mat(pixels.Rows, pixels.Cols, pixels.Type());
                 TargetRenderer.DrawTargetPreview(target, currentAim, lastHit, aimPath, followPath,
                     lastTargetHit, CameraSettings.Calibration);
-                await CameraPreview.ShowFrameAsync(target, fps, cancellationToken);
+                await CameraPreview.ShowFrameAsync(target, measuredFps, cancellationToken);
                 return;
             }
 
@@ -134,7 +134,7 @@ namespace HitAnalyzer2.ViewModels
             if (lastHit is { } hit)
                 AimTracerRenderer.DrawHitAndTraceIntoFrame(pixels, hit, aimPath, followPath);
 
-            await CameraPreview.ShowFrameAsync(pixels, fps, cancellationToken);
+            await CameraPreview.ShowFrameAsync(pixels, measuredFps, cancellationToken);
         }
     }
 }

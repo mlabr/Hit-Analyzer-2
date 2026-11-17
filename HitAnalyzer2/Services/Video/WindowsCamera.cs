@@ -22,12 +22,14 @@ namespace HitAnalyzer2.Services.Video
         private static readonly Guid Subtype = new("f7e34c9a-42e8-4714-b74b-cb29d72c35e5");
         private static readonly Guid VideoType = new("73646976-0000-0010-8000-00aa00389b71");
         private static readonly Guid Rgb32 = new("00000016-0000-0010-8000-00aa00389b71");
+        private static readonly Guid Mjpg = new("47504a4d-0000-0010-8000-00aa00389b71");
         private static readonly Guid FrameSize = new("1652c33d-d6b2-4012-b834-72030849a37d");
         private static readonly Guid FrameRate = new("c459a2e8-3d2c-4e44-b132-fee5156c7bb0");
         private static readonly Guid DefaultStride = new("644b4e48-1e02-4516-b0eb-c01ca9d49ac6");
 
         private readonly Session _session = new();
         private readonly CameraMode? _mode;
+        private readonly bool _useNativeMjpg;
         private nint _source;
         private nint _reader;
         private int _width;
@@ -37,13 +39,15 @@ namespace HitAnalyzer2.Services.Video
         public WindowsCamera(string deviceId, CameraMode? mode)
         {
             _mode = mode;
+            _useNativeMjpg = mode?.Format == Mjpg;
             try
             {
                 _source = OpenSource(deviceId);
-                _reader = CreateReader(_source, convertVideo: true);
+                _reader = CreateReader(_source, convertVideo: !_useNativeMjpg);
                 if (mode is not null)
                     SelectNativeMode(mode);
-                SetRgbOutput();
+                if (!_useNativeMjpg)
+                    SetRgbOutput();
                 UpdateOutputLayout();
             }
             catch
@@ -69,6 +73,8 @@ namespace HitAnalyzer2.Services.Video
                         var setNativeType = (delegate* unmanaged[Stdcall]<nint, uint, nint, uint*, int>)Slot(readerEx, 13);
                         uint flags;
                         Check(setNativeType(readerEx, FirstVideoStream, type, &flags));
+                        if (_useNativeMjpg)
+                            SetOutputType(type);
                         return;
                     }
                     finally
@@ -92,14 +98,19 @@ namespace HitAnalyzer2.Services.Video
             {
                 SetGuid(type, MajorType, VideoType);
                 SetGuid(type, Subtype, Rgb32);
-                // IMFSourceReader::SetCurrentMediaType
-                var setCurrentType = (delegate* unmanaged[Stdcall]<nint, uint, nint, nint, int>)Slot(_reader, 7);
-                Check(setCurrentType(_reader, FirstVideoStream, 0, type));
+                SetOutputType(type);
             }
             finally
             {
                 Release(type);
             }
+        }
+
+        private void SetOutputType(nint type)
+        {
+            // IMFSourceReader::SetCurrentMediaType
+            var setCurrentType = (delegate* unmanaged[Stdcall]<nint, uint, nint, nint, int>)Slot(_reader, 7);
+            Check(setCurrentType(_reader, FirstVideoStream, 0, type));
         }
 
         private void UpdateOutputLayout()
@@ -125,13 +136,17 @@ namespace HitAnalyzer2.Services.Video
             Check(getCurrentType(_reader, FirstVideoStream, &type));
             try
             {
-                if (!TryGetUInt64(type, FrameSize, out var size) || GetGuid(type, Subtype) != Rgb32)
+                var expectedFormat = _useNativeMjpg ? Mjpg : Rgb32;
+                if (!TryGetUInt64(type, FrameSize, out var size) || GetGuid(type, Subtype) != expectedFormat)
                     throw new InvalidOperationException("Kamera neposkytuje očekávaný formát náhledu.");
 
                 _width = checked((int)(size >> 32));
                 _height = checked((int)(size & uint.MaxValue));
                 if (_mode is { } selected && (_width != selected.Width || _height != selected.Height))
                     throw new InvalidOperationException("Náhled nemá vybrané rozlišení.");
+
+                if (_useNativeMjpg)
+                    return;
 
                 var strideKey = DefaultStride;
                 var getUInt32 = (delegate* unmanaged[Stdcall]<nint, Guid*, int*, int>)Slot(type, 7);
@@ -146,15 +161,17 @@ namespace HitAnalyzer2.Services.Video
             }
         }
 
-        public bool Read(Mat frame, CancellationToken cancellationToken)
+        public bool Read(Mat frame, CancellationToken cancellationToken, out long timestamp)
         {
+            timestamp = default;
             // IMFSourceReader::ReadSample
             var readSample = (delegate* unmanaged[Stdcall]<nint, uint, uint, uint*, uint*, long*, nint*, int>)Slot(_reader, 9);
             while (!cancellationToken.IsCancellationRequested)
             {
                 uint flags;
+                long sampleTimestamp;
                 nint sample;
-                Check(readSample(_reader, FirstVideoStream, 0, null, &flags, null, &sample));
+                Check(readSample(_reader, FirstVideoStream, 0, null, &flags, &sampleTimestamp, &sample));
                 try
                 {
                     if ((flags & StreamEndedOrFailed) != 0 || cancellationToken.IsCancellationRequested)
@@ -165,6 +182,7 @@ namespace HitAnalyzer2.Services.Video
                         continue;
 
                     CopySample(sample, frame);
+                    timestamp = sampleTimestamp;
                     return true;
                 }
                 finally
@@ -191,6 +209,12 @@ namespace HitAnalyzer2.Services.Video
                 Check(lockBuffer(buffer, &pixels, null, &length));
                 try
                 {
+                    if (_useNativeMjpg)
+                    {
+                        DecodeMjpg(new ReadOnlySpan<byte>((void*)pixels, checked((int)length)), frame);
+                        return;
+                    }
+
                     int stride = Math.Abs(_stride);
                     int rowBytes = checked(_width * 4);
                     if (_height <= 0 || stride < rowBytes || length < (long)(_height - 1) * stride + rowBytes)
@@ -211,6 +235,18 @@ namespace HitAnalyzer2.Services.Video
             {
                 Release(buffer);
             }
+        }
+
+        private void DecodeMjpg(ReadOnlySpan<byte> encoded, Mat frame)
+        {
+            if (encoded.IsEmpty)
+                throw new InvalidOperationException("Kamera vrátila prázdný MJPG snímek.");
+
+            using var decoded = Cv2.ImDecode(encoded, ImreadModes.Color | ImreadModes.IgnoreOrientation);
+            if (decoded.Empty() || decoded.Width != _width || decoded.Height != _height)
+                throw new InvalidOperationException("Kamera vrátila neplatný MJPG snímek.");
+
+            Cv2.CvtColor(decoded, frame, ColorConversionCodes.BGR2BGRA);
         }
 
         internal static CameraMode? ReadMode(nint type)
