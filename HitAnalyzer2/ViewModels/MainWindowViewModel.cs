@@ -108,7 +108,8 @@ namespace HitAnalyzer2.ViewModels
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             if (showTargetPreview)
             {
-                using var target = new Mat(pixels.Rows, pixels.Cols, pixels.Type());
+                int size = Math.Min(pixels.Rows, pixels.Cols);
+                using var target = new Mat(size, size, pixels.Type());
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings);
                 await CameraPreview.ShowFrameAsync(target, measuredFps, cancellationToken);
                 return;

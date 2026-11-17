@@ -20,17 +20,16 @@ namespace HitAnalyzer2.Services.Rendering
                 return;
 
             double diameterPixels = TargetPreviewModel.GetPreviewDiameterPixels(size);
-            using var target = new Mat(preview, new Rect((preview.Width - size) / 2, (preview.Height - size) / 2, size, size));
             var guide = new Scalar(0, 0, 0, 255);
-            Cv2.Rectangle(target, default(Point), new Point(size - 1, size - 1), guide);
+            Cv2.Rectangle(preview, default(Point), new Point(size - 1, size - 1), guide);
             var center = ToTargetPixel(TargetCalibrationService.TargetCenter);
-            DrawTargetRings(target, center, diameterPixels, settings, guide);
+            DrawTargetRings(preview, center, diameterPixels, settings, guide);
 
             if (lastTargetHit is { } hit && IsInsidePreview(hit))
             {
-                int markerSize = Math.Max(1, (int)Math.Round(target.Height * AimTracerRenderer.MarkerSizeRatio));
+                int markerSize = Math.Max(1, (int)Math.Round(size * AimTracerRenderer.MarkerSizeRatio));
                 var marker = ToTargetPixel(hit);
-                AimTracerRenderer.DrawAimPosition(target, marker.X, marker.Y, markerSize,
+                AimTracerRenderer.DrawAimPosition(preview, marker.X, marker.Y, markerSize,
                     AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
             }
 
