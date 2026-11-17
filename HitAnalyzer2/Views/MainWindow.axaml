@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="HitAnalyzer2.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/HA2_icon.ico"
         Width="800" Height="450" MinWidth="450" MinHeight="150"
         Title="Hit Analyzer 2">
 
@@ -37,7 +37,7 @@
                 <TextBlock Text="Hits:" FontSize="32" />
                 <TextBlock Text="{Binding ShootingSettings.HitCount}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
                 <TextBlock Text="Total:" FontSize="32" />
-                <TextBlock Text="{Binding ShootingSettings.TotalScore}" FontSize="32" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding ShootingSettings.TotalScore}" FontSize="32" FontWeight="SemiBold" MinWidth="72" />
             </StackPanel>
             <Border x:Name="SettingsPanel" Grid.RowSpan="2" Width="280" BorderThickness="0,0,1,0"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">

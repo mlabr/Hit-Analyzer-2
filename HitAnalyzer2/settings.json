@@ -9,8 +9,8 @@
     "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u00268852233\u00263\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
-      "Width": 1280,
-      "Height": 720,
+      "Width": 640,
+      "Height": 480,
       "FpsNumerator": 30,
       "FpsDenominator": 1,
       "Format": "47504a4d-0000-0010-8000-00aa00389b71"
@@ -19,20 +19,20 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.3453,
-          "Y": 0.2181
+          "X": 0.2000,
+          "Y": 0.1000
         },
         "TopRight": {
-          "X": 0.6367,
-          "Y": 0.2597
+          "X": 0.8000,
+          "Y": 0.1000
         },
         "BottomRight": {
-          "X": 0.6438,
-          "Y": 0.7847
+          "X": 0.8000,
+          "Y": 0.9000
         },
         "BottomLeft": {
-          "X": 0.3438,
-          "Y": 0.8278
+          "X": 0.2000,
+          "Y": 0.9000
         }
       }
     }

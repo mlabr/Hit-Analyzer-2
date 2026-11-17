@@ -119,6 +119,7 @@ namespace HitAnalyzer2.Views
             
             TargetSettings.IsVisible = view == TargetSettings;
             UpdateCalibrationOverlay();
+            FitWindowToPreview();
         }
 
         private void InvalidateCalibrationOverlay()
@@ -190,7 +191,12 @@ namespace HitAnalyzer2.Views
                 (maxWidth - horizontalSpace) / imageSize.Width,
                 (maxHeight - verticalSpace) / imageSize.Height), 0, 1);
 
-            Width = Math.Min(maxWidth, Math.Max(MinWidth, Math.Ceiling(imageSize.Width * scale + horizontalSpace)));
+            double previewWidth = Math.Ceiling(imageSize.Width * scale + horizontalSpace);
+            double statisticsWidth = Math.Ceiling(SettingsPanel.Width + HitCounter.DesiredSize.Width + 20);
+            MinWidth = DataContext is MainWindowViewModel { IsTargetPreviewActive: true }
+                ? Math.Min(maxWidth, Math.Max(450, Math.Max(previewWidth + 20, statisticsWidth)))
+                : 450;
+            Width = Math.Min(maxWidth, Math.Max(MinWidth, previewWidth));
             Height = Math.Min(maxHeight, Math.Max(MinHeight, Math.Ceiling(imageSize.Height * scale + verticalSpace)));
 
             if (screen is { } currentScreen)
