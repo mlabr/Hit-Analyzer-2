@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace HitAnalyzer2.Services.Target
+namespace HitAnalyzer2.Repository
 {
     internal sealed class CalibrationCoordinateJsonConverter : JsonConverter<double>
     {

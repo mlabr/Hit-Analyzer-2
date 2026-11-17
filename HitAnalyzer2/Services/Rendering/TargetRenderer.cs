@@ -11,7 +11,7 @@ namespace HitAnalyzer2.Services.Rendering
 {
     internal static class TargetRenderer
     {
-        private const double PreviewMargin = TargetModel.PreviewMargin;
+        private const double PreviewMargin = TargetPreviewModel.PreviewMargin;
         private static readonly Scalar AimMarkerOutline = new(20, 20, 20, 255);
 
         internal static void DrawTargetPreview(Mat preview, AimPosition? aim, AimPosition? lastHit,
@@ -23,7 +23,7 @@ namespace HitAnalyzer2.Services.Rendering
             if (size < 2)
                 return;
 
-            double diameterPixels = TargetModel.GetPreviewDiameterPixels(size);
+            double diameterPixels = TargetPreviewModel.GetPreviewDiameterPixels(size);
             using var target = new Mat(preview, new Rect((preview.Width - size) / 2, (preview.Height - size) / 2, size, size));
             var guide = new Scalar(0, 0, 0, 255);
             Cv2.Rectangle(target, default(Point), new Point(size - 1, size - 1), guide);

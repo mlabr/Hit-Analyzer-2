@@ -1,3 +1,4 @@
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Repository;
 using OpenCvSharp;
 using System;
@@ -5,6 +6,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace HitAnalyzer2
 {
@@ -13,6 +15,10 @@ namespace HitAnalyzer2
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = true,
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver
+            {
+                Modifiers = { ConfigureCalibrationCoordinates }
+            },
             Converters =
             {
                 new JsonStringEnumConverter<FlipMode>(),
@@ -20,6 +26,19 @@ namespace HitAnalyzer2
                 new JsonStringEnumConverter<TriggerTypeEnum>()
             }
         };
+
+        private static void ConfigureCalibrationCoordinates(JsonTypeInfo typeInfo)
+        {
+            if (typeInfo.Type != typeof(CalibrationPoint))
+                return;
+
+            var converter = new CalibrationCoordinateJsonConverter();
+            foreach (var property in typeInfo.Properties)
+            {
+                if (property.Name is nameof(CalibrationPoint.X) or nameof(CalibrationPoint.Y))
+                    property.CustomConverter = converter;
+            }
+        }
 
         private readonly string _path;
         private readonly WeaponFileRepository _weaponProfiles;

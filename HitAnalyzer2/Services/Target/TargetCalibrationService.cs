@@ -1,29 +1,10 @@
 using HitAnalyzer2.Models;
 using OpenCvSharp;
 using System;
-using System.Text.Json.Serialization;
 using System.Threading;
 
 namespace HitAnalyzer2.Services.Target
 {
-    internal readonly record struct CalibrationPoint(
-        [property: JsonConverter(typeof(CalibrationCoordinateJsonConverter))] double X,
-        [property: JsonConverter(typeof(CalibrationCoordinateJsonConverter))] double Y);
-
-    internal sealed record CalibrationCorners(
-        CalibrationPoint TopLeft, CalibrationPoint TopRight,
-        CalibrationPoint BottomRight, CalibrationPoint BottomLeft)
-    {
-        internal static CalibrationCorners CenteredSquare(double width, double height)
-        {
-            double halfSide = 0.4 * Math.Min(width, height);
-            double x = halfSide / width;
-            double y = halfSide / height;
-            return new(new(0.5 - x, 0.5 - y), new(0.5 + x, 0.5 - y),
-                new(0.5 + x, 0.5 + y), new(0.5 - x, 0.5 + y));
-        }
-    }
-
     internal sealed class TargetCalibrationService
     {
         internal static readonly CalibrationPoint TargetCenter = new(0.5, 0.5);
@@ -32,9 +13,9 @@ namespace HitAnalyzer2.Services.Target
         private const double MinimumCornerCrossProduct = 0.0001;
         private volatile CalibrationSnapshot _snapshot;
 
-        internal TargetCalibrationService(TargetModel settings) => _snapshot = CreateSnapshot(settings);
+        internal TargetCalibrationService(TargetPreviewModel settings) => _snapshot = CreateSnapshot(settings);
 
-        internal TargetModel Settings => _snapshot.Settings;
+        internal TargetPreviewModel Settings => _snapshot.Settings;
         internal double? PreviewMmToPixel
         {
             get
@@ -42,7 +23,7 @@ namespace HitAnalyzer2.Services.Target
                 var snapshot = _snapshot;
                 int size = Math.Min(snapshot.FrameWidth, snapshot.FrameHeight);
                 return size > 1
-                    ? snapshot.Settings.MaxDiameterMm / TargetModel.GetPreviewDiameterPixels(size)
+                    ? snapshot.Settings.MaxDiameterMm / TargetPreviewModel.GetPreviewDiameterPixels(size)
                     : null;
             }
         }
@@ -63,7 +44,7 @@ namespace HitAnalyzer2.Services.Target
             do
             {
                 snapshot = _snapshot;
-                var settings = target ?? snapshot.Settings;
+                var settings = target is null ? snapshot.Settings : new TargetPreviewModel(target);
                 if (resetCalibration)
                 {
                     var corners = snapshot.FrameWidth > 1 && snapshot.FrameHeight > 1
@@ -135,7 +116,7 @@ namespace HitAnalyzer2.Services.Target
             return double.IsFinite(targetX) && double.IsFinite(targetY) ? new(targetX, targetY) : null;
         }
 
-        private static CalibrationSnapshot CreateSnapshot(TargetModel settings)
+        private static CalibrationSnapshot CreateSnapshot(TargetPreviewModel settings)
         {
             if (settings.Corners is not { } corners)
                 return new(settings, null, null, []);
@@ -187,7 +168,7 @@ namespace HitAnalyzer2.Services.Target
         }
 
         private sealed record CalibrationSnapshot(
-            TargetModel Settings, double[]? Matrix, CalibrationPoint? CameraTargetCenter,
+            TargetPreviewModel Settings, double[]? Matrix, CalibrationPoint? CameraTargetCenter,
             CalibrationPoint[] CameraTargetOutline, int FrameWidth = 0, int FrameHeight = 0)
         {
             internal CalibrationSnapshot WithFrameGeometry(int width, int height)

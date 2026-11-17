@@ -57,7 +57,7 @@ namespace HitAnalyzer2
         public int? DeviceIndex { get; init; }
         public CameraMode? Mode { get; init; }
         public FlipMode? Flip { get; init; } = FlipMode.XY;
-        public TargetModel Calibration { get; init; } = new();
+        public TargetPreviewModel Calibration { get; init; } = new();
     }
 
     public enum DetectionMethod
