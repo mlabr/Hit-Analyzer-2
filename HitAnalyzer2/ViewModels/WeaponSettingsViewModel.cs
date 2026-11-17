@@ -4,6 +4,7 @@ using HitAnalyzer2.Repository;
 using HitAnalyzer2.Services.Shooting;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace HitAnalyzer2.ViewModels
@@ -13,9 +14,22 @@ namespace HitAnalyzer2.ViewModels
         private readonly ShootingSessionService _shootingSession;
 
         private readonly WeaponHandler _weaponHandler;
+        private const decimal MillimetersPerInch = 25.4m;
+        private bool _showCaliberInInches;
 
         public int MinimumOffset => WeaponHandler.MinimumOffset;
         public int MaximumOffset => WeaponHandler.MaximumOffset;
+        public string CaliberText
+        {
+            get
+            {
+                decimal diameterMm = _weaponHandler.CaliberDiameterMm;
+                decimal displayedDiameter = _showCaliberInInches ? diameterMm / MillimetersPerInch : diameterMm;
+                return displayedDiameter.ToString("0.############################", CultureInfo.CurrentCulture);
+            }
+        }
+
+        public string CaliberUnit => _showCaliberInInches ? "in" : "mm";
 
         [ObservableProperty]
         private int offsetX;
@@ -77,6 +91,10 @@ namespace HitAnalyzer2.ViewModels
 
         partial void OnSelectedWeaponChanged(WeaponProfileItem? value)
         {
+            _weaponHandler.SetCaliber(value?.Profile.Caliber ?? 0);
+            _showCaliberInInches = false;
+            OnPropertyChanged(nameof(CaliberText));
+            OnPropertyChanged(nameof(CaliberUnit));
             if (value is null)
                 return;
 
@@ -113,6 +131,26 @@ namespace HitAnalyzer2.ViewModels
 
         partial void OnOffsetYChanged(int value) => ApplyOffset();
 
+        internal void CommitCaliber(string? text)
+        {
+            if (text == CaliberText)
+                return;
+
+            const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite |
+                NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
+            if ((decimal.TryParse(text, style, CultureInfo.CurrentCulture, out var diameter) ||
+                decimal.TryParse(text, style, CultureInfo.InvariantCulture, out diameter)) && diameter >= 0)
+            {
+                bool enteredInInches = diameter < 1;
+                decimal diameterMm = enteredInInches ? diameter * MillimetersPerInch : diameter;
+                _weaponHandler.SetCaliber(diameterMm);
+                _showCaliberInInches = enteredInInches && _weaponHandler.CaliberDiameterMm == diameterMm;
+                OnPropertyChanged(nameof(CaliberUnit));
+            }
+
+            OnPropertyChanged(nameof(CaliberText));
+        }
+
         private void ApplyOffset()
         {
             _weaponHandler.SetOffset(OffsetX, OffsetY);
@@ -131,7 +169,10 @@ namespace HitAnalyzer2.ViewModels
         }
 
         internal SavedWeaponProfile? GetSelectedProfile() => SelectedWeapon is { } weapon
-            ? new(weapon.FileName, (WeaponProfile)GetConfiguration(weapon.Profile))
+            ? new(weapon.FileName, ((WeaponProfile)GetConfiguration(weapon.Profile)) with
+            {
+                Caliber = _weaponHandler.CaliberDiameterMm
+            })
             : null;
 
         internal WeaponSettings GetConfiguration(WeaponSettings current) => current with

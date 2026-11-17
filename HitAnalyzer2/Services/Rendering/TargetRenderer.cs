@@ -12,7 +12,7 @@ namespace HitAnalyzer2.Services.Rendering
         private const double PreviewMargin = TargetPreviewModel.PreviewMargin;
         private static readonly Scalar AimMarkerOutline = new(20, 20, 20, 255);
 
-        internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings)
+        internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings, double caliberDiameterMm)
         {
             preview.SetTo(new Scalar(211, 211, 211, 255));
             int size = Math.Min(preview.Width, preview.Height);
@@ -27,10 +27,11 @@ namespace HitAnalyzer2.Services.Rendering
 
             if (lastTargetHit is { } hit && IsInsidePreview(hit))
             {
-                int markerSize = Math.Max(1, (int)Math.Round(size * AimTracerRenderer.MarkerSizeRatio));
+                int markerSize = Math.Max(1, (int)Math.Round(size * AimTraceRenderer.MarkerSizeRatio));
                 var marker = ToTargetPixel(hit);
-                AimTracerRenderer.DrawAimPosition(preview, marker.X, marker.Y, markerSize,
-                    AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
+                double? projectileDiameterPixels = caliberDiameterMm / settings.MaxDiameterMm * diameterPixels;
+                AimTraceRenderer.DrawAimPosition(preview, marker.X, marker.Y, markerSize,
+                    AimTraceRenderer.AimPositionMarkerColor, projectileDiameterPixels, AimMarkerOutline);
             }
 
             Point ToTargetPixel(Position point) =>

@@ -13,7 +13,7 @@ using HitAnalyzer2.Services.Target;
 namespace HitAnalyzer2.Services.Shooting
 {
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
-        ShootingSettings shootingSettings, DetectionSettings detectionSettings, TargetCalibrationService calibration,
+        WeaponHandler weaponHandler, ShootingSettings shootingSettings, DetectionSettings detectionSettings, TargetCalibrationService calibration,
         RecordingService recording, long appStartedTimestampMs)
     {
         internal const int NextDetectionMinimumInterval = 100;
@@ -25,6 +25,7 @@ namespace HitAnalyzer2.Services.Shooting
         private volatile ILaserDetector _laserDetector = laserDetector;
         private volatile int _nextDetectionInterval = NextDetectionMinimumInterval;
         private LaserPosition? _lastHit;
+        private double _lastHitCaliberDiameterMm;
         private Position? _lastTargetHit;
         private LaserPosition[] _lastHitAimPath = Array.Empty<LaserPosition>();
         private LaserPosition[] _lastHitFollowPath = Array.Empty<LaserPosition>();
@@ -125,7 +126,7 @@ namespace HitAnalyzer2.Services.Shooting
         }
 
         internal (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
-            Position? LastTargetHit) ProcessFrame(
+            Position? LastTargetHit, double CaliberDiameterMm) ProcessFrame(
             Mat frame, long frameCapturedTimestampMs, double detectedFps, CancellationToken cancellationToken)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(appStartedTimestampMs, frameCapturedTimestampMs);
@@ -136,6 +137,7 @@ namespace HitAnalyzer2.Services.Shooting
             LaserPosition[] followPath;
             Position? targetPoint = null;
             Position? lastTargetHit;
+            double caliberDiameterMm;
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -178,6 +180,7 @@ namespace HitAnalyzer2.Services.Shooting
                 if (registeredHit is { } registered)
                 {
                     _lastHit = registeredHit;
+                    _lastHitCaliberDiameterMm = (double)weaponHandler.CaliberDiameterMm;
                     var aim = aimPositionHandler.GetAimPosition(registered);
                     targetPoint = calibration.MapHit(aim.X / frame.Width, aim.Y / frame.Height, out calibrationAtHit);
                     _lastTargetHit = targetPoint;
@@ -186,7 +189,7 @@ namespace HitAnalyzer2.Services.Shooting
                     if (targetPoint is { } mapped)
                     {
                         var recordedAimPath = MapAimPath(_lastHitAimPath, offsetX, offsetY, frame.Width, frame.Height);
-                        var score = calibrationAtHit.CalculateScore(mapped);
+                        var score = calibrationAtHit.CalculateScore(mapped, _lastHitCaliberDiameterMm);
 						var hitPosition = new HitPosition(mapped.X, mapped.Y, registered.Time, score);
                         hitRecord = new HitRecord(hitPosition,
                             recordedAimPath, calibrationAtHit.GetDistanceFromCenterMm(mapped));
@@ -229,6 +232,7 @@ namespace HitAnalyzer2.Services.Shooting
 
                 followPath = _lastHitFollowPath;
                 lastTargetHit = _lastTargetHit;
+                caliberDiameterMm = _lastHitCaliberDiameterMm;
             }
 
             LaserPositionEvaluated?.Invoke(registeredHit, targetPoint, elapsed);
@@ -237,7 +241,7 @@ namespace HitAnalyzer2.Services.Shooting
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
-                aimPath, followPath, lastTargetHit);
+                aimPath, followPath, lastTargetHit, caliberDiameterMm);
         }
 
         private IReadOnlyList<LaserPosition> MapAimPath(LaserPosition[] path, double offsetX, double offsetY,

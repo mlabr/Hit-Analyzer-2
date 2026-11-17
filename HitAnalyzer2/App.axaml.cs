@@ -37,15 +37,14 @@ namespace HitAnalyzer2
                 }
 
                 var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
-                var initialWeapon = settings.InitialWeapon;
-                var weaponHandler = new WeaponHandler(initialWeapon.OffsetX, initialWeapon.OffsetY, aimPositionHandler);
+                var weaponHandler = new WeaponHandler(settings.InitialWeapon, aimPositionHandler);
                 var cameraCalibration = new TargetCalibrationService(settings.Current.Camera.Calibration);
                 var targetFiles = new TargetFileRepository(Path.Combine(AppContext.BaseDirectory, "Data", "Targets"));
                 var targetSettings = new TargetSettingsViewModel(targetFiles, cameraCalibration,
                     settings.Current.SelectedTargetFileName);
                 var recording = new RecordingService(cameraCalibration);
                 var shootingSession = new ShootingSessionService(
-                    CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
+                    CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler, weaponHandler,
                     settings.Current.Shooting, detection, cameraCalibration, recording, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));

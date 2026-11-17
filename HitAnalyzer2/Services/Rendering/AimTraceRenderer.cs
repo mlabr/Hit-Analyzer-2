@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace HitAnalyzer2.Services.Rendering
 {
-    internal static class AimTracerRenderer
+    internal static class AimTraceRenderer
     {
         internal const double MarkerSizeRatio = 0.05;
         private const int MinimumAimPathBrightness = 64;
@@ -15,7 +15,7 @@ namespace HitAnalyzer2.Services.Rendering
         internal static readonly Scalar AimPathAfterColor = new(255, 255, 0, 255);
 
         internal static void DrawHitAndTraceIntoFrame(Mat preview, AimPosition position,
-            IReadOnlyList<LaserPosition> aimPath, IReadOnlyList<LaserPosition> followPath)
+            IReadOnlyList<LaserPosition> aimPath, IReadOnlyList<LaserPosition> followPath, double? projectileDiameterPixels)
         {
             var laser = position.LaserPosition;
             var offset = (X: position.X - laser.X, Y: position.Y - laser.Y);
@@ -27,7 +27,7 @@ namespace HitAnalyzer2.Services.Rendering
             {
 				DrawLaserPosition(preview, laser.X, laser.Y, size, LaserPositionMarkerColor);
 			}
-			DrawAimPosition(preview, position.X, position.Y, size, AimPositionMarkerColor);
+			DrawAimPosition(preview, position.X, position.Y, size, AimPositionMarkerColor, projectileDiameterPixels);
         }
 
         internal static void DrawAimPath(Mat preview, IReadOnlyList<LaserPosition> aimPath, Scalar baseColor,
@@ -66,10 +66,20 @@ namespace HitAnalyzer2.Services.Rendering
         }
 
         internal static void DrawAimPosition(Mat preview, double positionX, double positionY, int size, Scalar color,
-            Scalar? outline = null)
+            double? projectileDiameterPixels, Scalar? outline = null)
         {
             int x = (int)Math.Round(positionX);
             int y = (int)Math.Round(positionY);
+            if (projectileDiameterPixels is > 0 and < int.MaxValue and var diameter)
+            {
+                var center = new Point(x, y);
+                int radius = Math.Max(1, (int)Math.Round(diameter / 2));
+                if (outline is { } circleBorder)
+                    Cv2.Circle(preview, center, radius, circleBorder, 3);
+                Cv2.Circle(preview, center, radius, color, -1);
+                return;
+            }
+
             int startOffset = (size - 1) / 2;
             int endOffset = size / 2;
             if (outline is { } border)

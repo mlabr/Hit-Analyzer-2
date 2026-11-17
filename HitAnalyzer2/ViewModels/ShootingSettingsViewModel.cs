@@ -18,15 +18,11 @@ namespace HitAnalyzer2.ViewModels
             ? $"Last hit distance from center: {distance:F2} mm"
             : "Last hit distance from center: —";
 
-        [ObservableProperty]
-        private bool showTargetPreview;
-
         internal ShootingSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
             RecordingService recording)
         {
             _shootingSession = shootingSession;
             _recording = recording;
-            showTargetPreview = settings.Current.Detection.ShowTargetPreview;
             recording.HitCountChanged += RefreshHitStatistics;
         }
 

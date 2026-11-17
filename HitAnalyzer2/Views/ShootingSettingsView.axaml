@@ -7,7 +7,6 @@
     <StackPanel Spacing="16">
         <TextBlock Text="Shooting settings" FontWeight="SemiBold" />
         <Button Content="Reset shooting" Command="{Binding ResetCommand}" />
-        <CheckBox Content="Show Target Preview" IsChecked="{Binding ShowTargetPreview, Mode=TwoWay}" />
         <TextBlock Text="{Binding LastHitDistanceText}" TextWrapping="Wrap" />
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>

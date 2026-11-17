@@ -16,6 +16,12 @@
                 </DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
+        <TextBlock Text="Caliber" />
+        <Grid ColumnDefinitions="*,*">
+            <TextBox Text="{Binding CaliberText, Mode=OneWay}" LostFocus="CommitCaliberOnLostFocus"
+                     KeyDown="CommitCaliberOnEnter" AutomationProperties.Name="Caliber" />
+            <TextBlock Grid.Column="1" Text="{Binding CaliberUnit}" VerticalAlignment="Center" Margin="8,0,0,0" />
+        </Grid>
         <TextBlock Text="Trigger type:" />
         <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Trigger type"
                   ItemsSource="{Binding Triggers}"

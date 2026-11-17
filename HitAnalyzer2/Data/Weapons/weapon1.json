@@ -1,7 +1,7 @@
 {
   "Type": "ha_weapon",
   "Name": "weapon1",
-  "Caliber": 0,
+  "Caliber": 20,
   "OffsetX": 45,
   "OffsetY": -35,
   "Trigger": "FirstSpot",

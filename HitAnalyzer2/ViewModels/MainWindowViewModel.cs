@@ -20,7 +20,7 @@ namespace HitAnalyzer2.ViewModels
         private readonly SettingsService _settings;
         private readonly ShootingSessionService _shootingSession;
         private readonly DetectionSettings _detectionSettings;
-        internal volatile bool IsShootingTabActive = true;
+        internal volatile bool IsTargetPreviewActive = true;
 
         public CameraSettingsViewModel CameraSettings { get; }
         public CameraPreviewViewModel CameraPreview { get; } = new();
@@ -66,10 +66,7 @@ namespace HitAnalyzer2.ViewModels
         {
             var current = _settings.Current;
             var camera = CameraSettings.GetConfiguration(current.Camera);
-            var detection = DetectionSettings.GetConfiguration(current.Detection) with
-            {
-                ShowTargetPreview = ShootingSettings.ShowTargetPreview
-            };
+            var detection = DetectionSettings.GetConfiguration(current.Detection);
             var weapon = WeaponSettings.GetSelectedProfile();
             var configuration = current with
             {
@@ -103,14 +100,14 @@ namespace HitAnalyzer2.ViewModels
             using var output = new Mat();
             var pixels = FramePreprocessor.ApplyImageAdjustments(frame, output, DetectionSettings.BrightnessPercent,
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
-            bool showTargetPreview = IsShootingTabActive && ShootingSettings.ShowTargetPreview;
-            var (lastHit, aimPath, followPath, lastTargetHit) =
+            bool showTargetPreview = IsTargetPreviewActive;
+            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             if (showTargetPreview)
             {
                 int size = Math.Min(pixels.Rows, pixels.Cols);
                 using var target = new Mat(size, size, pixels.Type());
-                TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings);
+                TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings, caliberDiameterMm);
                 await CameraPreview.ShowFrameAsync(target, measuredFps, cancellationToken);
                 return;
             }
@@ -132,7 +129,8 @@ namespace HitAnalyzer2.ViewModels
                 AllowedAreaRenderer.Draw(pixels, _detectionSettings);
 
             if (lastHit is { } hit)
-                AimTracerRenderer.DrawHitAndTraceIntoFrame(pixels, hit, aimPath, followPath);
+                AimTraceRenderer.DrawHitAndTraceIntoFrame(pixels, hit, aimPath, followPath,
+                    caliberDiameterMm / CameraSettings.Calibration.Settings.MmToPixel);
 
             await CameraPreview.ShowFrameAsync(pixels, measuredFps, cancellationToken);
         }

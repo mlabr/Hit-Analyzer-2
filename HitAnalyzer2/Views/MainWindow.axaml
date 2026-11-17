@@ -14,10 +14,10 @@
     <Grid RowDefinitions="Auto,*">
         <Menu x:Name="SettingsMenu">
             <MenuItem Header="_Shooting" Click="ShowShootingSettings" />
+            <MenuItem Header="_Weapon" Click="ShowWeaponSettings" />
+            <MenuItem Header="_Target" Click="ShowTargetSettings" />
             <MenuItem Header="_Camera" Click="ShowCameraSettings" />
             <MenuItem Header="_Detection" Click="ShowDetectionSettings" />
-            <MenuItem Header="_Target" Click="ShowTargetSettings" />
-            <MenuItem Header="_Weapon" Click="ShowWeaponSettings" />
             <MenuItem Header="_Help" HotKey="F1" Click="ShowHelp" />
         </Menu>
         <Grid Grid.Row="1" RowDefinitions="*,Auto" ColumnDefinitions="Auto,*">

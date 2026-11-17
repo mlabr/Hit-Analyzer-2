@@ -19,20 +19,20 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2750,
-          "Y": 0.1000
+          "X": 0.3453,
+          "Y": 0.2181
         },
         "TopRight": {
-          "X": 0.7250,
-          "Y": 0.1000
+          "X": 0.6367,
+          "Y": 0.2597
         },
         "BottomRight": {
-          "X": 0.7250,
-          "Y": 0.9000
+          "X": 0.6438,
+          "Y": 0.7847
         },
         "BottomLeft": {
-          "X": 0.2750,
-          "Y": 0.9000
+          "X": 0.3438,
+          "Y": 0.8278
         }
       }
     }
@@ -51,14 +51,14 @@
     "HorizontalForbiddenZoneSize": 50
   },
   "SelectedWeapon": {
-    "FileName": "weapon3.json",
+    "FileName": "weapon1.json",
     "Profile": {
       "Type": "ha_weapon",
-      "Name": "weapon3",
-      "Caliber": 0,
+      "Name": "weapon1",
+      "Caliber": 20,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "NewSpot",
+      "Trigger": "FirstSpot",
       "NexDetectionInterval": 500
     }
   },
