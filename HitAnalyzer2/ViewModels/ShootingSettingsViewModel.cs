@@ -12,6 +12,9 @@ namespace HitAnalyzer2.ViewModels
         private readonly RecordingService _recording;
 
         public int HitCount => _recording.GetHitRecordCount();
+        public string LastHitDistanceText => _recording.GetLastHitDistanceFromCenterMm() is { } distance
+            ? $"Last hit distance from center: {distance:F2} mm"
+            : "Last hit distance from center: —";
 
         [ObservableProperty]
         private bool showTargetPreview;
@@ -22,15 +25,18 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession = shootingSession;
             _recording = recording;
             showTargetPreview = settings.Current.Detection.ShowTargetPreview;
-            recording.HitCountChanged += RefreshHitCount;
+            recording.HitCountChanged += RefreshHitStatistics;
         }
 
-        private void RefreshHitCount()
+        private void RefreshHitStatistics()
         {
             if (Dispatcher.UIThread.CheckAccess())
+            {
                 OnPropertyChanged(nameof(HitCount));
+                OnPropertyChanged(nameof(LastHitDistanceText));
+            }
             else
-                Dispatcher.UIThread.Post(RefreshHitCount);
+                Dispatcher.UIThread.Post(RefreshHitStatistics);
         }
 
         [RelayCommand]

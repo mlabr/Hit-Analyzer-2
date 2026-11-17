@@ -186,7 +186,7 @@ namespace HitAnalyzer2.Services.Shooting
                     {
                         var recordedAimPath = MapAimPath(_lastHitAimPath, offsetX, offsetY, frame.Width, frame.Height);
                         hitRecord = new HitRecord(new LaserPosition(mapped.X, mapped.Y, registered.Time),
-                            recordedAimPath);
+                            recordedAimPath, calibrationAtHit.GetDistanceFromCenterMm(mapped));
                     }
 
                     CompleteRecordingFollowPath();

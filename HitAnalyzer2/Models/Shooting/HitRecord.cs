@@ -4,9 +4,10 @@ using System.Threading;
 
 namespace HitAnalyzer2.Models
 {
-	internal class HitRecord(LaserPosition hitPosition, IReadOnlyList<LaserPosition> aimPathBefore)
+	internal class HitRecord(LaserPosition hitPosition, IReadOnlyList<LaserPosition> aimPathBefore, double? distanceFromCenterMm)
 	{
 		public LaserPosition HitPosition { get; } = hitPosition;
+		public double? DistanceFromCenterMm { get; } = distanceFromCenterMm;
 
 		public IReadOnlyList<LaserPosition> AimPathBefore { get; } = aimPathBefore;
 

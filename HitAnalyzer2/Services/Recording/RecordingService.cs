@@ -46,6 +46,12 @@ namespace HitAnalyzer2.Services.Recording
 				return hitRecordNormalizedList.Count;
 		}
 
+		internal double? GetLastHitDistanceFromCenterMm()
+		{
+			lock (_recordsGate)
+				return hitRecordNormalizedList.Count > 0 ? hitRecordNormalizedList[^1].DistanceFromCenterMm : null;
+		}
+
 		internal void AddNormalizedHitRecord(HitRecord hitRecord, TargetPreviewModel calibrationAtHit)
 		{
 			lock (_recordsGate)

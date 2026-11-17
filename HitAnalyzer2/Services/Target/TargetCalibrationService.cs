@@ -7,7 +7,6 @@ namespace HitAnalyzer2.Services.Target
 {
     internal sealed class TargetCalibrationService
     {
-        internal static readonly Position TargetCenter = new(0.5, 0.5);
         internal const double TargetRadius = 0.5;
         private const int OutlinePointCount = 128;
         private const double MinimumCornerCrossProduct = 0.0001;
@@ -159,13 +158,13 @@ namespace HitAnalyzer2.Services.Target
                     return new(settings, null, null, []);
             }
 
-            var center = Project(inverseMatrix, TargetCenter.X, TargetCenter.Y);
+            var center = Project(inverseMatrix, TargetModel.Center.X, TargetModel.Center.Y);
             var outline = new Position[OutlinePointCount];
             for (int i = 0; i < outline.Length; i++)
             {
                 double angle = Math.Tau * i / outline.Length;
-                if (Project(inverseMatrix, TargetCenter.X + TargetRadius * Math.Cos(angle),
-                    TargetCenter.Y + TargetRadius * Math.Sin(angle)) is not { } point)
+                if (Project(inverseMatrix, TargetModel.Center.X + TargetRadius * Math.Cos(angle),
+                    TargetModel.Center.Y + TargetRadius * Math.Sin(angle)) is not { } point)
                     return new(settings, null, null, []);
 
                 outline[i] = point;

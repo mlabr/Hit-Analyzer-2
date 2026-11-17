@@ -22,7 +22,7 @@ namespace HitAnalyzer2.Services.Rendering
             double diameterPixels = TargetPreviewModel.GetPreviewDiameterPixels(size);
             var guide = new Scalar(0, 0, 0, 255);
             Cv2.Rectangle(preview, default(Point), new Point(size - 1, size - 1), guide);
-            var center = ToTargetPixel(TargetCalibrationService.TargetCenter);
+            var center = ToTargetPixel(TargetModel.Center);
             DrawTargetRings(preview, center, diameterPixels, settings, guide);
 
             if (lastTargetHit is { } hit && IsInsidePreview(hit))
