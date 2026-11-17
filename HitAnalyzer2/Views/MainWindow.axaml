@@ -33,9 +33,11 @@
             </Grid>
             <StackPanel x:Name="HitCounter" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
                 <TextBlock Text="Score:" FontSize="32" />
-                <TextBlock Text="{Binding ShootingSettings.LastHitScore}" FontSize="32" FontWeight="SemiBold" Margin="0,0,16,0" />
+                <TextBlock Text="{Binding ShootingSettings.LastHitScore}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
                 <TextBlock Text="Hits:" FontSize="32" />
-                <TextBlock Text="{Binding ShootingSettings.HitCount}" FontSize="32" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding ShootingSettings.HitCount}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
+                <TextBlock Text="Total:" FontSize="32" />
+                <TextBlock Text="{Binding ShootingSettings.TotalScore}" FontSize="32" FontWeight="SemiBold" />
             </StackPanel>
             <Border x:Name="SettingsPanel" Grid.RowSpan="2" Width="280" BorderThickness="0,0,1,0"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">

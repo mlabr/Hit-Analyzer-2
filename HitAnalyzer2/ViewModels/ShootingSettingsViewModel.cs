@@ -13,6 +13,7 @@ namespace HitAnalyzer2.ViewModels
 
         public int HitCount => _recording.GetHitRecordCount();
         public double LastHitScore => _recording.GetLastHitScore();
+        public double TotalScore => _recording.GetTotalScore();
         public string LastHitDistanceText => _recording.GetLastHitDistanceFromCenterMm() is { } distance
             ? $"Last hit distance from center: {distance:F2} mm"
             : "Last hit distance from center: —";
@@ -35,6 +36,7 @@ namespace HitAnalyzer2.ViewModels
             {
                 OnPropertyChanged(nameof(HitCount));
                 OnPropertyChanged(nameof(LastHitScore));
+                OnPropertyChanged(nameof(TotalScore));
                 OnPropertyChanged(nameof(LastHitDistanceText));
             }
             else

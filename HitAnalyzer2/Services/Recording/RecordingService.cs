@@ -2,6 +2,7 @@ using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Target;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HitAnalyzer2.Services.Recording
 {
@@ -56,6 +57,12 @@ namespace HitAnalyzer2.Services.Recording
 		{
 			lock (_recordsGate)
 				return hitRecordNormalizedList.Count > 0 ? hitRecordNormalizedList[^1].HitPosition.Score : 0;
+		}
+
+		internal double GetTotalScore()
+		{
+			lock (_recordsGate)
+				return hitRecordNormalizedList.Sum(record => record.HitPosition.Score);
 		}
 
 		internal void AddNormalizedHitRecord(HitRecord hitRecord, TargetPreviewModel calibrationAtHit)
