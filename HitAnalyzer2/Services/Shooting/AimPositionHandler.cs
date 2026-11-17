@@ -39,7 +39,8 @@ namespace HitAnalyzer2.Services.Shooting
             AppendPosition(AimPositionList, position, settings.AimPathTimeLimit * detectedFps);
         }
 
-        internal LaserPosition[] UpdateFollowPath(LaserPosition? position, TimeSpan elapsed, double detectedFps,
+        internal (LaserPosition[] Path, LaserPosition? AddedPoint, bool IsCollecting) UpdateFollowPath(
+            LaserPosition? position, TimeSpan elapsed, double detectedFps,
             bool externalHit)
         {
             if (externalHit)
@@ -53,24 +54,30 @@ namespace HitAnalyzer2.Services.Shooting
             }
 
             // Once the last point expires, a new external hit is needed to start tracking again.
-            if ((externalHit || _aimPositionAfterList.Count > 0) && elapsed <= _followEndsAt)
-                AppendPosition(_aimPositionAfterList, position, settings.AimPathAfterTimeLimit * detectedFps);
+            LaserPosition? addedPoint = null;
+            if ((externalHit || _aimPositionAfterList.Count > 0) && elapsed <= _followEndsAt &&
+                AppendPosition(_aimPositionAfterList, position, settings.AimPathAfterTimeLimit * detectedFps))
+                addedPoint = position;
 
-            return _aimPositionAfterList.ToArray();
+            bool isCollecting = _aimPositionAfterList.Count > 0 && elapsed <= _followEndsAt;
+            return (_aimPositionAfterList.ToArray(), addedPoint, isCollecting);
         }
 
         private bool HasExpired(List<LaserPosition> path, TimeSpan elapsed) =>
             path.Count > 0 && elapsed - path[^1].Time > _aimPathTimeoutMs;
 
-        private static void AppendPosition(List<LaserPosition> path, LaserPosition? position, double capacity)
+        private static bool AppendPosition(List<LaserPosition> path, LaserPosition? position, double capacity)
         {
             int maxCount = (int)Math.Clamp(capacity, 0, int.MaxValue);
-            int pointsToKeep = position.HasValue && maxCount > 0 ? maxCount - 1 : maxCount;
+            int pointsToKeep = position is not null && maxCount > 0 ? maxCount - 1 : maxCount;
             if (path.Count > pointsToKeep)
                 path.RemoveRange(0, path.Count - pointsToKeep);
 
-            if (position is { } point && maxCount > 0)
-                path.Add(point);
+            if (position is null || maxCount == 0)
+                return false;
+
+            path.Add(position);
+            return true;
         }
 
         internal LaserPosition[] GetAimPathSnapshot() => AimPositionList.ToArray();

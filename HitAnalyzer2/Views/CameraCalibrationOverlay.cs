@@ -125,19 +125,19 @@ namespace HitAnalyzer2.Views
             var pointer = e.GetPosition(this);
             if (_translationStart is { } start)
             {
-                CalibrationPoint[] corners = [start.TopLeft, start.TopRight, start.BottomRight, start.BottomLeft];
+                Position[] corners = [start.TopLeft, start.TopRight, start.BottomRight, start.BottomLeft];
                 double dx = Math.Clamp((pointer.X - _translationPointerStart.X) / _imageBounds.Width,
                     -corners.Min(point => point.X), 1 - corners.Max(point => point.X));
                 double dy = Math.Clamp((pointer.Y - _translationPointerStart.Y) / _imageBounds.Height,
                     -corners.Min(point => point.Y), 1 - corners.Max(point => point.Y));
-                CalibrationPoint Translate(CalibrationPoint point) => new(point.X + dx, point.Y + dy);
+                Position Translate(Position point) => new(point.X + dx, point.Y + dy);
                 settings.SetCalibrationCorners(new(Translate(start.TopLeft), Translate(start.TopRight),
                     Translate(start.BottomRight), Translate(start.BottomLeft)));
             }
             else
             {
                 var position = pointer + _dragOffset;
-                settings.MoveCalibrationCorner(_dragCorner, new CalibrationPoint(
+                settings.MoveCalibrationCorner(_dragCorner, new Position(
                     Math.Clamp((position.X - _imageBounds.X) / _imageBounds.Width, 0, 1),
                     Math.Clamp((position.Y - _imageBounds.Y) / _imageBounds.Height, 0, 1)));
             }
@@ -178,7 +178,7 @@ namespace HitAnalyzer2.Views
                 ToPreview(corners.BottomRight), ToPreview(corners.BottomLeft)];
         }
 
-        private Point ToPreview(CalibrationPoint point) => new(
+        private Point ToPreview(Position point) => new(
             _imageBounds.X + point.X * _imageBounds.Width,
             _imageBounds.Y + point.Y * _imageBounds.Height);
     }

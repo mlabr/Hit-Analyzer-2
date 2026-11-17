@@ -29,13 +29,13 @@ namespace HitAnalyzer2
 
         private static void ConfigureCalibrationCoordinates(JsonTypeInfo typeInfo)
         {
-            if (typeInfo.Type != typeof(CalibrationPoint))
+            if (typeInfo.Type != typeof(Position))
                 return;
 
             var converter = new CalibrationCoordinateJsonConverter();
             foreach (var property in typeInfo.Properties)
             {
-                if (property.Name is nameof(CalibrationPoint.X) or nameof(CalibrationPoint.Y))
+                if (property.Name is nameof(Position.X) or nameof(Position.Y))
                     property.CustomConverter = converter;
             }
         }

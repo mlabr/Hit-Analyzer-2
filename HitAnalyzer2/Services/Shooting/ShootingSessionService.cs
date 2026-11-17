@@ -11,7 +11,7 @@ using HitAnalyzer2.Services.Target;
 
 namespace HitAnalyzer2.Services.Shooting
 {
-    internal readonly record struct TargetHit(CalibrationPoint? Aim, CalibrationPoint? Laser);
+    internal readonly record struct TargetHit(Position? Aim, Position? Laser);
 
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
         ShootingSettings shootingSettings, DetectionSettings detectionSettings, TargetCalibrationService calibration,
@@ -29,7 +29,7 @@ namespace HitAnalyzer2.Services.Shooting
         private TargetHit? _lastTargetHit;
         private LaserPosition[] _lastHitAimPath = Array.Empty<LaserPosition>();
         private LaserPosition[] _lastHitFollowPath = Array.Empty<LaserPosition>();
-        private (HitRecord Record, double OffsetX, double OffsetY)? _recordingFollowPath;
+        private (HitRecord Record, List<LaserPosition> Path, double OffsetX, double OffsetY)? _recordingFollowPath;
         private TriggerTypeEnum _trigger = TriggerTypeEnum.FirstSpot;
         private bool _spotWasVisible;
         private long? _lastAcceptedExternalTriggerEventTimestamp;
@@ -39,7 +39,7 @@ namespace HitAnalyzer2.Services.Shooting
         private TimeSpan NextDetectionTimestamp { get; set; }
 
         // Raised on the capture thread. The target point is present only with a valid calibration.
-        internal event Action<LaserPosition?, CalibrationPoint?, TimeSpan>? LaserPositionEvaluated;
+        internal event Action<LaserPosition?, Position?, TimeSpan>? LaserPositionEvaluated;
 
         internal void SetLaserDetector(ILaserDetector detector) => _laserDetector = detector;
 
@@ -58,7 +58,7 @@ namespace HitAnalyzer2.Services.Shooting
                 {
                     _lastHitAimPath = Array.Empty<LaserPosition>();
                     _lastHitFollowPath = Array.Empty<LaserPosition>();
-                    _recordingFollowPath = null;
+                    CompleteRecordingFollowPath();
                     aimPositionHandler.ClearFollowPath();
                 }
             }
@@ -115,6 +115,12 @@ namespace HitAnalyzer2.Services.Shooting
             _lastTargetHit = null;
             _lastHitAimPath = Array.Empty<LaserPosition>();
             _lastHitFollowPath = Array.Empty<LaserPosition>();
+            CompleteRecordingFollowPath();
+        }
+
+        private void CompleteRecordingFollowPath()
+        {
+            _recordingFollowPath?.Record.CompleteAimPathAfter();
             _recordingFollowPath = null;
         }
 
@@ -128,7 +134,7 @@ namespace HitAnalyzer2.Services.Shooting
             LaserPosition? position;
             LaserPosition[] aimPath;
             LaserPosition[] followPath;
-            CalibrationPoint? targetPoint = null;
+            Position? targetPoint = null;
             TargetHit? lastTargetHit;
             lock (_hitGate)
             {
@@ -177,26 +183,41 @@ namespace HitAnalyzer2.Services.Shooting
                         ? calibration.MapHit(registered.X / frame.Width, registered.Y / frame.Height)
                         : null;
                     _lastTargetHit = new(targetPoint, laserPoint);
-                    LaserPosition? recordedPosition = targetPoint is { } mapped
-                        ? new LaserPosition(mapped.X, mapped.Y, registered.Time)
-                        : null;
                     double offsetX = aim.X - registered.X;
                     double offsetY = aim.Y - registered.Y;
-                    var recordedAimPath = MapAimPath(_lastHitAimPath, offsetX, offsetY, frame.Width, frame.Height);
-                    hitRecord = new HitRecord(recordedPosition, registered.Time, recordedAimPath);
-                    _recordingFollowPath = startFollowPath ? (hitRecord, offsetX, offsetY) : null;
+                    if (targetPoint is { } mapped)
+                    {
+                        var recordedAimPath = MapAimPath(_lastHitAimPath, offsetX, offsetY, frame.Width, frame.Height);
+                        hitRecord = new HitRecord(new LaserPosition(mapped.X, mapped.Y, registered.Time), recordedAimPath);
+                    }
+
+                    CompleteRecordingFollowPath();
+                    if (startFollowPath && hitRecord is not null)
+                        _recordingFollowPath = (hitRecord, hitRecord.BeginAimPathAfter(), offsetX, offsetY);
                 }
 
                 lastHit = _lastHit;
                 aimPath = _lastHitAimPath;
-                var updatedFollowPath = aimPositionHandler.UpdateFollowPath(position, elapsed, detectedFps, startFollowPath);
+                var (updatedFollowPath, addedPoint, isCollecting) =
+                    aimPositionHandler.UpdateFollowPath(position, elapsed, detectedFps, startFollowPath);
                 if (startFollowPath || updatedFollowPath.Length > 0)
-                {
                     _lastHitFollowPath = updatedFollowPath;
-                    if (_recordingFollowPath is { } pending)
-                        pending.Record.AimPathAfter = MapAimPath(updatedFollowPath, pending.OffsetX, pending.OffsetY,
-                            frame.Width, frame.Height);
+
+                if (_recordingFollowPath is { } pending && updatedFollowPath.Length > 0)
+                {
+                    var oldestTime = updatedFollowPath[0].Time;
+                    int removedCount = 0;
+                    while (removedCount < pending.Path.Count && pending.Path[removedCount].Time < oldestTime)
+                        removedCount++;
+                    pending.Path.RemoveRange(0, removedCount);
+
+                    if (addedPoint is not null &&
+                        MapAimPoint(addedPoint, pending.OffsetX, pending.OffsetY, frame.Width, frame.Height) is { } mapped)
+                        pending.Path.Add(mapped);
                 }
+
+                if (!isCollecting)
+                    CompleteRecordingFollowPath();
 
                 if (hitRecord is not null)
                     recording.AddHitRecord(hitRecord);
@@ -223,13 +244,18 @@ namespace HitAnalyzer2.Services.Shooting
             var mappedPath = new List<LaserPosition>(path.Length);
             foreach (var point in path)
             {
-                if (calibration.MapHit((point.X + offsetX) / frameWidth,
-                    (point.Y + offsetY) / frameHeight) is { } mapped)
-                    mappedPath.Add(new LaserPosition(mapped.X, mapped.Y, point.Time));
+                if (MapAimPoint(point, offsetX, offsetY, frameWidth, frameHeight) is { } mapped)
+                    mappedPath.Add(mapped);
             }
 
             return mappedPath.AsReadOnly();
         }
+
+        private LaserPosition? MapAimPoint(LaserPosition point, double offsetX, double offsetY,
+            int frameWidth, int frameHeight) =>
+            calibration.MapHit((point.X + offsetX) / frameWidth, (point.Y + offsetY) / frameHeight) is { } mapped
+                ? new LaserPosition(mapped.X, mapped.Y, point.Time)
+                : null;
 
         private bool IsAimPositionInsideAllowedZone(AimPosition position, Mat frame)
         {
@@ -243,16 +269,16 @@ namespace HitAnalyzer2.Services.Shooting
             if (_trigger == TriggerTypeEnum.ExternalEvent)
             {
                 // Compare against capture time, even if the frame is processed after key-up.
-                return position.HasValue && _externalPressedAt is { } pressedAt &&
+                return position is not null && _externalPressedAt is { } pressedAt &&
                     capturedAt >= pressedAt && capturedAt < _externalReleasedAt;
             }
 
             if (_trigger == TriggerTypeEnum.FirstSpot)
-                return position.HasValue && intervalElapsed;
+                return position is not null && intervalElapsed;
 
             // Observe every frame so a spot that appeared during the interval is not a new spot afterward.
-            bool appeared = position.HasValue && !_spotWasVisible;
-            _spotWasVisible = position.HasValue;
+            bool appeared = position is not null && !_spotWasVisible;
+            _spotWasVisible = position is not null;
             return appeared && intervalElapsed;
         }
     }

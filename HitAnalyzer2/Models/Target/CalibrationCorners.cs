@@ -3,8 +3,8 @@ using System;
 namespace HitAnalyzer2.Models
 {
     internal sealed record CalibrationCorners(
-        CalibrationPoint TopLeft, CalibrationPoint TopRight,
-        CalibrationPoint BottomRight, CalibrationPoint BottomLeft)
+        Position TopLeft, Position TopRight,
+        Position BottomRight, Position BottomLeft)
     {
         internal static CalibrationCorners CenteredSquare(double width, double height)
         {

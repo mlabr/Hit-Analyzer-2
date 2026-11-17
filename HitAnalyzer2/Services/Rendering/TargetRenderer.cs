@@ -65,7 +65,7 @@ namespace HitAnalyzer2.Services.Rendering
                         AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
             }
 
-            Point ToTargetPixel(CalibrationPoint point) =>
+            Point ToTargetPixel(Position point) =>
                 new(Math.Round((point.X + PreviewMargin) * diameterPixels),
                     Math.Round((point.Y + PreviewMargin) * diameterPixels));
 
@@ -144,7 +144,7 @@ namespace HitAnalyzer2.Services.Rendering
             }
         }
 
-        private static bool IsInsidePreview(CalibrationPoint point)
+        private static bool IsInsidePreview(Position point)
         {
             const double min = -PreviewMargin - 0.000001;
             const double max = 1 + PreviewMargin + 0.000001;

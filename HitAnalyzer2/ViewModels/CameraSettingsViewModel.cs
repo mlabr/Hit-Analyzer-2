@@ -61,7 +61,7 @@ namespace HitAnalyzer2.ViewModels
             Calibration.SetCorners(corners);
         }
 
-        internal void MoveCalibrationCorner(int index, CalibrationPoint point)
+        internal void MoveCalibrationCorner(int index, Position point)
         {
             var settings = Calibration.Settings;
             if (settings.Corners is not { } corners)

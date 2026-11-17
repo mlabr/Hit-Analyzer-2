@@ -6,6 +6,9 @@ namespace HitAnalyzer2.Services.Recording
 {
 	internal class RecordingService
 	{
+		
+
+
 		private readonly object _recordsGate = new();
 		private readonly List<HitRecord> hitRecordList = new();
 

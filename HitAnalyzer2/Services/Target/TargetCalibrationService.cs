@@ -7,7 +7,7 @@ namespace HitAnalyzer2.Services.Target
 {
     internal sealed class TargetCalibrationService
     {
-        internal static readonly CalibrationPoint TargetCenter = new(0.5, 0.5);
+        internal static readonly Position TargetCenter = new(0.5, 0.5);
         internal const double TargetRadius = 0.5;
         private const int OutlinePointCount = 128;
         private const double MinimumCornerCrossProduct = 0.0001;
@@ -29,8 +29,8 @@ namespace HitAnalyzer2.Services.Target
         }
 
         internal bool IsValid => _snapshot.Matrix is not null;
-        internal CalibrationPoint? CameraTargetCenter => _snapshot.CameraTargetCenter;
-        internal ReadOnlySpan<CalibrationPoint> CameraTargetOutline => _snapshot.CameraTargetOutline;
+        internal Position? CameraTargetCenter => _snapshot.CameraTargetCenter;
+        internal ReadOnlySpan<Position> CameraTargetOutline => _snapshot.CameraTargetOutline;
         internal event Action? CalibrationGeometryChanged;
 
         internal void SetTarget(TargetModel target) => UpdateTarget(target, resetCalibration: false);
@@ -100,9 +100,9 @@ namespace HitAnalyzer2.Services.Target
         }
 
         // Both input and output are relative coordinates with the origin at the top left.
-        internal CalibrationPoint? MapHit(double x, double y) => Project(_snapshot.Matrix, x, y);
+        internal Position? MapHit(double x, double y) => Project(_snapshot.Matrix, x, y);
 
-        private static CalibrationPoint? Project(double[]? matrix, double x, double y)
+        private static Position? Project(double[]? matrix, double x, double y)
         {
             if (matrix is null)
                 return null;
@@ -121,7 +121,7 @@ namespace HitAnalyzer2.Services.Target
             if (settings.Corners is not { } corners)
                 return new(settings, null, null, []);
 
-            CalibrationPoint[] points = [corners.TopLeft, corners.TopRight, corners.BottomRight, corners.BottomLeft];
+            Position[] points = [corners.TopLeft, corners.TopRight, corners.BottomRight, corners.BottomLeft];
             var source = new Point2f[points.Length];
             for (int i = 0; i < points.Length; i++)
             {
@@ -153,7 +153,7 @@ namespace HitAnalyzer2.Services.Target
             }
 
             var center = Project(inverseMatrix, TargetCenter.X, TargetCenter.Y);
-            var outline = new CalibrationPoint[OutlinePointCount];
+            var outline = new Position[OutlinePointCount];
             for (int i = 0; i < outline.Length; i++)
             {
                 double angle = Math.Tau * i / outline.Length;
@@ -168,8 +168,8 @@ namespace HitAnalyzer2.Services.Target
         }
 
         private sealed record CalibrationSnapshot(
-            TargetPreviewModel Settings, double[]? Matrix, CalibrationPoint? CameraTargetCenter,
-            CalibrationPoint[] CameraTargetOutline, int FrameWidth = 0, int FrameHeight = 0)
+            TargetPreviewModel Settings, double[]? Matrix, Position? CameraTargetCenter,
+            Position[] CameraTargetOutline, int FrameWidth = 0, int FrameHeight = 0)
         {
             internal CalibrationSnapshot WithFrameGeometry(int width, int height)
             {
@@ -189,7 +189,7 @@ namespace HitAnalyzer2.Services.Target
                     Settings = Settings with { CameraTargetDiameterPixels = diameter }
                 };
 
-                double DistanceInPixels(CalibrationPoint a, CalibrationPoint b) =>
+                double DistanceInPixels(Position a, Position b) =>
                     double.Hypot((a.X - b.X) * width, (a.Y - b.Y) * height);
             }
         }
