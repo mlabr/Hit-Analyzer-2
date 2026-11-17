@@ -102,6 +102,13 @@ namespace HitAnalyzer2.Services.Target
         // Both input and output are relative coordinates with the origin at the top left.
         internal Position? MapHit(double x, double y) => Project(_snapshot.Matrix, x, y);
 
+        internal Position? MapHit(double x, double y, out TargetPreviewModel target)
+        {
+            var snapshot = _snapshot;
+            target = snapshot.Settings;
+            return Project(snapshot.Matrix, x, y);
+        }
+
         private static Position? Project(double[]? matrix, double x, double y)
         {
             if (matrix is null)

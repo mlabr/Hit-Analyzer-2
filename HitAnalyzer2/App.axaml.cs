@@ -43,7 +43,7 @@ namespace HitAnalyzer2
                 var targetFiles = new TargetFileRepository(Path.Combine(AppContext.BaseDirectory, "Data", "Targets"));
                 var targetSettings = new TargetSettingsViewModel(targetFiles, cameraCalibration,
                     settings.Current.SelectedTargetFileName);
-                var recording = new RecordingService();
+                var recording = new RecordingService(cameraCalibration);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler,
                     settings.Current.Shooting, detection, cameraCalibration, recording, Program.StartedAt);

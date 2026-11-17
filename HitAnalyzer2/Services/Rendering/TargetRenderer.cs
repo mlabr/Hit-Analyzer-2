@@ -1,9 +1,7 @@
 using HitAnalyzer2.Models;
-using HitAnalyzer2.Services.Shooting;
 using HitAnalyzer2.Services.Target;
 using OpenCvSharp;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -14,9 +12,7 @@ namespace HitAnalyzer2.Services.Rendering
         private const double PreviewMargin = TargetPreviewModel.PreviewMargin;
         private static readonly Scalar AimMarkerOutline = new(20, 20, 20, 255);
 
-        internal static void DrawTargetPreview(Mat preview, AimPosition? aim, AimPosition? lastHit,
-            IReadOnlyList<LaserPosition> aimPath, IReadOnlyList<LaserPosition> followPath,
-            TargetHit? lastTargetHit, TargetCalibrationService calibration)
+        internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings)
         {
             preview.SetTo(new Scalar(211, 211, 211, 255));
             int size = Math.Min(preview.Width, preview.Height);
@@ -28,52 +24,19 @@ namespace HitAnalyzer2.Services.Rendering
             var guide = new Scalar(0, 0, 0, 255);
             Cv2.Rectangle(target, default(Point), new Point(size - 1, size - 1), guide);
             var center = ToTargetPixel(TargetCalibrationService.TargetCenter);
-            DrawTargetRings(target, center, diameterPixels, calibration.Settings, guide);
+            DrawTargetRings(target, center, diameterPixels, settings, guide);
 
-            var reference = aim ?? lastHit;
-            var offset = reference is { } position
-                ? (position.X - position.LaserPosition.X, position.Y - position.LaserPosition.Y)
-                : (0.0, 0.0);
-            AimTracerRenderer.DrawAimPath(target, aimPath, AimTracerRenderer.AimPathBeforeColor, offset, false, Project);
-            AimTracerRenderer.DrawAimPath(target, followPath, AimTracerRenderer.AimPathAfterColor, offset, true, Project);
-
-            int markerSize = Math.Max(1, (int)Math.Round(target.Height * AimTracerRenderer.MarkerSizeRatio));
-            if (lastTargetHit is { } hit)
+            if (lastTargetHit is { } hit && IsInsidePreview(hit))
             {
-                if (hit.Laser is { } laser && IsInsidePreview(laser))
-                {
-                    var marker = ToTargetPixel(laser);
-                    AimTracerRenderer.DrawLaserPosition(target, marker.X, marker.Y, markerSize, AimTracerRenderer.LaserPositionMarkerColor);
-                }
-
-                if (hit.Aim is { } hitAim && IsInsidePreview(hitAim))
-                {
-                    var marker = ToTargetPixel(hitAim);
-                    AimTracerRenderer.DrawAimPosition(target, marker.X, marker.Y, markerSize,
-                        AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
-                }
-            }
-
-            if (aim is { } current)
-            {
-                var laser = current.LaserPosition;
-                if ((current.X != laser.X || current.Y != laser.Y) && Project(laser.X, laser.Y) is { } laserMarker)
-                    AimTracerRenderer.DrawLaserPosition(target, laserMarker.X, laserMarker.Y, markerSize, AimTracerRenderer.LaserPositionMarkerColor);
-
-                if (Project(current.X, current.Y) is { } aimMarker)
-                    AimTracerRenderer.DrawAimPosition(target, aimMarker.X, aimMarker.Y, markerSize,
-                        AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
+                int markerSize = Math.Max(1, (int)Math.Round(target.Height * AimTracerRenderer.MarkerSizeRatio));
+                var marker = ToTargetPixel(hit);
+                AimTracerRenderer.DrawAimPosition(target, marker.X, marker.Y, markerSize,
+                    AimTracerRenderer.AimPositionMarkerColor, AimMarkerOutline);
             }
 
             Point ToTargetPixel(Position point) =>
                 new(Math.Round((point.X + PreviewMargin) * diameterPixels),
                     Math.Round((point.Y + PreviewMargin) * diameterPixels));
-
-            Point? Project(double x, double y)
-            {
-                var mapped = calibration.MapHit(x / preview.Width, y / preview.Height);
-                return mapped is { } point && IsInsidePreview(point) ? ToTargetPixel(point) : null;
-            }
         }
 
         private static void DrawTargetRings(Mat preview, Point center, double diameterPixels,

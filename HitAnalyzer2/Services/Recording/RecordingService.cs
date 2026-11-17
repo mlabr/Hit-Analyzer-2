@@ -1,4 +1,5 @@
-﻿using HitAnalyzer2.Models;
+using HitAnalyzer2.Models;
+using HitAnalyzer2.Services.Target;
 using System;
 using System.Collections.Generic;
 
@@ -7,44 +8,76 @@ namespace HitAnalyzer2.Services.Recording
 	internal class RecordingService
 	{
 		
-
-
 		private readonly object _recordsGate = new();
-		private readonly List<HitRecord> hitRecordList = new();
+		private readonly List<HitRecord> hitRecordNormalizedList = new();
+		private readonly TargetCalibrationService _calibration;
+		private TargetPreviewModel _target;
+
+		internal RecordingService(TargetCalibrationService calibration)
+		{
+			_calibration = calibration;
+			_target = calibration.Settings;
+			calibration.CalibrationGeometryChanged += ClearNormalizedHitRecordList;
+		}
+
+		internal TargetModel Target
+		{
+			get
+			{
+				lock (_recordsGate)
+					return _target;
+			}
+		}
+
+		internal double? MmToPixel
+		{
+			get
+			{
+				lock (_recordsGate)
+					return _target.MmToPixel;
+			}
+		}
 
 		internal event Action? HitCountChanged;
 
 		internal int GetHitRecordCount()
 		{
 			lock (_recordsGate)
-				return hitRecordList.Count;
+				return hitRecordNormalizedList.Count;
 		}
 
-		public void AddHitRecord(HitRecord hitRecord)
-		{
-			lock (_recordsGate)
-				hitRecordList.Add(hitRecord);
-
-			HitCountChanged?.Invoke();
-		}
-
-		public void ClearHitRecordsList()
+		internal void AddNormalizedHitRecord(HitRecord hitRecord, TargetPreviewModel calibrationAtHit)
 		{
 			lock (_recordsGate)
 			{
-				if (hitRecordList.Count == 0)
+				if (!ReferenceEquals(calibrationAtHit, _target) ||
+					!ReferenceEquals(calibrationAtHit, _calibration.Settings))
 					return;
 
-				hitRecordList.Clear();
+				hitRecordNormalizedList.Add(hitRecord);
 			}
 
 			HitCountChanged?.Invoke();
 		}
 
-		public IReadOnlyList<HitRecord> GetHitRecordsList()
+		public void ClearNormalizedHitRecordList()
 		{
 			lock (_recordsGate)
-				return Array.AsReadOnly(hitRecordList.ToArray());
+			{
+				_target = _calibration.Settings;
+				if (hitRecordNormalizedList.Count == 0)
+					return;
+
+				hitRecordNormalizedList.Clear();
+			}
+			
+			HitCountChanged?.Invoke();
+		}
+
+		public IReadOnlyList<HitRecord> GetNormalizedHitRecordList()
+		{
+			lock (_recordsGate)
+				return Array.AsReadOnly(hitRecordNormalizedList.ToArray());
 		}
 
 
