@@ -32,6 +32,8 @@
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
             </Grid>
             <StackPanel x:Name="HitCounter" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
+                <TextBlock Text="Score:" FontSize="32" />
+                <TextBlock Text="{Binding ShootingSettings.LastHitScore}" FontSize="32" FontWeight="SemiBold" Margin="0,0,16,0" />
                 <TextBlock Text="Hits:" FontSize="32" />
                 <TextBlock Text="{Binding ShootingSettings.HitCount}" FontSize="32" FontWeight="SemiBold" />
             </StackPanel>

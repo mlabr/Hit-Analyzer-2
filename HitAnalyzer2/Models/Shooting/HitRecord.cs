@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using HitAnalyzer2.Models.Shooting;
 
 namespace HitAnalyzer2.Models
 {
-	internal class HitRecord(LaserPosition hitPosition, IReadOnlyList<LaserPosition> aimPathBefore, double? distanceFromCenterMm)
+	internal class HitRecord(HitPosition hitPosition, IReadOnlyList<LaserPosition> aimPathBefore, double? distanceFromCenterMm)
 	{
-		public LaserPosition HitPosition { get; } = hitPosition;
+		public HitPosition HitPosition { get; } = hitPosition;
 		public double? DistanceFromCenterMm { get; } = distanceFromCenterMm;
 
 		public IReadOnlyList<LaserPosition> AimPathBefore { get; } = aimPathBefore;

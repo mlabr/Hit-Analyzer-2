@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Threading;
 
 using HitAnalyzer2.Models;
+using HitAnalyzer2.Models.Shooting;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Target;
@@ -185,7 +186,9 @@ namespace HitAnalyzer2.Services.Shooting
                     if (targetPoint is { } mapped)
                     {
                         var recordedAimPath = MapAimPath(_lastHitAimPath, offsetX, offsetY, frame.Width, frame.Height);
-                        hitRecord = new HitRecord(new LaserPosition(mapped.X, mapped.Y, registered.Time),
+                        var score = calibrationAtHit.CalculateScore(mapped);
+						var hitPosition = new HitPosition(mapped.X, mapped.Y, registered.Time, score);
+                        hitRecord = new HitRecord(hitPosition,
                             recordedAimPath, calibrationAtHit.GetDistanceFromCenterMm(mapped));
                     }
 

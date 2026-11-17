@@ -12,6 +12,7 @@ namespace HitAnalyzer2.ViewModels
         private readonly RecordingService _recording;
 
         public int HitCount => _recording.GetHitRecordCount();
+        public double LastHitScore => _recording.GetLastHitScore();
         public string LastHitDistanceText => _recording.GetLastHitDistanceFromCenterMm() is { } distance
             ? $"Last hit distance from center: {distance:F2} mm"
             : "Last hit distance from center: —";
@@ -33,6 +34,7 @@ namespace HitAnalyzer2.ViewModels
             if (Dispatcher.UIThread.CheckAccess())
             {
                 OnPropertyChanged(nameof(HitCount));
+                OnPropertyChanged(nameof(LastHitScore));
                 OnPropertyChanged(nameof(LastHitDistanceText));
             }
             else

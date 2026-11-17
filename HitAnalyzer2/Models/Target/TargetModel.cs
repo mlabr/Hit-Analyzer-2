@@ -14,11 +14,29 @@ namespace HitAnalyzer2.Models
         internal IReadOnlyList<TargetRingModel> Rings { get; init; } = [];
         internal double? MarkedRingPoints { get; init; }
         internal double? MaxDiameter => Rings.Count == 0 ? null : Rings.Max(ring => ring.Diameter);
-        internal double? MaxDiameterMm => MaxDiameter * (TargetType == TargetTypeEnum.CircleImperial ? 25.4 : 1);
+        private double MillimetersPerUnit => TargetType == TargetTypeEnum.CircleImperial ? 25.4 : 1;
+        internal double? MaxDiameterMm => MaxDiameter * MillimetersPerUnit;
 
         internal double? GetDistanceFromCenterMm(Position hitPosition) =>
             MaxDiameterMm is > 0 and < double.PositiveInfinity and var diameterMm
                 ? double.Hypot(hitPosition.X - Center.X, hitPosition.Y - Center.Y) * diameterMm
                 : null;
+
+        internal double CalculateScore(Position hitPosition, double caliberDiameterMm = 0)
+        {
+            if (GetDistanceFromCenterMm(hitPosition) is not { } distanceMm ||
+                !double.IsFinite(distanceMm) || !double.IsFinite(caliberDiameterMm) || caliberDiameterMm < 0)
+                return 0;
+
+            double projectileRadiusMm = caliberDiameterMm / 2;
+            foreach (var ring in Rings.OrderBy(ring => ring.Diameter))
+            {
+                double ringRadiusMm = ring.Radius * MillimetersPerUnit;
+                if (distanceMm <= ringRadiusMm + projectileRadiusMm)
+                    return ring.PointValue;
+            }
+
+            return 0;
+        }
     }
 }
