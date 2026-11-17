@@ -48,7 +48,7 @@ namespace HitAnalyzer2.Services.Video
             startInfo.Environment["LC_ALL"] = "C";
 
             using var process = Process.Start(startInfo)
-                ?? throw new InvalidOperationException("Nepodařilo se spustit v4l2-ctl.");
+                ?? throw new InvalidOperationException("Could not start v4l2-ctl.");
             var output = process.StandardOutput.ReadToEndAsync();
             var error = process.StandardError.ReadToEndAsync();
             try

@@ -113,7 +113,7 @@ namespace HitAnalyzer2.Repository
             if (string.IsNullOrWhiteSpace(fileName) || fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
                 || fileName.Contains('/') || fileName.Contains('\\')
                 || !string.Equals(Path.GetExtension(fileName), ".json", StringComparison.OrdinalIgnoreCase))
-                throw new JsonException("Neplatný název souboru profilu zbraně.");
+                throw new JsonException("Invalid weapon profile file name.");
 
             return Path.Combine(directory, fileName);
         }
@@ -121,7 +121,7 @@ namespace HitAnalyzer2.Repository
         internal static void ValidateProfile([NotNull] WeaponProfile? profile)
         {
             if (profile is not { Type: "ha_weapon" } || string.IsNullOrWhiteSpace(profile.Name))
-                throw new JsonException("Neplatný typ nebo název profilu zbraně.");
+                throw new JsonException("Invalid weapon profile type or name.");
 
             ValidateSettings(profile);
         }
@@ -133,7 +133,7 @@ namespace HitAnalyzer2.Repository
                     or > ShootingSessionService.NextDetectionMaximumInterval
                 || weapon.OffsetX is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset
                 || weapon.OffsetY is < WeaponHandler.MinimumOffset or > WeaponHandler.MaximumOffset)
-                throw new JsonException("Neplatné nastavení zbraně.");
+                throw new JsonException("Invalid weapon settings.");
         }
     }
 }

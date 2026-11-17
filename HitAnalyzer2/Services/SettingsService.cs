@@ -78,7 +78,7 @@ namespace HitAnalyzer2
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
-                LoadError = $"Nastavení se nepodařilo načíst nebo vytvořit. Používám výchozí hodnoty. {ex.Message}";
+                LoadError = $"Could not load or create settings. Using defaults. {ex.Message}";
             }
 
             try
@@ -92,7 +92,7 @@ namespace HitAnalyzer2
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
-                LoadError = $"Uložený profil zbraně se nepodařilo obnovit. {ex.Message}";
+                LoadError = $"Could not restore the saved weapon profile. {ex.Message}";
             }
         }
 
@@ -172,13 +172,13 @@ namespace HitAnalyzer2
         private static void Validate(AppSettings? settings)
         {
             if (settings is not { Camera: { } camera, Detection: { } detection })
-                throw new JsonException("Chybí nastavení kamery nebo detekce.");
+                throw new JsonException("Camera or detection settings are missing.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
                 || camera.Calibration is null
                 || camera.Mode is { } mode && (mode.Width <= 0 || mode.Height <= 0
                     || mode.FpsNumerator == 0 || mode.FpsDenominator == 0))
-                throw new JsonException("Neplatné nastavení kamery.");
+                throw new JsonException("Invalid camera settings.");
 
             if (!Enum.IsDefined(detection.Method)
                 || detection.BrightnessPercent is < 0 or > 100
@@ -186,7 +186,7 @@ namespace HitAnalyzer2
                 || detection.SaturationPercent is < 0 or > 100
                 || detection.DetectionSensitivity is < 1 or > 99
                 || detection.MinimumHitAreaPixels is <= 0)
-                throw new JsonException("Neplatné parametry detekce.");
+                throw new JsonException("Invalid detection parameters.");
 
             if (settings.SelectedWeapon is null && settings.LegacyWeapon is { } legacyWeapon)
                 WeaponFileRepository.ValidateSettings(legacyWeapon);

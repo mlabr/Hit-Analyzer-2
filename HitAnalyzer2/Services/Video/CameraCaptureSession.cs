@@ -11,7 +11,7 @@ namespace HitAnalyzer2.Services.Video
         Action clearPreview, Action<string?> showStatus)
     {
         private static readonly TimeSpan CaptureStopTimeout = TimeSpan.FromSeconds(1);
-        private const string CameraStillStopping = "Ovladač kamery stále ukončuje snímání. Zkuste to znovu později.";
+        private const string CameraStillStopping = "The camera driver is still stopping capture. Try again later.";
         private readonly VideoHandler _videoHandler = new();
         private readonly SemaphoreSlim _cameraGate = new(1);
         private readonly CancellationTokenSource _discoveryCancellation = new();
@@ -48,7 +48,7 @@ namespace HitAnalyzer2.Services.Video
                 }
                 _pendingCaptures.Clear();
 
-                showStatus("Hledám kamery…");
+                showStatus("Searching for cameras…");
                 var detected = await _videoHandler.DetectCamerasAsync(_discoveryCancellation.Token);
                 if (IsClosing)
                     return;
@@ -57,14 +57,14 @@ namespace HitAnalyzer2.Services.Video
                 if (camera is not null)
                     StartCapture(camera, mode, flip);
                 else
-                    showStatus("Nebyla nalezena žádná dostupná kamera.");
+                    showStatus("No cameras found.");
             }
             catch (OperationCanceledException) when (_discoveryCancellation.IsCancellationRequested)
             {
             }
             catch (Exception ex)
             {
-                showStatus($"Kamery se nepodařilo vyhledat: {ex.Message}");
+                showStatus($"Could not search for cameras: {ex.Message}");
             }
             finally
             {
@@ -124,7 +124,7 @@ namespace HitAnalyzer2.Services.Video
             }
             _pendingCaptures.Remove(device);
 
-            showStatus("Otevírám kameru…");
+            showStatus("Opening camera…");
             _captureDevice = device;
             _captureCancellation = new CancellationTokenSource();
             _captureTask = RunCaptureAsync(camera, mode, flip, _captureCancellation.Token);
@@ -178,7 +178,7 @@ namespace HitAnalyzer2.Services.Video
                     return;
 
                 clearPreview();
-                showStatus($"Chyba kamery: {ex.Message}");
+                showStatus($"Camera error: {ex.Message}");
             }
         }
     }

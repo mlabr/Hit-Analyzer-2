@@ -45,7 +45,7 @@ namespace HitAnalyzer2.ViewModels
                 .Select(profile => new WeaponProfileItem(profile.FileName, profile.Profile))
                 .ToArray());
             if (loadError is not null)
-                SettingsMessage ??= $"Profily zbraní se nepodařilo načíst. {loadError}";
+                SettingsMessage ??= $"Could not load weapon profiles. {loadError}";
 
             if (settings.Current.SelectedWeapon is { } savedWeapon)
             {
@@ -59,7 +59,7 @@ namespace HitAnalyzer2.ViewModels
                 }
 
                 if (SelectedWeapon is null)
-                    SettingsMessage ??= $"Profil zbraně {savedWeapon.FileName} se nepodařilo načíst.";
+                    SettingsMessage ??= $"Could not load weapon profile {savedWeapon.FileName}.";
             }
         }
 

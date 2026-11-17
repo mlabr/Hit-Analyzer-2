@@ -31,7 +31,7 @@ namespace HitAnalyzer2.Services.Detection
             {
                 var type when type == MatType.CV_8UC1 => ColorConversionCodes.GRAY2BGRA,
                 var type when type == MatType.CV_8UC3 => ColorConversionCodes.BGR2BGRA,
-                _ => throw new InvalidOperationException("Nepodporovaný formát snímku.")
+                _ => throw new InvalidOperationException("Unsupported frame format.")
             });
         }
 

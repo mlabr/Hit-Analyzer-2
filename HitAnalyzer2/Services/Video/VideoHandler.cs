@@ -43,7 +43,7 @@ namespace HitAnalyzer2.Services.Video
         public IReadOnlyList<CameraMode> Modes { get; init; } = Array.Empty<CameraMode>();
         public string? ModeDetectionError { get; init; }
 
-        public override string ToString() => Name ?? $"Kamera {Index}";
+        public override string ToString() => Name ?? $"Camera {Index}";
     }
 
     internal sealed class VideoHandler
@@ -84,7 +84,7 @@ namespace HitAnalyzer2.Services.Video
 
                 using var capture = OpenCapture(camera.Index);
                 if (!capture.IsOpened())
-                    throw new InvalidOperationException($"Nepodařilo se otevřít kameru s indexem {camera.Index}.");
+                    throw new InvalidOperationException($"Could not open camera at index {camera.Index}.");
 
                 if (OperatingSystem.IsLinux())
                 {
@@ -122,7 +122,7 @@ namespace HitAnalyzer2.Services.Video
                         return;
 
                     if (!hasFrame || frame.Empty())
-                        throw new InvalidOperationException("Z kamery se nepodařilo načíst snímek.");
+                        throw new InvalidOperationException("Could not read a frame from the camera.");
 
                     long frameTime = Stopwatch.GetTimestamp();
                     if (currentFrameTimeStamp.HasValue)
@@ -163,7 +163,7 @@ namespace HitAnalyzer2.Services.Video
                 capture.Get(VideoCaptureProperties.FourCC) != fourCc ||
                 Math.Round(capture.Get(VideoCaptureProperties.Fps)) != fps)
             {
-                throw new InvalidOperationException($"Kamera nepřijala vybraný režim {mode}.");
+                throw new InvalidOperationException($"The camera rejected the selected mode {mode}.");
             }
         }
     }

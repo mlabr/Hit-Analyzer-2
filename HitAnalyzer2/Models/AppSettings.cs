@@ -92,7 +92,7 @@ namespace HitAnalyzer2
                     return;
 
                 if (!double.IsFinite(threshold) || threshold is < 0 or > 1)
-                    throw new JsonException("Neplatný práh detekce.");
+                    throw new JsonException("Invalid detection threshold.");
 
                 _legacyDetectionSensitivity = Math.Clamp(byte.MaxValue - (int)Math.Ceiling(threshold * byte.MaxValue), 1, 99);
             }

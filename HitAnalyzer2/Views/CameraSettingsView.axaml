@@ -12,7 +12,7 @@
         <ComboBox PlaceholderText="{Binding CameraModePlaceholder}" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CameraModes}" SelectedItem="{Binding SelectedCameraMode, Mode=TwoWay}"
                   IsEnabled="{Binding CanSelectCameraMode}"
-                  AutomationProperties.Name="Výběr rozlišení a FPS" />
+                  AutomationProperties.Name="Resolution and frame rate" />
         <ComboBox HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CameraFlipOptions}" SelectedItem="{Binding SelectedCameraFlip, Mode=TwoWay}"
                   AutomationProperties.Name="Camera View Flip" />

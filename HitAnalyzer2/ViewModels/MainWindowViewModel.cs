@@ -87,11 +87,11 @@ namespace HitAnalyzer2.ViewModels
                 _settings.SaveConfiguration(configuration, weapon);
                 if (weapon is not null && WeaponSettings.SelectedWeapon is { } selected)
                     selected.Profile = weapon.Profile;
-                ConfigurationMessage = "Nastavení uloženo.";
+                ConfigurationMessage = "Settings saved.";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
-                ConfigurationMessage = $"Nastavení se nepodařilo uložit. {ex.Message}";
+                ConfigurationMessage = $"Could not save settings. {ex.Message}";
             }
         }
 

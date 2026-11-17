@@ -88,7 +88,7 @@ namespace HitAnalyzer2.Services.Video
                 Release(readerEx);
             }
 
-            throw new InvalidOperationException("Vybraný režim už kamera nenabízí. Obnovte seznam kamer.");
+            throw new InvalidOperationException("The camera no longer offers the selected mode. Refresh the camera list.");
         }
 
         private void SetRgbOutput()
@@ -118,11 +118,11 @@ namespace HitAnalyzer2.Services.Video
             if (_mode is { } mode)
             {
                 if (!TryGetNativeType(_reader, CurrentNativeType, out var nativeType))
-                    throw new InvalidOperationException("Kamera nehlásí aktuální režim.");
+                    throw new InvalidOperationException("The camera did not report its current mode.");
                 try
                 {
                     if (ReadMode(nativeType) != mode)
-                        throw new InvalidOperationException("Kamera nepoužila vybraný režim.");
+                        throw new InvalidOperationException("The camera did not apply the selected mode.");
                 }
                 finally
                 {
@@ -138,12 +138,12 @@ namespace HitAnalyzer2.Services.Video
             {
                 var expectedFormat = _useNativeMjpg ? Mjpg : Rgb32;
                 if (!TryGetUInt64(type, FrameSize, out var size) || GetGuid(type, Subtype) != expectedFormat)
-                    throw new InvalidOperationException("Kamera neposkytuje očekávaný formát náhledu.");
+                    throw new InvalidOperationException("The camera did not provide the expected preview format.");
 
                 _width = checked((int)(size >> 32));
                 _height = checked((int)(size & uint.MaxValue));
                 if (_mode is { } selected && (_width != selected.Width || _height != selected.Height))
-                    throw new InvalidOperationException("Náhled nemá vybrané rozlišení.");
+                    throw new InvalidOperationException("The preview resolution does not match the selected resolution.");
 
                 if (_useNativeMjpg)
                     return;
@@ -218,7 +218,7 @@ namespace HitAnalyzer2.Services.Video
                     int stride = Math.Abs(_stride);
                     int rowBytes = checked(_width * 4);
                     if (_height <= 0 || stride < rowBytes || length < (long)(_height - 1) * stride + rowBytes)
-                        throw new InvalidOperationException("Kamera vrátila neúplný snímek.");
+                        throw new InvalidOperationException("The camera returned an incomplete frame.");
 
                     using var source = Mat.FromPixelData(_height, _width, MatType.CV_8UC4, pixels, stride);
                     if (_stride < 0)
@@ -240,11 +240,11 @@ namespace HitAnalyzer2.Services.Video
         private void DecodeMjpg(ReadOnlySpan<byte> encoded, Mat frame)
         {
             if (encoded.IsEmpty)
-                throw new InvalidOperationException("Kamera vrátila prázdný MJPG snímek.");
+                throw new InvalidOperationException("The camera returned an empty MJPG frame.");
 
             using var decoded = Cv2.ImDecode(encoded, ImreadModes.Color | ImreadModes.IgnoreOrientation);
             if (decoded.Empty() || decoded.Width != _width || decoded.Height != _height)
-                throw new InvalidOperationException("Kamera vrátila neplatný MJPG snímek.");
+                throw new InvalidOperationException("The camera returned an invalid MJPG frame.");
 
             Cv2.CvtColor(decoded, frame, ColorConversionCodes.BGR2BGRA);
         }

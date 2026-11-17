@@ -77,7 +77,7 @@ namespace HitAnalyzer2.ViewModels
         }
 
         [ObservableProperty]
-        private string cameraModePlaceholder = "Vyberte kameru";
+        private string cameraModePlaceholder = "Select a camera";
 
         public bool CanSelectCameraMode => !IsDiscoveringCameras && CameraModes.Count > 0;
 
@@ -180,11 +180,11 @@ namespace HitAnalyzer2.ViewModels
                     ?? CameraModes.FirstOrDefault();
                 CameraModePlaceholder = camera switch
                 {
-                    null => "Vyberte kameru",
-                    { ModeDetectionError: not null } => "Režimy se nepodařilo načíst",
-                    _ when !OperatingSystem.IsWindows() && !OperatingSystem.IsLinux() => "Detekce režimů je dostupná ve Windows a Linuxu",
-                    _ when CameraModes.Count == 0 => "Žádný režim od 640 × 480 a 25 FPS",
-                    _ => "Vyberte režim"
+                    null => "Select a camera",
+                    { ModeDetectionError: not null } => "Could not load camera modes",
+                    _ when !OperatingSystem.IsWindows() && !OperatingSystem.IsLinux() => "Camera mode detection is available on Windows and Linux",
+                    _ when CameraModes.Count == 0 => "No camera modes at 640 × 480 or higher and 25 FPS or faster",
+                    _ => "Select a camera mode"
                 };
             }
             finally
