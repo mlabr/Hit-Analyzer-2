@@ -169,7 +169,7 @@ namespace HitAnalyzer2.Views
                 }
             }
 
-            TargetSettings.ZoomPreview.Update(source, imagePoint, TargetSettings.ZoomSelector.SelectedIndex + 2,
+            TargetSettings.ZoomPreview.Update(source, imagePoint, 2 << Math.Clamp(TargetSettings.ZoomSelector.SelectedIndex, 0, 2),
                 source is null ? null : _cameraSettingsViewModel);
         }
 

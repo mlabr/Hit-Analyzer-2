@@ -52,9 +52,6 @@ namespace HitAnalyzer2.Views
             var points = GetPreviewCorners(settings);
             var brush = settings.Calibration.IsValid ? Brushes.Yellow : Brushes.Cyan;
             var pen = new Pen(brush, StrokeThickness);
-            for (int i = 0; i < points.Length; i++)
-                context.DrawLine(pen, points[i], points[(i + 1) % points.Length]);
-
             DrawOutline(settings.Calibration.CameraTargetOutline);
             DrawOutline(settings.Calibration.CameraMarkedRingOutline);
 
@@ -75,10 +72,25 @@ namespace HitAnalyzer2.Views
             }
 
             foreach (var point in points)
-                context.DrawEllipse(null, pen, point, HandleRadius, HandleRadius);
+                DrawHandle(point);
 
             if (settings.Calibration.CameraTargetCenter is { } center)
-                context.DrawEllipse(null, pen, ToPreview(center), HandleRadius, HandleRadius);
+                DrawHandle(ToPreview(center));
+
+            void DrawHandle(Point point)
+            {
+                const double armEnd = HandleRadius + 6;
+                var handlePen = new Pen(Brushes.Cyan, StrokeThickness);
+                context.DrawEllipse(null, handlePen, point, HandleRadius, HandleRadius);
+                context.DrawLine(handlePen, new Point(point.X - armEnd, point.Y),
+                    new Point(point.X - HandleRadius, point.Y));
+                context.DrawLine(handlePen, new Point(point.X + HandleRadius, point.Y),
+                    new Point(point.X + armEnd, point.Y));
+                context.DrawLine(handlePen, new Point(point.X, point.Y - armEnd),
+                    new Point(point.X, point.Y - HandleRadius));
+                context.DrawLine(handlePen, new Point(point.X, point.Y + HandleRadius),
+                    new Point(point.X, point.Y + armEnd));
+            }
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)

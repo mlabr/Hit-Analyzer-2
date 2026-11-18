@@ -36,7 +36,7 @@ namespace HitAnalyzer2.ViewModels
         internal TargetSettings GetConfiguration() => new()
         {
             SelectedTargetFileName = SelectedTarget?.FileName,
-            CalibrationZoom = CalibrationZoomIndex + 2,
+            CalibrationZoom = 2 << CalibrationZoomIndex,
             Calibration = _calibration.Settings
         };
 
@@ -51,7 +51,7 @@ namespace HitAnalyzer2.ViewModels
             string? selectedFileName, TargetSettings settings)
         {
             _calibration = calibration;
-            _calibrationZoomIndex = Math.Clamp(settings.CalibrationZoom, 2, 4) - 2;
+            _calibrationZoomIndex = settings.CalibrationZoom switch { 4 => 1, 8 => 2, _ => 0 };
             Targets = repository.LoadTargets(out var loadError)
                 .Select(item => new TargetOption(item.FileName, item.Target)).ToList().AsReadOnly();
             LoadMessage = loadError ?? (Targets.Count == 0 ? "No targets found in Data/Targets." : null);

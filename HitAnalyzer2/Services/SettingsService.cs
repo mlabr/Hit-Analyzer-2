@@ -92,6 +92,11 @@ namespace HitAnalyzer2
                     detection[nameof(DetectionSettings.ShowTargetPreview)] = legacyPreview.DeepClone();
                 }
 
+                if (json?[nameof(AppSettings.Target)] is JsonObject zoomSettings &&
+                    zoomSettings[nameof(TargetSettings.CalibrationZoom)] is JsonValue zoomValue &&
+                    zoomValue.TryGetValue<int>(out var legacyZoom) && legacyZoom == 3)
+                    zoomSettings[nameof(TargetSettings.CalibrationZoom)] = 4;
+
                 var settings = json.Deserialize<AppSettings>(JsonOptions);
                 Validate(settings);
                 _current = settings!.SelectedWeapon is null ? settings : settings with { LegacyWeapon = null };
@@ -195,7 +200,7 @@ namespace HitAnalyzer2
             if (settings is not { Camera: { } camera, Detection: { } detection })
                 throw new JsonException("Camera or detection settings are missing.");
 
-            if (settings.Target is not { CalibrationZoom: >= 2 and <= 4, Calibration: not null })
+            if (settings.Target is not { CalibrationZoom: 2 or 4 or 8, Calibration: not null })
                 throw new JsonException("Invalid target calibration zoom.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)

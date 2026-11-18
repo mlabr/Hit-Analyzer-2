@@ -24,8 +24,8 @@
         <ComboBox x:Name="ZoomSelector" SelectedIndex="{Binding CalibrationZoomIndex, Mode=TwoWay}" HorizontalAlignment="Stretch"
                   AutomationProperties.Name="Calibration zoom">
             <ComboBoxItem Content="2×" />
-            <ComboBoxItem Content="3×" />
             <ComboBoxItem Content="4×" />
+            <ComboBoxItem Content="8×" />
         </ComboBox>
         <views:CalibrationZoomView x:Name="ZoomPreview" Height="180" IsHitTestVisible="False" />
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
