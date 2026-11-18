@@ -5,6 +5,7 @@ using HitAnalyzer2.Repository;
 using HitAnalyzer2.Services.Target;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace HitAnalyzer2.ViewModels
@@ -19,13 +20,31 @@ namespace HitAnalyzer2.ViewModels
 
         internal string FileName { get; }
         internal TargetModel Target { get; }
-        public string Label => $"{Target.TargetName} ({FileName})";
+        public string Label => $"{Target.TargetName} ({Path.GetFileNameWithoutExtension(FileName)})";
     }
 
     public partial class TargetSettingsViewModel : ViewModelBase
     {
         private readonly TargetCalibrationService _calibration;
         private int _calibrationZoomIndex;
+        private ShootingSettingsViewModel? _shootingSettings;
+
+        [ObservableProperty]
+        private bool adjustScaleForDistance;
+
+        partial void OnAdjustScaleForDistanceChanged(bool value) => RefreshScale();
+
+        internal void SetShootingSettings(ShootingSettingsViewModel shootingSettings)
+        {
+            _shootingSettings = shootingSettings;
+            shootingSettings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName is nameof(ShootingSettingsViewModel.RealDistanceMeters) or
+                    nameof(ShootingSettingsViewModel.SimulatedDistanceMeters))
+                    RefreshScale();
+            };
+            RefreshScale();
+        }
 
         public int CalibrationZoomIndex
         {
@@ -37,12 +56,24 @@ namespace HitAnalyzer2.ViewModels
         {
             SelectedTargetFileName = SelectedTarget?.FileName,
             CalibrationZoom = 2 << CalibrationZoomIndex,
+            AdjustScaleForDistance = AdjustScaleForDistance,
+            RealDistanceMeters = _shootingSettings!.RealDistanceMeters,
+            SimulatedDistanceMeters = _shootingSettings.SimulatedDistanceMeters,
             Calibration = _calibration.Settings
         };
 
         public IReadOnlyList<TargetOption> Targets { get; }
         public string? LoadMessage { get; }
-        public string CalibratedScaleText => $"Average camera scale: {FormatScale(_calibration.Settings.MmToPixel)}";
+        public string CalibratedScaleText
+        {
+            get
+            {
+                double factor = AdjustScaleForDistance && _shootingSettings is { } shooting
+                    ? (double)(shooting.RealDistanceMeters / shooting.SimulatedDistanceMeters)
+                    : 1;
+                return $"Average camera scale: {FormatScale(_calibration.Settings.MmToPixel * factor)}";
+            }
+        }
 
         [ObservableProperty]
         private TargetOption? selectedTarget;
@@ -51,6 +82,7 @@ namespace HitAnalyzer2.ViewModels
             string? selectedFileName, TargetSettings settings)
         {
             _calibration = calibration;
+            adjustScaleForDistance = settings.AdjustScaleForDistance;
             _calibrationZoomIndex = settings.CalibrationZoom switch { 4 => 1, 8 => 2, _ => 0 };
             Targets = repository.LoadTargets(out var loadError)
                 .Select(item => new TargetOption(item.FileName, item.Target)).ToList().AsReadOnly();

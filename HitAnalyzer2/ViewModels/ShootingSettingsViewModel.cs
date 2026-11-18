@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Shooting;
+using System;
 
 namespace HitAnalyzer2.ViewModels
 {
@@ -10,6 +11,26 @@ namespace HitAnalyzer2.ViewModels
     {
         private readonly ShootingSessionService _shootingSession;
         private readonly RecordingService _recording;
+        private decimal _realDistanceMeters;
+        private decimal _simulatedDistanceMeters;
+
+        public decimal RealDistanceMeters
+        {
+            get => _realDistanceMeters;
+            set
+            {
+                if (value <= 0)
+                    return;
+                if (SetProperty(ref _realDistanceMeters, value))
+                    SimulatedDistanceMeters = Math.Max(_simulatedDistanceMeters, value);
+            }
+        }
+
+        public decimal SimulatedDistanceMeters
+        {
+            get => _simulatedDistanceMeters;
+            set => SetProperty(ref _simulatedDistanceMeters, Math.Max(value, _realDistanceMeters));
+        }
 
         [ObservableProperty]
         private bool showAllHits;
@@ -26,6 +47,8 @@ namespace HitAnalyzer2.ViewModels
         {
             _shootingSession = shootingSession;
             _recording = recording;
+            _realDistanceMeters = settings.Current.Target.RealDistanceMeters;
+            _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;
         }
 

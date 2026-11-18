@@ -46,6 +46,7 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession = shootingSession;
             _recording = recording;
             ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording);
+            TargetSettings.SetShootingSettings(ShootingSettings);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
                 () =>

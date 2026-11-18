@@ -9,34 +9,37 @@
     "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u00268852233\u00263\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
-      "Width": 1280,
-      "Height": 720,
+      "Width": 640,
+      "Height": 480,
       "FpsNumerator": 30,
       "FpsDenominator": 1,
-      "Format": "47504a4d-0000-0010-8000-00aa00389b71"
+      "Format": "3231564e-0000-0010-8000-00aa00389b71"
     },
-    "Flip": null
+    "Flip": "X"
   },
   "Target": {
     "SelectedTargetFileName": "10m_air_pistol.json",
-    "CalibrationZoom": 8,
+    "CalibrationZoom": 4,
+    "AdjustScaleForDistance": false,
+    "RealDistanceMeters": 5,
+    "SimulatedDistanceMeters": 10,
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2969,
-          "Y": 0.1028
+          "X": 0.2563,
+          "Y": 0.1417
         },
         "TopRight": {
-          "X": 0.6672,
-          "Y": 0.1750
+          "X": 0.7047,
+          "Y": 0.2062
         },
         "BottomRight": {
-          "X": 0.6758,
-          "Y": 0.8306
+          "X": 0.7125,
+          "Y": 0.7958
         },
         "BottomLeft": {
-          "X": 0.2922,
-          "Y": 0.8778
+          "X": 0.2531,
+          "Y": 0.8375
         }
       }
     }

@@ -17,9 +17,9 @@
         </ComboBox>
         <TextBlock Text="{Binding LoadMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding LoadMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        <TextBlock Text="Calibration" FontWeight="SemiBold" />
         <TextBlock Text="{Binding CalibratedScaleText}" />
-        <Button x:Name="ResetCalibrationButton" Content="Reset calibration" IsEnabled="False" />
+        <CheckBox Content="Adjust scale for distance"
+                  IsChecked="{Binding AdjustScaleForDistance, Mode=TwoWay}" />
         <TextBlock Text="Calibration zoom" FontWeight="SemiBold" />
         <ComboBox x:Name="ZoomSelector" SelectedIndex="{Binding CalibrationZoomIndex, Mode=TwoWay}" HorizontalAlignment="Stretch"
                   AutomationProperties.Name="Calibration zoom">
@@ -28,6 +28,22 @@
             <ComboBoxItem Content="8×" />
         </ComboBox>
         <views:CalibrationZoomView x:Name="ZoomPreview" Height="180" IsHitTestVisible="False" />
-        <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+            <TextBlock Text="Real distance (m)" VerticalAlignment="Center" />
+            <NumericUpDown Grid.Column="1" Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShootingSettings.RealDistanceMeters, Mode=TwoWay}" Minimum="0.01"
+                           Increment="1" ClipValueToMinMax="True" ShowButtonSpinner="False"
+                           AutomationProperties.Name="Real distance in meters" />
+            <TextBlock Grid.Row="1" Text="Simulated distance (m)" VerticalAlignment="Center" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1"
+                           Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShootingSettings.SimulatedDistanceMeters, Mode=TwoWay}" Minimum="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShootingSettings.RealDistanceMeters}"
+                           Increment="1" ClipValueToMinMax="True" ShowButtonSpinner="False"
+                           AutomationProperties.Name="Simulated distance in meters" />
+        </Grid>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Button Content="Save" HorizontalAlignment="Left"
+                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
+            <Button x:Name="ResetCalibrationButton" Grid.Column="1" Content="Reset calibration"
+                    HorizontalAlignment="Right" IsEnabled="False" />
+        </Grid>
     </StackPanel>
 </UserControl>

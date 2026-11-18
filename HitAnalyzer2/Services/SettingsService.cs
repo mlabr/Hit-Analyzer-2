@@ -97,7 +97,28 @@ namespace HitAnalyzer2
                     zoomValue.TryGetValue<int>(out var legacyZoom) && legacyZoom == 3)
                     zoomSettings[nameof(TargetSettings.CalibrationZoom)] = 4;
 
+                if (json is JsonObject distanceRoot &&
+                    distanceRoot[nameof(AppSettings.Shooting)] is JsonObject shootingSection)
+                {
+                    foreach (string name in new[] { nameof(TargetSettings.RealDistanceMeters), nameof(TargetSettings.SimulatedDistanceMeters) })
+                    {
+                        if (!shootingSection.TryGetPropertyValue(name, out var distance))
+                            continue;
+                        shootingSection.Remove(name);
+                        if (!distanceRoot.ContainsKey(nameof(AppSettings.Target)))
+                            distanceRoot[nameof(AppSettings.Target)] = new JsonObject();
+                        if (distanceRoot[nameof(AppSettings.Target)] is JsonObject targetDistances &&
+                            !targetDistances.ContainsKey(name))
+                            targetDistances[name] = distance;
+                    }
+                }
+
                 var settings = json.Deserialize<AppSettings>(JsonOptions);
+                if (settings?.Target is { } target && target.SimulatedDistanceMeters < target.RealDistanceMeters)
+                    settings = settings with
+                    {
+                        Target = target with { SimulatedDistanceMeters = target.RealDistanceMeters }
+                    };
                 Validate(settings);
                 _current = settings!.SelectedWeapon is null ? settings : settings with { LegacyWeapon = null };
                 InitialWeapon = _current.LegacyWeapon ?? new WeaponSettings();
@@ -202,6 +223,10 @@ namespace HitAnalyzer2
 
             if (settings.Target is not { CalibrationZoom: 2 or 4 or 8, Calibration: not null })
                 throw new JsonException("Invalid target calibration zoom.");
+
+            if (settings.Target is not { RealDistanceMeters: > 0 } distances ||
+                distances.SimulatedDistanceMeters < distances.RealDistanceMeters)
+                throw new JsonException("Invalid shooting distances.");
 
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
                 || camera.Mode is { } mode && (mode.Width <= 0 || mode.Height <= 0

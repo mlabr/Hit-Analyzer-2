@@ -27,6 +27,9 @@ namespace HitAnalyzer2
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? SelectedTargetFileName { get; init; }
         public int CalibrationZoom { get; init; } = 2;
+        public bool AdjustScaleForDistance { get; init; }
+        public decimal RealDistanceMeters { get; init; } = 5;
+        public decimal SimulatedDistanceMeters { get; init; } = 10;
         public TargetPreviewModel Calibration { get; init; } = new();
     }
 
