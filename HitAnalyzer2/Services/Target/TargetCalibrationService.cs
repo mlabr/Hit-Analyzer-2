@@ -1,6 +1,7 @@
 using HitAnalyzer2.Models;
 using OpenCvSharp;
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace HitAnalyzer2.Services.Target
@@ -18,6 +19,7 @@ namespace HitAnalyzer2.Services.Target
         internal bool IsValid => _snapshot.Matrix is not null;
         internal Position? CameraTargetCenter => _snapshot.CameraTargetCenter;
         internal ReadOnlySpan<Position> CameraTargetOutline => _snapshot.CameraTargetOutline;
+        internal ReadOnlySpan<Position> CameraMarkedRingOutline => _snapshot.MarkedRingOutline;
         internal event Action? CalibrationGeometryChanged;
 
         internal void SetTarget(TargetModel target) => UpdateTarget(target, resetCalibration: false);
@@ -42,14 +44,8 @@ namespace HitAnalyzer2.Services.Target
                 }
                 else
                 {
-                    updated = snapshot with
-                    {
-                        Settings = settings with
-                        {
-                            Corners = snapshot.Settings.Corners,
-                            CameraTargetDiameterPixels = snapshot.Settings.CameraTargetDiameterPixels
-                        }
-                    };
+                    updated = CreateSnapshot(settings with { Corners = snapshot.Settings.Corners })
+                        .WithFrameGeometry(snapshot.FrameWidth, snapshot.FrameHeight);
                 }
             }
             while (!ReferenceEquals(Interlocked.CompareExchange(ref _snapshot, updated, snapshot), snapshot));
@@ -158,13 +154,34 @@ namespace HitAnalyzer2.Services.Target
                 outline[i] = point;
             }
 
-            return new(settings, matrix, center, outline);
+            var markedRing = settings.Rings.FirstOrDefault(ring => ring.PointValue == settings.MarkedRingPoints);
+            Position[] markedOutline = [];
+            if (markedRing is not null && settings.MaxDiameter is > 0 and var diameter)
+            {
+                double radius = markedRing.Radius / diameter;
+                markedOutline = new Position[OutlinePointCount];
+                for (int i = 0; i < markedOutline.Length; i++)
+                {
+                    double angle = Math.Tau * i / markedOutline.Length;
+                    if (Project(inverseMatrix, TargetModel.Center.X + radius * Math.Cos(angle),
+                        TargetModel.Center.Y + radius * Math.Sin(angle)) is not { } point)
+                    {
+                        markedOutline = [];
+                        break;
+                    }
+                    markedOutline[i] = point;
+                }
+            }
+
+            return new CalibrationSnapshot(settings, matrix, center, outline) { MarkedRingOutline = markedOutline };
         }
 
         private sealed record CalibrationSnapshot(
             TargetPreviewModel Settings, double[]? Matrix, Position? CameraTargetCenter,
             Position[] CameraTargetOutline, int FrameWidth = 0, int FrameHeight = 0)
         {
+            internal Position[] MarkedRingOutline { get; init; } = [];
+
             internal CalibrationSnapshot WithFrameGeometry(int width, int height)
             {
                 double? diameter = null;

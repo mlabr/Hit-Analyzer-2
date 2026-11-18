@@ -20,6 +20,7 @@ namespace HitAnalyzer2.Views
         private Vector _dragOffset;
         private CalibrationCorners? _translationStart;
         private Point _translationPointerStart;
+        internal double StrokeThickness { get; set; } = 2;
 
         internal void Update(CameraSettingsViewModel? settings, Rect imageBounds)
         {
@@ -50,13 +51,18 @@ namespace HitAnalyzer2.Views
             context.FillRectangle(Brushes.Transparent, new Rect(Bounds.Size));
             var points = GetPreviewCorners(settings);
             var brush = settings.Calibration.IsValid ? Brushes.Yellow : Brushes.Cyan;
-            var pen = new Pen(brush, 2);
+            var pen = new Pen(brush, StrokeThickness);
             for (int i = 0; i < points.Length; i++)
                 context.DrawLine(pen, points[i], points[(i + 1) % points.Length]);
 
-            var outline = settings.Calibration.CameraTargetOutline;
-            if (!outline.IsEmpty)
+            DrawOutline(settings.Calibration.CameraTargetOutline);
+            DrawOutline(settings.Calibration.CameraMarkedRingOutline);
+
+            void DrawOutline(ReadOnlySpan<Position> outline)
             {
+                if (outline.IsEmpty)
+                    return;
+
                 var geometry = new StreamGeometry();
                 using (var path = geometry.Open())
                 {
@@ -69,10 +75,10 @@ namespace HitAnalyzer2.Views
             }
 
             foreach (var point in points)
-                context.DrawEllipse(brush, null, point, HandleRadius, HandleRadius);
+                context.DrawEllipse(null, pen, point, HandleRadius, HandleRadius);
 
             if (settings.Calibration.CameraTargetCenter is { } center)
-                context.DrawEllipse(brush, null, ToPreview(center), HandleRadius, HandleRadius);
+                context.DrawEllipse(null, pen, ToPreview(center), HandleRadius, HandleRadius);
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)

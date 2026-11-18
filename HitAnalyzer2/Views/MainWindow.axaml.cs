@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -20,12 +21,20 @@ namespace HitAnalyzer2.Views
         private bool _stoppingCamera;
         private bool _cameraStopped;
         private CameraSettingsViewModel? _cameraSettingsViewModel;
+        private Point? _zoomPointer;
 
         public MainWindow()
         {
             InitializeComponent();
             CameraPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
+            CameraPreview.AddHandler(PointerMovedEvent, UpdateZoomPointer, RoutingStrategies.Tunnel, handledEventsToo: true);
+            CameraPreview.PointerExited += (_, _) =>
+            {
+                _zoomPointer = null;
+                UpdateCalibrationZoom();
+            };
+            TargetSettings.ZoomSelector.SelectionChanged += (_, _) => UpdateCalibrationZoom();
             TargetSettings.ResetCalibrationButton.Click += (_, _) => CalibrationOverlay.ResetToSquare();
             DataContextChanged += (_, _) =>
             {
@@ -118,6 +127,8 @@ namespace HitAnalyzer2.Views
             WeaponSettings.IsVisible = view == WeaponSettings;
             
             TargetSettings.IsVisible = view == TargetSettings;
+            _zoomPointer = null;
+            UpdateCalibrationZoom();
             UpdateCalibrationOverlay();
             FitWindowToPreview();
         }
@@ -125,9 +136,41 @@ namespace HitAnalyzer2.Views
         private void InvalidateCalibrationOverlay()
         {
             if (Dispatcher.UIThread.CheckAccess())
+            {
                 CalibrationOverlay.InvalidateVisual();
+                UpdateCalibrationZoom();
+            }
             else
-                Dispatcher.UIThread.Post(CalibrationOverlay.InvalidateVisual);
+                Dispatcher.UIThread.Post(InvalidateCalibrationOverlay);
+        }
+
+        private void UpdateZoomPointer(object? sender, PointerEventArgs e)
+        {
+            _zoomPointer = e.GetPosition(PreviewImage);
+            UpdateCalibrationZoom();
+        }
+
+        private void UpdateCalibrationZoom()
+        {
+            Bitmap? source = null;
+            Point imagePoint = default;
+            if (TargetSettings.IsVisible && _zoomPointer is { } pointer &&
+                PreviewImage.Source is Bitmap bitmap)
+            {
+                var bounds = PreviewImage.Bounds;
+                var size = Stretch.Uniform.CalculateSize(bounds.Size, bitmap.Size, StretchDirection.DownOnly);
+                var imageBounds = new Rect((bounds.Width - size.Width) / 2,
+                    (bounds.Height - size.Height) / 2, size.Width, size.Height);
+                if (size.Width > 0 && size.Height > 0 && imageBounds.Contains(pointer))
+                {
+                    source = bitmap;
+                    imagePoint = new Point((pointer.X - imageBounds.X) * bitmap.Size.Width / size.Width,
+                        (pointer.Y - imageBounds.Y) * bitmap.Size.Height / size.Height);
+                }
+            }
+
+            TargetSettings.ZoomPreview.Update(source, imagePoint, TargetSettings.ZoomSelector.SelectedIndex + 2,
+                source is null ? null : _cameraSettingsViewModel);
         }
 
         private void UpdateCalibrationOverlay()
@@ -152,12 +195,14 @@ namespace HitAnalyzer2.Views
             if (e.Property == BoundsProperty)
             {
                 UpdateCalibrationOverlay();
+                UpdateCalibrationZoom();
                 return;
             }
 
             if (e.Property != Image.SourceProperty)
                 return;
 
+            UpdateCalibrationZoom();
             var pixelSize = (PreviewImage.Source as Bitmap)?.PixelSize;
             if (pixelSize == _previewPixelSize)
                 return;
