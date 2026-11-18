@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Avalonia.Styling;
 using HitAnalyzer2.ViewModels;
 using System;
 using System.ComponentModel;
@@ -44,10 +45,13 @@ namespace HitAnalyzer2.Views
                 if (_cameraSettingsViewModel is { } current)
                     current.Calibration.CalibrationGeometryChanged += InvalidateCalibrationOverlay;
                 UpdateCalibrationOverlay();
+                UpdatePreviewTheme();
             };
             ScalingChanged += (_, _) => FitWindowToPreview();
             PropertyChanged += (_, e) =>
             {
+                if (e.Property == ActualThemeVariantProperty)
+                    UpdatePreviewTheme();
                 if (e.Property == WindowStateProperty && WindowState == WindowState.Normal)
                     FitWindowToPreview();
             };
@@ -60,6 +64,12 @@ namespace HitAnalyzer2.Views
         }
 
         private void ShowShootingSettings(object? sender, RoutedEventArgs e) => ShowSettings(ShootingSettings);
+
+        private void UpdatePreviewTheme()
+        {
+            if (DataContext is MainWindowViewModel viewModel)
+                viewModel.IsDarkTheme = ActualThemeVariant == ThemeVariant.Dark;
+        }
 
         private void ShowCameraSettings(object? sender, RoutedEventArgs e) => ShowSettings(CameraSettings);
 

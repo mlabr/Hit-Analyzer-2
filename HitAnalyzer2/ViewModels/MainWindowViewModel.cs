@@ -22,6 +22,7 @@ namespace HitAnalyzer2.ViewModels
         private readonly RecordingService _recording;
         private readonly DetectionSettings _detectionSettings;
         internal volatile bool IsTargetPreviewActive = true;
+        internal volatile bool IsDarkTheme;
 
         public CameraSettingsViewModel CameraSettings { get; }
         public CameraPreviewViewModel CameraPreview { get; } = new();
@@ -113,7 +114,7 @@ namespace HitAnalyzer2.ViewModels
                 using var target = new Mat(size, size, pixels.Type());
                 var recordedHits = ShootingSettings.ShowAllHits ? _recording.GetNormalizedHitRecordList() : null;
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings,
-                    caliberDiameterMm, recordedHits);
+                    caliberDiameterMm, recordedHits, IsDarkTheme);
                 await CameraPreview.ShowFrameAsync(target, null, cancellationToken);
                 return;
             }
