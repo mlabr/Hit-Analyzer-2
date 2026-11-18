@@ -1,0 +1,33 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="AppBackgroundBrush">#F2F6F5</SolidColorBrush>
+                    <SolidColorBrush x:Key="AppTextBrush">#203438</SolidColorBrush>
+                    <SolidColorBrush x:Key="PanelBrush">#FFFFFF</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentSurfaceBrush">#D6E9E7</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentTextBrush">#245D65</SolidColorBrush>
+                    <SolidColorBrush x:Key="HitTextBrush">#853F4B</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessSurfaceBrush">#DFEDE2</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessTextBrush">#396347</SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AppBackgroundBrush">#182528</SolidColorBrush>
+                    <SolidColorBrush x:Key="AppTextBrush">#E3ECEB</SolidColorBrush>
+                    <SolidColorBrush x:Key="PanelBrush">#223337</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentSurfaceBrush">#29474C</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentTextBrush">#A9D5D1</SolidColorBrush>
+                    <SolidColorBrush x:Key="HitTextBrush">#E6B2BB</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessSurfaceBrush">#2C4137</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessTextBrush">#B5D8BE</SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+    <Style Selector="Window">
+        <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}" />
+    </Style>
+</Styles>

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Repository;
 using HitAnalyzer2.Services.Recording;
@@ -27,6 +28,7 @@ namespace HitAnalyzer2
                 var weaponsDirectory = Path.Combine(AppContext.BaseDirectory, "Data", "Weapons");
                 var weaponProfiles = new WeaponFileRepository(weaponsDirectory);
                 var settings = new SettingsService(GetSettingsPath(AppContext.BaseDirectory), weaponProfiles);
+                ApplyTheme(settings.Current.Theme);
                 var detection = settings.Current.Detection;
                 ILaserDetector CreateDetector(DetectionMethod method, int sensitivity)
                 {
@@ -60,6 +62,17 @@ namespace HitAnalyzer2
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        internal static void ApplyTheme(ThemePreference theme)
+        {
+            if (Current is { } application)
+                application.RequestedThemeVariant = theme switch
+                {
+                    ThemePreference.Light => ThemeVariant.Light,
+                    ThemePreference.Dark => ThemeVariant.Dark,
+                    _ => ThemeVariant.Default
+                };
         }
 
         private static string GetSettingsPath(string baseDirectory)

@@ -10,6 +10,20 @@
     </Application.DataTemplates>
   
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Light" Accent="#2B7585" RegionColor="#F2F6F5"
+                    BaseHigh="#203438" BaseMediumHigh="#566A6E" BaseMedium="#566A6E"
+                    AltHigh="#FFFFFF" ChromeAltLow="#FFFFFF" ChromeLow="#E6EEEC"
+                    ChromeMediumLow="#D6E9E7" ChromeMedium="#C4D6D3"
+                    ListLow="#D6E9E7" ListMedium="#BEDBD8" ErrorText="#853F4B" />
+                <ColorPaletteResources x:Key="Dark" Accent="#A9D5D1" RegionColor="#182528"
+                    BaseHigh="#E3ECEB" BaseMediumHigh="#A7BABB" BaseMedium="#A7BABB"
+                    AltHigh="#223337" ChromeAltLow="#223337" ChromeLow="#223337"
+                    ChromeMediumLow="#29474C" ChromeMedium="#3F595E"
+                    ListLow="#29474C" ListMedium="#365B60" ErrorText="#E6B2BB" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <StyleInclude Source="/Styles/Palette.axaml" />
     </Application.Styles>
 </Application>

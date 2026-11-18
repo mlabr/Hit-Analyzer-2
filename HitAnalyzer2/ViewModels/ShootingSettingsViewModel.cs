@@ -14,6 +14,19 @@ namespace HitAnalyzer2.ViewModels
         private decimal _realDistanceMeters;
         private decimal _simulatedDistanceMeters;
 
+        public string[] ThemeOptions { get; } = ["System", "Light", "Dark"];
+
+        [ObservableProperty]
+        private int selectedThemeIndex;
+
+        partial void OnSelectedThemeIndexChanged(int value)
+        {
+            if (value >= 0 && value < ThemeOptions.Length)
+                App.ApplyTheme((ThemePreference)value);
+        }
+
+        internal ThemePreference SelectedTheme => (ThemePreference)SelectedThemeIndex;
+
         public decimal RealDistanceMeters
         {
             get => _realDistanceMeters;
@@ -47,6 +60,7 @@ namespace HitAnalyzer2.ViewModels
         {
             _shootingSession = shootingSession;
             _recording = recording;
+            selectedThemeIndex = (int)settings.Current.Theme;
             _realDistanceMeters = settings.Current.Target.RealDistanceMeters;
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;

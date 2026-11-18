@@ -73,6 +73,7 @@ namespace HitAnalyzer2.ViewModels
             var weapon = WeaponSettings.GetSelectedProfile();
             var configuration = current with
             {
+                Theme = ShootingSettings.SelectedTheme,
                 Camera = camera,
                 Target = TargetSettings.GetConfiguration(),
                 Detection = detection,

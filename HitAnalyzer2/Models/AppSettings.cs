@@ -11,6 +11,7 @@ namespace HitAnalyzer2
 {
     internal sealed record AppSettings
     {
+        public ThemePreference Theme { get; init; } = ThemePreference.System;
         public ShootingSettings Shooting { get; init; } = new();
         public CameraSettings Camera { get; init; } = new();
         public TargetSettings Target { get; init; } = new();
@@ -20,6 +21,13 @@ namespace HitAnalyzer2
         public WeaponSettings? LegacyWeapon { get; init; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public SavedWeaponProfile? SelectedWeapon { get; init; }
+    }
+
+    public enum ThemePreference
+    {
+        System,
+        Light,
+        Dark
     }
 
     internal sealed record TargetSettings

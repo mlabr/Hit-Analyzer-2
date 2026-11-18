@@ -21,6 +21,7 @@ namespace HitAnalyzer2
             },
             Converters =
             {
+                new JsonStringEnumConverter<ThemePreference>(),
                 new JsonStringEnumConverter<FlipMode>(),
                 new JsonStringEnumConverter<DetectionMethod>(),
                 new JsonStringEnumConverter<TriggerTypeEnum>()
@@ -218,6 +219,9 @@ namespace HitAnalyzer2
 
         private static void Validate(AppSettings? settings)
         {
+            if (settings is not null && !Enum.IsDefined(settings.Theme))
+                throw new JsonException("Invalid application theme.");
+
             if (settings is not { Camera: { } camera, Detection: { } detection })
                 throw new JsonException("Camera or detection settings are missing.");
 
