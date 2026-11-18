@@ -11,13 +11,21 @@
         Width="800" Height="450" MinWidth="450" MinHeight="150"
         Title="Hit Analyzer 2">
 
+    <Window.Styles>
+        <Style Selector="MenuItem.active">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentLowBrush}" />
+        </Style>
+    </Window.Styles>
+
     <Grid RowDefinitions="Auto,*">
         <Menu x:Name="SettingsMenu">
-            <MenuItem Header="_Shooting" Click="ShowShootingSettings" />
-            <MenuItem Header="_Weapon" Click="ShowWeaponSettings" />
-            <MenuItem Header="_Target" Click="ShowTargetSettings" />
-            <MenuItem Header="_Camera" Click="ShowCameraSettings" />
-            <MenuItem Header="_Detection" Click="ShowDetectionSettings" />
+            <MenuItem Header="_Shooting" Click="ShowShootingSettings" Classes.active="{Binding #ShootingSettings.IsVisible}" />
+            <MenuItem Header="_Weapon" Click="ShowWeaponSettings" Classes.active="{Binding #WeaponSettings.IsVisible}" />
+            <MenuItem Header="_Target" Click="ShowTargetSettings" Classes.active="{Binding #TargetSettings.IsVisible}" />
+            <MenuItem Header="_Camera" Click="ShowCameraSettings" Classes.active="{Binding #CameraSettings.IsVisible}" />
+            <MenuItem Header="_Detection" Click="ShowDetectionSettings" Classes.active="{Binding #DetectionSettings.IsVisible}" />
             <MenuItem Header="_Help" HotKey="F1" Click="ShowHelp" />
         </Menu>
         <Grid Grid.Row="1" RowDefinitions="*,Auto" ColumnDefinitions="Auto,*">

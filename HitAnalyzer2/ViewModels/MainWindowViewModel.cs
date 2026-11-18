@@ -108,7 +108,7 @@ namespace HitAnalyzer2.ViewModels
                 int size = Math.Min(pixels.Rows, pixels.Cols);
                 using var target = new Mat(size, size, pixels.Type());
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings, caliberDiameterMm);
-                await CameraPreview.ShowFrameAsync(target, measuredFps, cancellationToken);
+                await CameraPreview.ShowFrameAsync(target, null, cancellationToken);
                 return;
             }
 
