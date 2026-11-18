@@ -11,6 +11,7 @@ namespace HitAnalyzer2.ViewModels
     {
         private readonly ShootingSessionService _shootingSession;
         private readonly RecordingService _recording;
+        private readonly Action _saveConfiguration;
         private decimal _realDistanceMeters;
         private decimal _simulatedDistanceMeters;
 
@@ -22,7 +23,10 @@ namespace HitAnalyzer2.ViewModels
         partial void OnSelectedThemeIndexChanged(int value)
         {
             if (value >= 0 && value < ThemeOptions.Length)
+            {
                 App.ApplyTheme((ThemePreference)value);
+                _saveConfiguration();
+            }
         }
 
         internal ThemePreference SelectedTheme => (ThemePreference)SelectedThemeIndex;
@@ -56,10 +60,11 @@ namespace HitAnalyzer2.ViewModels
             : "Last hit distance from center: —";
 
         internal ShootingSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
-            RecordingService recording)
+            RecordingService recording, Action saveConfiguration)
         {
             _shootingSession = shootingSession;
             _recording = recording;
+            _saveConfiguration = saveConfiguration;
             selectedThemeIndex = (int)settings.Current.Theme;
             _realDistanceMeters = settings.Current.Target.RealDistanceMeters;
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);

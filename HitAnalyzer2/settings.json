@@ -1,5 +1,5 @@
 {
-  "Theme": "System",
+  "Theme": "Dark",
   "Shooting": {
     "AimPathTimeLimit": 15,
     "AimPathTimeoutMs": 400,
@@ -25,24 +25,7 @@
     "RealDistanceMeters": 5,
     "SimulatedDistanceMeters": 10,
     "Calibration": {
-      "Corners": {
-        "TopLeft": {
-          "X": 0.2563,
-          "Y": 0.1417
-        },
-        "TopRight": {
-          "X": 0.7047,
-          "Y": 0.2062
-        },
-        "BottomRight": {
-          "X": 0.7125,
-          "Y": 0.7958
-        },
-        "BottomLeft": {
-          "X": 0.2531,
-          "Y": 0.8375
-        }
-      }
+      "Corners": null
     }
   },
   "Detection": {
