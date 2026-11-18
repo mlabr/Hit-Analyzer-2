@@ -68,7 +68,6 @@
                             <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
                                                       DataContext="{Binding TargetSettings}" />
                             <StackPanel x:Name="About" IsVisible="False" Spacing="16">
-                                <TextBlock Text="Hit Analyzer 2" FontWeight="SemiBold" />
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="Theme" />
                                     <ComboBox ItemsSource="{Binding ShootingSettings.ThemeOptions}"
@@ -77,6 +76,7 @@
                                               HorizontalAlignment="Stretch" />
                                 </StackPanel>
                                 <Button Content="Help (F1)" Click="ShowHelp" />
+                                <Button Content="Help (html)" Click="ShowHtmlHelp" />
                                 <Button Content="About" Click="ShowAbout" />
                             </StackPanel>
                         </Grid>

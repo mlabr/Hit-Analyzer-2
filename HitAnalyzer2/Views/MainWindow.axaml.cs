@@ -8,6 +8,9 @@ using Avalonia.Threading;
 using Avalonia.Styling;
 using HitAnalyzer2.ViewModels;
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 
 namespace HitAnalyzer2.Views
 {
@@ -97,6 +100,23 @@ namespace HitAnalyzer2.Views
             ShowSettings(About);
             AboutContent.IsVisible = false;
             HelpContent.IsVisible = true;
+        }
+
+        private void ShowHtmlHelp(object? sender, RoutedEventArgs e)
+        {
+            string helpPath = Path.Combine(AppContext.BaseDirectory, "Data", "Help", "index.html");
+            try
+            {
+                if (!File.Exists(helpPath))
+                    throw new FileNotFoundException("The HTML help file is missing.", helpPath);
+
+                using var browser = Process.Start(new ProcessStartInfo(helpPath) { UseShellExecute = true });
+            }
+            catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException)
+            {
+                if (DataContext is MainWindowViewModel viewModel)
+                    viewModel.ConfigurationMessage = $"Could not open HTML help. {ex.Message}";
+            }
         }
 
         private void ShowSettings(Control view)
