@@ -1,4 +1,5 @@
 {
+  "Theme": "System",
   "Shooting": {
     "AimPathTimeLimit": 15,
     "AimPathTimeoutMs": 400,

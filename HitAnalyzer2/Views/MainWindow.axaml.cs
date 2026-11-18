@@ -2,16 +2,12 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Input;
-using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.Styling;
 using HitAnalyzer2.ViewModels;
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
 
 namespace HitAnalyzer2.Views
 {
@@ -61,6 +57,14 @@ namespace HitAnalyzer2.Views
                     await viewModel.RefreshCamerasAsync();
             };
             Closing += StopCameraBeforeClosing;
+            AddHandler(KeyDownEvent, (_, e) =>
+            {
+                if (e.Key == Key.F1 && e.KeyModifiers == KeyModifiers.None)
+                {
+                    ShowHelp(this, e);
+                    e.Handled = true;
+                }
+            }, RoutingStrategies.Tunnel);
         }
 
         private void ShowShootingSettings(object? sender, RoutedEventArgs e) => ShowSettings(ShootingSettings);
@@ -81,50 +85,18 @@ namespace HitAnalyzer2.Views
         private void ShowWeaponSettings(object? sender, RoutedEventArgs e) =>
             ShowSettings(WeaponSettings);
 
-        private async void ShowHelp(object? sender, RoutedEventArgs e)
+        private void ShowAbout(object? sender, RoutedEventArgs e)
         {
-            string helpPath = Path.Combine(AppContext.BaseDirectory, "Data", "Help", "index.html");
-            string message;
-            if (File.Exists(helpPath))
-            {
-                try
-                {
-                    using var browser = Process.Start(new ProcessStartInfo(helpPath) { UseShellExecute = true });
-                    return;
-                }
-                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException)
-                {
-                    message = "Could not open the help page. Check that a default web browser is configured.";
-                }
-            }
-            else
-            {
-                message = "The help file is missing. Check that Data/Help/index.html is in the application folder.";
-            }
+            ShowSettings(About);
+            AboutContent.IsVisible = true;
+            HelpContent.IsVisible = false;
+        }
 
-            var closeButton = new Button { Content = "OK", IsDefault = true, IsCancel = true,
-                HorizontalAlignment = HorizontalAlignment.Right };
-            var dialog = new Window
-            {
-                Title = "Hit Analyzer 2 Help",
-                Width = 380,
-                SizeToContent = SizeToContent.Height,
-                CanResize = false,
-                ShowInTaskbar = false,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Content = new StackPanel
-                {
-                    Margin = new Thickness(16),
-                    Spacing = 12,
-                    Children =
-                    {
-                        new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-                        closeButton
-                    }
-                }
-            };
-            closeButton.Click += (_, _) => dialog.Close();
-            await dialog.ShowDialog(this);
+        private void ShowHelp(object? sender, RoutedEventArgs e)
+        {
+            ShowSettings(About);
+            AboutContent.IsVisible = false;
+            HelpContent.IsVisible = true;
         }
 
         private void ShowSettings(Control view)
@@ -137,6 +109,12 @@ namespace HitAnalyzer2.Views
             WeaponSettings.IsVisible = view == WeaponSettings;
             
             TargetSettings.IsVisible = view == TargetSettings;
+            About.IsVisible = view == About;
+            InformationPanel.IsVisible = About.IsVisible;
+            CameraPreview.IsVisible = !About.IsVisible;
+            HitCounter.IsVisible = !About.IsVisible;
+            if (About.IsVisible)
+                MinWidth = 450;
             _zoomPointer = null;
             UpdateCalibrationZoom();
             UpdateCalibrationOverlay();
@@ -224,7 +202,7 @@ namespace HitAnalyzer2.Views
 
         private void FitWindowToPreview()
         {
-            if (_previewPixelSize is not { } pixels || WindowState != WindowState.Normal || _stoppingCamera)
+            if (About.IsVisible || _previewPixelSize is not { } pixels || WindowState != WindowState.Normal || _stoppingCamera)
                 return;
 
             var imageSize = new Size(pixels.Width / RenderScaling, pixels.Height / RenderScaling);

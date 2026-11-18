@@ -26,7 +26,7 @@
             <MenuItem Header="_Target" Click="ShowTargetSettings" Classes.active="{Binding #TargetSettings.IsVisible}" />
             <MenuItem Header="_Camera" Click="ShowCameraSettings" Classes.active="{Binding #CameraSettings.IsVisible}" />
             <MenuItem Header="_Detection" Click="ShowDetectionSettings" Classes.active="{Binding #DetectionSettings.IsVisible}" />
-            <MenuItem Header="_Help" HotKey="F1" Click="ShowHelp" />
+            <MenuItem Header="_About" Click="ShowAbout" Classes.active="{Binding #About.IsVisible}" />
         </Menu>
         <Grid Grid.Row="1" RowDefinitions="*,Auto" ColumnDefinitions="Auto,*">
             <Grid x:Name="CameraPreview" Grid.Column="1">
@@ -38,6 +38,10 @@
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
+            </Grid>
+            <Grid x:Name="InformationPanel" Grid.Column="1" Grid.RowSpan="2" IsVisible="False">
+                <views:AboutView x:Name="AboutContent" />
+                <views:HelpView x:Name="HelpContent" IsVisible="False" />
             </Grid>
             <StackPanel x:Name="HitCounter" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
                 <TextBlock Text="Score:" FontSize="32" />
@@ -63,6 +67,18 @@
                                                         DataContext="{Binding ShootingSettings}" />
                             <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
                                                       DataContext="{Binding TargetSettings}" />
+                            <StackPanel x:Name="About" IsVisible="False" Spacing="16">
+                                <TextBlock Text="Hit Analyzer 2" FontWeight="SemiBold" />
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Theme" />
+                                    <ComboBox ItemsSource="{Binding ShootingSettings.ThemeOptions}"
+                                              SelectedIndex="{Binding ShootingSettings.SelectedThemeIndex, Mode=TwoWay}"
+                                              AutomationProperties.Name="Application theme"
+                                              HorizontalAlignment="Stretch" />
+                                </StackPanel>
+                                <Button Content="Help (F1)" Click="ShowHelp" />
+                                <Button Content="About" Click="ShowAbout" />
+                            </StackPanel>
                         </Grid>
                         <TextBlock Text="{Binding ConfigurationMessage}" TextWrapping="Wrap"
                                    IsVisible="{Binding ConfigurationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />

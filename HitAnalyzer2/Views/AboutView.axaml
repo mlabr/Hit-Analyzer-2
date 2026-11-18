@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HitAnalyzer2.Views.AboutView">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24" Spacing="16" MaxWidth="760" HorizontalAlignment="Stretch">
+            <Image Source="/Assets/HA2_icon.png" Width="160" Height="160" HorizontalAlignment="Left" />
+            <TextBlock Text="Hit Analyzer 2" FontSize="28" FontWeight="SemiBold" />
+            <TextBlock Text="Part of LISHRA — Libre Shooting Range" TextWrapping="Wrap"
+                       Foreground="{DynamicResource AccentTextBrush}" />
+            <TextBlock Text="Hit Analyzer 2 uses a webcam to detect a laser spot, register hits, and show where they landed on a calibrated target."
+                       TextWrapping="Wrap" />
+            <TextBlock Text="Open Help or press F1 for setup instructions, calibration, and troubleshooting."
+                       TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

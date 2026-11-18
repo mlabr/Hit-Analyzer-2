@@ -1,0 +1,87 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HitAnalyzer2.Views.HelpView">
+    <!-- Static conversion of Data/Help/index.html. Update this view when the guide changes. -->
+    <UserControl.Styles>
+        <Style Selector="TextBlock"><Setter Property="TextWrapping" Value="Wrap" /></Style>
+        <Style Selector="TextBlock.section"><Setter Property="FontSize" Value="22" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Margin" Value="0,16,0,0" /></Style>
+        <Style Selector="TextBlock.subsection"><Setter Property="FontSize" Value="17" /><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Margin" Value="0,10,0,0" /></Style>
+    </UserControl.Styles>
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24" Spacing="12" MaxWidth="760" HorizontalAlignment="Stretch">
+            <TextBlock FontSize="28" FontWeight="SemiBold">Hit Analyzer 2 Help</TextBlock>
+            <TextBlock>Hit Analyzer 2 uses a webcam to detect a laser spot, register hits, and show where they landed on a calibrated target. Open <Bold>Help</Bold> or press <Span FontFamily="monospace">F1</Span> to return to this guide.</TextBlock>
+            <Button Content="Record your first hit" Tag="#quick-start" Click="NavigateToSection" />
+            <Button Content="Calibrate the target" Tag="#calibration" Click="NavigateToSection" />
+            <Button Content="Settings reference" Tag="#settings" Click="NavigateToSection" />
+            <Button Content="Trigger types" Tag="#triggers" Click="NavigateToSection" />
+            <Button Content="Troubleshooting" Tag="#troubleshooting" Click="NavigateToSection" />
+            <TextBlock x:Name="Help_quick_start" Classes="section">Record your first hit</TextBlock>
+            <TextBlock Margin="12,0,0,0">1. Connect your webcam and point it at the target so the shooting area is visible in the preview.</TextBlock>
+            <TextBlock Margin="12,0,0,0">2. Open <Bold>Camera</Bold> and select the webcam. If it is missing from the list, click <Bold>Refresh webcams</Bold>. Choose a camera mode if the list is available, set the preview orientation, and click <Bold>Save</Bold>. On Linux, see <InlineUIContainer><HyperlinkButton Padding="0" Content="camera mode detection" Tag="#linux-camera-modes" Click="NavigateToSection" /></InlineUIContainer> if the mode list is empty.</TextBlock>
+            <TextBlock Margin="12,0,0,0">3. Open <Bold>Weapon</Bold> and select a profile. Choose <Bold>FirstSpot</Bold> for a test with a short laser pulse.</TextBlock>
+            <TextBlock Margin="12,0,0,0">4. <InlineUIContainer><HyperlinkButton Padding="0" Content="Select and calibrate the target" Tag="#calibration" Click="NavigateToSection" /></InlineUIContainer>. Then open <Bold>Shooting</Bold>, clear <Bold>Show Target Preview</Bold> to see the camera image, and click <Bold>Reset shooting</Bold> to start from zero.</TextBlock>
+            <TextBlock Margin="12,0,0,0">5. Fire a test pulse at the target. A hit mapped to the calibrated target increases the <Bold>Hits</Bold> counter. If the counter stays at zero, follow the <InlineUIContainer><HyperlinkButton Padding="0" Content="missed hits checklist" Tag="#missed-hits" Click="NavigateToSection" /></InlineUIContainer>.</TextBlock>
+            <TextBlock x:Name="Help_calibration" Classes="section">Calibrate the target</TextBlock>
+            <TextBlock Margin="12,0,0,0">1. Set the camera, resolution, and flip orientation before calibrating. Keep the camera and target fixed while shooting.</TextBlock>
+            <TextBlock Margin="12,0,0,0">2. Open <Bold>Target</Bold> and select the profile that matches the physical target. Profiles are loaded from JSON files in <Span FontFamily="monospace">Data/Targets</Span> under the application folder. Click <Bold>Reset calibration</Bold> if you need a centered starting shape.</TextBlock>
+            <TextBlock Margin="12,0,0,0">3. Drag the center handle to move the entire guide. Drag the four corner handles until the projected circle follows the outer edge of the physical target and its center matches the bullseye. The guide is yellow when the geometry is valid. If it turns cyan, uncross the edges and spread out the corners until the circle returns.</TextBlock>
+            <TextBlock Margin="12,0,0,0">4. Click <Bold>Save</Bold> to save the calibration together with the current camera settings.</TextBlock>
+            <TextBlock Margin="12,0,0,0">5. Return to <Bold>Shooting</Bold> and enable <Bold>Show Target Preview</Bold>. Test a hit at a known location and check where the marker appears.</TextBlock>
+            <TextBlock>The calibration scale is shown in millimeters per pixel when available. Check the calibration again after moving the camera or target. Changing the target profile, camera, camera mode, or flip resets the active calibration. Changes to the calibration geometry clear recorded hits.</TextBlock>
+            <TextBlock x:Name="Help_settings" Classes="section">Settings reference</TextBlock>
+            <TextBlock Classes="subsection">Shooting</TextBlock>
+            <TextBlock><Bold>Reset shooting</Bold> clears recorded hits, the last hit marker, and the aim paths. <Bold>Show Target Preview</Bold> replaces the camera image with a diagram of the selected target and marks the last mapped hit with a yellow cross while <Bold>Shooting</Bold> is open. Click <Bold>Save</Bold> to keep the preview choice.</TextBlock>
+            <TextBlock>In the camera image, the yellow cross marks the last hit after applying the weapon offset. When the offset moves the aim away from the laser spot, a blue X marks the detected spot. <Bold>External Event</Bold> can show the aim path before and after the hit. <Bold>TimeOut</Bold> shows the recorded aim path when a hit registers.</TextBlock>
+            <TextBlock Classes="subsection">Camera</TextBlock>
+            <TextBlock>Select a webcam, choose an available resolution and frame rate, and use the flip selector to orient the image. Click <Bold>Save</Bold> to keep your changes.</TextBlock>
+            <TextBlock x:Name="Help_linux_camera_modes" Classes="subsection">Camera mode detection on Linux</TextBlock>
+            <TextBlock>Install the <Span FontFamily="monospace">v4l-utils</Span> package to enable <InlineUIContainer><HyperlinkButton Padding="0" Content="camera mode detection" Tag="#linux-camera-modes" Click="NavigateToSection" /></InlineUIContainer>. Hit Analyzer 2 uses its <Span FontFamily="monospace">v4l2-ctl</Span> command to list supported resolutions, frame rates, and pixel formats. After installing it, open <Bold>Camera</Bold> and click <Bold>Refresh webcams</Bold>. The mode list shows supported modes at 640 × 480 or higher and 25 FPS or faster.</TextBlock>
+            <TextBlock>Without <InlineUIContainer><HyperlinkButton Padding="0" Content="v4l-utils" Tag="#linux-camera-modes" Click="NavigateToSection" /></InlineUIContainer>, the mode selector is unavailable and the camera opens at its default resolution, typically 640 × 480. The exact resolution depends on the camera and driver.</TextBlock>
+            <TextBlock Classes="subsection">Detection</TextBlock>
+            <TextBlock FontWeight="SemiBold">Simple</TextBlock>
+            <TextBlock>Looks for the brightest part of the image that meets the detection threshold.</TextBlock>
+            <TextBlock FontWeight="SemiBold">Blob</TextBlock>
+            <TextBlock>Uses the center of the largest connected bright region that meets the minimum area.</TextBlock>
+            <TextBlock FontWeight="SemiBold">Sensitivity</TextBlock>
+            <TextBlock>Increase sensitivity to pick up dimmer spots. Decrease it if bright areas in the scene are counted as hits.</TextBlock>
+            <TextBlock FontWeight="SemiBold">Brightness, contrast, and saturation</TextBlock>
+            <TextBlock>Adjust the camera image that the detector processes. Check the preview and test a pulse after changing these values.</TextBlock>
+            <TextBlock FontWeight="SemiBold">Show flares</TextBlock>
+            <TextBlock>Highlights bright regions that meet the detection threshold so you can see which parts of the image may affect detection.</TextBlock>
+            <TextBlock FontWeight="SemiBold">Show Allowed Area</TextBlock>
+            <TextBlock>Outlines the allowed area and hatches the margins on the camera image. In <Bold>TimeOut</Bold> mode, the final aim position must fall inside this area to register a hit.</TextBlock>
+            <TextBlock><Bold>Save</Bold> in any settings panel saves the current configuration, including the camera, detection, preview, and target settings.</TextBlock>
+            <TextBlock Classes="subsection">Weapon</TextBlock>
+            <TextBlock>The selector displays each profile as its name followed by its filename in parentheses. Profiles are loaded from JSON files in <Span FontFamily="monospace">Data/Weapons</Span> under the application folder. Selecting a profile applies its saved trigger, interval, and offsets. Click <Bold>Save</Bold> to write the changes to that profile and select it for the next launch.</TextBlock>
+            <TextBlock FontWeight="SemiBold">Next detection interval (ms)</TextBlock>
+            <TextBlock>Set a delay of 100 to 5,000 milliseconds. See <InlineUIContainer><HyperlinkButton Padding="0" Content="Trigger types" Tag="#triggers" Click="NavigateToSection" /></InlineUIContainer> for when the delay starts and how it applies.</TextBlock>
+            <TextBlock FontWeight="SemiBold">Weapon offset (px)</TextBlock>
+            <TextBlock>Adjust X and Y from −100 to +100 pixels to align the displayed aim with the point of aim. Positive X moves it right and positive Y moves it up. Click <Bold>Reset</Bold> to zero both offsets.</TextBlock>
+            <TextBlock x:Name="Help_triggers" Classes="section">Trigger types</TextBlock>
+            <TextBlock FontWeight="SemiBold">FirstSpot</TextBlock>
+            <TextBlock>Registers a hit whenever a spot is detected and the interval since the last hit has elapsed. A spot that stays visible can register repeatedly.</TextBlock>
+            <TextBlock FontWeight="SemiBold">NewSpot</TextBlock>
+            <TextBlock>Registers a hit when a spot appears after the interval since the last hit. If it appears too early and stays visible, let it disappear and try again after the interval.</TextBlock>
+            <TextBlock FontWeight="SemiBold">TimeOut</TextBlock>
+            <TextBlock>Tracks the spot while you aim. After the spot disappears and the aim path times out, the last position registers if the path meets the configured minimum duration and the final aim position is inside the allowed area. The included configuration uses a minimum path duration of 1.5 seconds and a timeout of 400 milliseconds without a detected spot.</TextBlock>
+            <TextBlock FontWeight="SemiBold">External Event</TextBlock>
+            <TextBlock>With the main window active, press and hold <Span FontFamily="monospace">T</Span> long enough for the camera to capture the visible spot. Each accepted press can register one hit. The interval starts at the accepted press, even if it yields no hit. Release <Span FontFamily="monospace">T</Span> and wait for the interval before pressing again.</TextBlock>
+            <TextBlock x:Name="Help_troubleshooting" Classes="section">Troubleshooting</TextBlock>
+            <TextBlock Classes="subsection">No camera preview</TextBlock>
+            <TextBlock>Check the camera connection, close other apps that may be using the webcam, and click <Bold>Refresh webcams</Bold>. Select the camera again and try another available camera mode if the preview stays blank.</TextBlock>
+            <TextBlock Classes="subsection">Camera resolution or frame rate is unavailable on Linux</TextBlock>
+            <TextBlock>If the mode selector says <Bold>Could not load camera modes</Bold>, check that <InlineUIContainer><HyperlinkButton Padding="0" Content="v4l-utils" Tag="#linux-camera-modes" Click="NavigateToSection" /></InlineUIContainer> is installed and refresh the camera list.</TextBlock>
+            <TextBlock x:Name="Help_missed_hits" Classes="subsection">The counter misses hits</TextBlock>
+            <TextBlock Margin="12,0,0,0">1. Check that the preview shows the entire shooting area and that the laser spot is inside the frame.</TextBlock>
+            <TextBlock Margin="12,0,0,0">2. Open <Bold>Target</Bold> and check the calibration guides. A hit needs valid calibration to be included in the counter.</TextBlock>
+            <TextBlock Margin="12,0,0,0">3. Turn on <Bold>Show flares</Bold>. Increase sensitivity a little at a time and repeat the test. If the background starts lighting up, reduce glare on the target and test again.</TextBlock>
+            <TextBlock Margin="12,0,0,0">4. If <Bold>Blob</Bold> misses a small spot, try <Bold>Simple</Bold> and compare the counter after a test pulse.</TextBlock>
+            <TextBlock Margin="12,0,0,0">5. Check the selected <InlineUIContainer><HyperlinkButton Padding="0" Content="trigger type" Tag="#triggers" Click="NavigateToSection" /></InlineUIContainer>. With <Bold>NewSpot</Bold>, let the spot disappear and wait for the interval before firing again. With <Bold>TimeOut</Bold>, turn on <Bold>Show Allowed Area</Bold> and check the final aim position. With <Bold>External Event</Bold>, check that the main window is active and that the spot is visible while you hold <Span FontFamily="monospace">T</Span>.</TextBlock>
+            <TextBlock Classes="subsection">The counter increases without a shot</TextBlock>
+            <TextBlock>Use <Bold>Show flares</Bold> to locate bright reflections or background lights in the preview. Remove them from the frame or lower sensitivity, then fire another test pulse.</TextBlock>
+            <TextBlock Classes="subsection">Hits appear in the wrong place on the target</TextBlock>
+            <TextBlock>Open <Bold>Target</Bold> and check the projected circle and center against the physical target. If the calibration lines up but every hit is shifted in the same direction, check the selected profile's <Bold>Weapon offset (px)</Bold>.</TextBlock>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
