@@ -15,7 +15,11 @@
       "FpsDenominator": 1,
       "Format": "47504a4d-0000-0010-8000-00aa00389b71"
     },
-    "Flip": null,
+    "Flip": null
+  },
+  "Target": {
+    "SelectedTargetFileName": "10m_air_pistol.json",
+    "CalibrationZoom": 4,
     "Calibration": {
       "Corners": {
         "TopLeft": {
@@ -61,6 +65,5 @@
       "Trigger": "FirstSpot",
       "NexDetectionInterval": 500
     }
-  },
-  "SelectedTargetFileName": "10m_air_pistol.json"
+  }
 }

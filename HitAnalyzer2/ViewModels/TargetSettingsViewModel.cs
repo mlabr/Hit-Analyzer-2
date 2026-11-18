@@ -25,18 +25,33 @@ namespace HitAnalyzer2.ViewModels
     public partial class TargetSettingsViewModel : ViewModelBase
     {
         private readonly TargetCalibrationService _calibration;
+        private int _calibrationZoomIndex;
+
+        public int CalibrationZoomIndex
+        {
+            get => _calibrationZoomIndex;
+            set => SetProperty(ref _calibrationZoomIndex, Math.Clamp(value, 0, 2));
+        }
+
+        internal TargetSettings GetConfiguration() => new()
+        {
+            SelectedTargetFileName = SelectedTarget?.FileName,
+            CalibrationZoom = CalibrationZoomIndex + 2,
+            Calibration = _calibration.Settings
+        };
 
         public IReadOnlyList<TargetOption> Targets { get; }
         public string? LoadMessage { get; }
-        public string CalibratedScaleText => $"Calibrated Ressolution: {FormatScale(_calibration.Settings.MmToPixel)}";
+        public string CalibratedScaleText => $"Average camera scale: {FormatScale(_calibration.Settings.MmToPixel)}";
 
         [ObservableProperty]
         private TargetOption? selectedTarget;
 
         internal TargetSettingsViewModel(TargetFileRepository repository, TargetCalibrationService calibration,
-            string? selectedFileName)
+            string? selectedFileName, TargetSettings settings)
         {
             _calibration = calibration;
+            _calibrationZoomIndex = Math.Clamp(settings.CalibrationZoom, 2, 4) - 2;
             Targets = repository.LoadTargets(out var loadError)
                 .Select(item => new TargetOption(item.FileName, item.Target)).ToList().AsReadOnly();
             LoadMessage = loadError ?? (Targets.Count == 0 ? "No targets found in Data/Targets." : null);

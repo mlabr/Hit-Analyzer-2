@@ -38,10 +38,10 @@ namespace HitAnalyzer2
 
                 var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
                 var weaponHandler = new WeaponHandler(settings.InitialWeapon, aimPositionHandler);
-                var cameraCalibration = new TargetCalibrationService(settings.Current.Camera.Calibration);
+                var cameraCalibration = new TargetCalibrationService(settings.Current.Target.Calibration);
                 var targetFiles = new TargetFileRepository(Path.Combine(AppContext.BaseDirectory, "Data", "Targets"));
                 var targetSettings = new TargetSettingsViewModel(targetFiles, cameraCalibration,
-                    settings.Current.SelectedTargetFileName);
+                    settings.Current.Target.SelectedTargetFileName, settings.Current.Target);
                 var recording = new RecordingService(cameraCalibration);
                 var shootingSession = new ShootingSessionService(
                     CreateDetector(detection.Method, detection.DetectionSensitivity), aimPositionHandler, weaponHandler,

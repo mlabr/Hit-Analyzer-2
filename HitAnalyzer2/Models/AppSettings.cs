@@ -13,14 +13,21 @@ namespace HitAnalyzer2
     {
         public ShootingSettings Shooting { get; init; } = new();
         public CameraSettings Camera { get; init; } = new();
+        public TargetSettings Target { get; init; } = new();
         public DetectionSettings Detection { get; init; } = new();
         [JsonPropertyName("Weapon")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public WeaponSettings? LegacyWeapon { get; init; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public SavedWeaponProfile? SelectedWeapon { get; init; }
+    }
+
+    internal sealed record TargetSettings
+    {
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? SelectedTargetFileName { get; init; }
+        public int CalibrationZoom { get; init; } = 2;
+        public TargetPreviewModel Calibration { get; init; } = new();
     }
 
     internal sealed record ShootingSettings
@@ -57,7 +64,6 @@ namespace HitAnalyzer2
         public int? DeviceIndex { get; init; }
         public CameraMode? Mode { get; init; }
         public FlipMode? Flip { get; init; } = FlipMode.XY;
-        public TargetPreviewModel Calibration { get; init; } = new();
     }
 
     public enum DetectionMethod

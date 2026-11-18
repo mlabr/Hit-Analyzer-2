@@ -21,7 +21,7 @@
         <TextBlock Text="{Binding CalibratedScaleText}" />
         <Button x:Name="ResetCalibrationButton" Content="Reset calibration" IsEnabled="False" />
         <TextBlock Text="Calibration zoom" FontWeight="SemiBold" />
-        <ComboBox x:Name="ZoomSelector" SelectedIndex="0" HorizontalAlignment="Stretch"
+        <ComboBox x:Name="ZoomSelector" SelectedIndex="{Binding CalibrationZoomIndex, Mode=TwoWay}" HorizontalAlignment="Stretch"
                   AutomationProperties.Name="Calibration zoom">
             <ComboBoxItem Content="2×" />
             <ComboBoxItem Content="3×" />

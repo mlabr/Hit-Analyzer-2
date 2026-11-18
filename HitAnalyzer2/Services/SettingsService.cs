@@ -64,6 +64,27 @@ namespace HitAnalyzer2
                 }
 
                 MigrateImageAdjustments(json as JsonObject);
+                if (json is JsonObject legacyRoot &&
+                    legacyRoot.TryGetPropertyValue(nameof(TargetSettings.SelectedTargetFileName), out var legacyTargetFile))
+                {
+                    legacyRoot.Remove(nameof(TargetSettings.SelectedTargetFileName));
+                    if (!legacyRoot.ContainsKey(nameof(AppSettings.Target)))
+                        legacyRoot[nameof(AppSettings.Target)] = new JsonObject();
+                    if (legacyRoot[nameof(AppSettings.Target)] is JsonObject targetSection &&
+                        !targetSection.ContainsKey(nameof(TargetSettings.SelectedTargetFileName)))
+                        targetSection[nameof(TargetSettings.SelectedTargetFileName)] = legacyTargetFile;
+                }
+                if (json is JsonObject root &&
+                    root[nameof(AppSettings.Camera)] is JsonObject cameraSettings &&
+                    cameraSettings.TryGetPropertyValue(nameof(TargetSettings.Calibration), out var legacyCalibration))
+                {
+                    cameraSettings.Remove(nameof(TargetSettings.Calibration));
+                    if (!root.ContainsKey(nameof(AppSettings.Target)))
+                        root[nameof(AppSettings.Target)] = new JsonObject();
+                    if (root[nameof(AppSettings.Target)] is JsonObject targetSettings &&
+                        !targetSettings.ContainsKey(nameof(TargetSettings.Calibration)))
+                        targetSettings[nameof(TargetSettings.Calibration)] = legacyCalibration;
+                }
                 if (json?[nameof(AppSettings.Detection)] is JsonObject detection &&
                     !detection.ContainsKey(nameof(DetectionSettings.ShowTargetPreview)) &&
                     detection["ShowAimPointPreview"] is { } legacyPreview)
@@ -174,8 +195,10 @@ namespace HitAnalyzer2
             if (settings is not { Camera: { } camera, Detection: { } detection })
                 throw new JsonException("Camera or detection settings are missing.");
 
+            if (settings.Target is not { CalibrationZoom: >= 2 and <= 4, Calibration: not null })
+                throw new JsonException("Invalid target calibration zoom.");
+
             if (camera.DeviceIndex is < 0 || camera.Flip is FlipMode flip && !Enum.IsDefined(flip)
-                || camera.Calibration is null
                 || camera.Mode is { } mode && (mode.Width <= 0 || mode.Height <= 0
                     || mode.FpsNumerator == 0 || mode.FpsDenominator == 0))
                 throw new JsonException("Invalid camera settings.");

@@ -73,9 +73,9 @@ namespace HitAnalyzer2.ViewModels
             var configuration = current with
             {
                 Camera = camera,
+                Target = TargetSettings.GetConfiguration(),
                 Detection = detection,
                 SelectedWeapon = weapon ?? current.SelectedWeapon,
-                SelectedTargetFileName = TargetSettings.SelectedTarget?.FileName ?? current.SelectedTargetFileName,
                 LegacyWeapon = weapon is null && current.SelectedWeapon is null
                     ? WeaponSettings.GetConfiguration(current.LegacyWeapon ?? new WeaponSettings())
                     : null

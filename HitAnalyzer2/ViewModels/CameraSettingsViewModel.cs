@@ -132,8 +132,7 @@ namespace HitAnalyzer2.ViewModels
                     DeviceId = camera.DeviceId,
                     DeviceIndex = camera.DeviceId is null ? camera.Index : null,
                     Mode = SelectedCameraMode,
-                    Flip = SelectedCameraFlip.Mode,
-                    Calibration = Calibration.Settings
+                    Flip = SelectedCameraFlip.Mode
                 }
                 : current;
 
