@@ -19,6 +19,7 @@ namespace HitAnalyzer2.ViewModels
     {
         private readonly SettingsService _settings;
         private readonly ShootingSessionService _shootingSession;
+        private readonly RecordingService _recording;
         private readonly DetectionSettings _detectionSettings;
         internal volatile bool IsTargetPreviewActive = true;
 
@@ -43,6 +44,7 @@ namespace HitAnalyzer2.ViewModels
             WeaponSettings = weaponSettings;
             TargetSettings = targetSettings;
             _shootingSession = shootingSession;
+            _recording = recording;
             ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
@@ -107,7 +109,9 @@ namespace HitAnalyzer2.ViewModels
             {
                 int size = Math.Min(pixels.Rows, pixels.Cols);
                 using var target = new Mat(size, size, pixels.Type());
-                TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings, caliberDiameterMm);
+                var recordedHits = ShootingSettings.ShowAllHits ? _recording.GetNormalizedHitRecordList() : null;
+                TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings,
+                    caliberDiameterMm, recordedHits);
                 await CameraPreview.ShowFrameAsync(target, null, cancellationToken);
                 return;
             }

@@ -19,20 +19,20 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2000,
-          "Y": 0.1000
+          "X": 0.3094,
+          "Y": 0.3083
         },
         "TopRight": {
-          "X": 0.8000,
-          "Y": 0.1000
+          "X": 0.6281,
+          "Y": 0.2875
         },
         "BottomRight": {
-          "X": 0.8000,
-          "Y": 0.9000
+          "X": 0.6297,
+          "Y": 0.7396
         },
         "BottomLeft": {
-          "X": 0.2000,
-          "Y": 0.9000
+          "X": 0.3047,
+          "Y": 0.7375
         }
       }
     }
@@ -55,7 +55,7 @@
     "Profile": {
       "Type": "ha_weapon",
       "Name": "weapon1",
-      "Caliber": 20,
+      "Caliber": 5,
       "OffsetX": 0,
       "OffsetY": 0,
       "Trigger": "FirstSpot",

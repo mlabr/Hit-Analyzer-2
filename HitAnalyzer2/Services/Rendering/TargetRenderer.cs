@@ -2,6 +2,7 @@ using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Target;
 using OpenCvSharp;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -12,7 +13,8 @@ namespace HitAnalyzer2.Services.Rendering
         private const double PreviewMargin = TargetPreviewModel.PreviewMargin;
         private static readonly Scalar AimMarkerOutline = new(20, 20, 20, 255);
 
-        internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings, double caliberDiameterMm)
+        internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings,
+            double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null)
         {
             preview.SetTo(new Scalar(211, 211, 211, 255));
             int size = Math.Min(preview.Width, preview.Height);
@@ -25,8 +27,19 @@ namespace HitAnalyzer2.Services.Rendering
             var center = ToTargetPixel(TargetModel.Center);
             DrawTargetRings(preview, center, diameterPixels, settings, guide);
 
-            if (lastTargetHit is { } hit && IsInsidePreview(hit))
+            if (recordedHits is not null)
             {
+                foreach (var record in recordedHits)
+                    DrawHit(record.HitPosition);
+            }
+            else if (lastTargetHit is { } hit)
+                DrawHit(hit);
+
+            void DrawHit(Position hit)
+            {
+                if (!IsInsidePreview(hit))
+                    return;
+
                 int markerSize = Math.Max(1, (int)Math.Round(size * AimTraceRenderer.MarkerSizeRatio));
                 var marker = ToTargetPixel(hit);
                 double? projectileDiameterPixels = caliberDiameterMm / settings.MaxDiameterMm * diameterPixels;

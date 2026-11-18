@@ -5,7 +5,7 @@
              x:DataType="vm:ShootingSettingsViewModel">
 
     <StackPanel Spacing="16">
-        <TextBlock Text="Shooting settings" FontWeight="SemiBold" />
+        <CheckBox Content="Show all hits" IsChecked="{Binding ShowAllHits, Mode=TwoWay}" />
         <Button Content="Reset shooting" Command="{Binding ResetCommand}" />
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>

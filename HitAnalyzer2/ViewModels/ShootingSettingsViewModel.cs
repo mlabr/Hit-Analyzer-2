@@ -11,6 +11,9 @@ namespace HitAnalyzer2.ViewModels
         private readonly ShootingSessionService _shootingSession;
         private readonly RecordingService _recording;
 
+        [ObservableProperty]
+        private bool showAllHits;
+
         public int HitCount => _recording.GetHitRecordCount();
         public double LastHitScore => _recording.GetLastHitScore();
         public double TotalScore => _recording.GetTotalScore();

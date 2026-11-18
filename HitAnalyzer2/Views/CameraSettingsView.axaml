@@ -4,7 +4,6 @@
              x:Class="HitAnalyzer2.Views.CameraSettingsView"
              x:DataType="vm:CameraSettingsViewModel">
     <StackPanel Spacing="8">
-        <TextBlock Text="Webcam settings" FontWeight="SemiBold" />
         <ComboBox PlaceholderText="Select camera" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding Cameras}" SelectedItem="{Binding SelectedCamera, Mode=TwoWay}"
                   IsEnabled="{Binding !IsDiscoveringCameras}"

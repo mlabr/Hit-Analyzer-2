@@ -14,7 +14,7 @@
     <Window.Styles>
         <Style Selector="MenuItem.active">
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAccentBrush}" />
+            <Setter Property="Foreground" Value="Black" />
             <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundAccentLowBrush}" />
         </Style>
     </Window.Styles>
