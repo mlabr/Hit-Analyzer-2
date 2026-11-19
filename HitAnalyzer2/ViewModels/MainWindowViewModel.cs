@@ -75,6 +75,7 @@ namespace HitAnalyzer2.ViewModels
             var configuration = current with
             {
                 Theme = ShootingSettings.SelectedTheme,
+                Shooting = ShootingSettings.GetConfiguration(current.Shooting),
                 Camera = camera,
                 Target = TargetSettings.GetConfiguration(),
                 Detection = detection,

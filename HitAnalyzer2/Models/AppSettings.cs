@@ -42,6 +42,8 @@ namespace HitAnalyzer2
 
     internal sealed record ShootingSettings
     {
+        public bool IsHitLimitEnable { get; init; }
+        public int HitLimit { get; init; } = 40;
         public int AimPathTimeLimit { get; init; } = 15;
         public int AimPathTimeoutMs { get; init; } = 400;
         public double AimPathTimeoutMinimumDuration { get; init; } = 2;

@@ -6,6 +6,15 @@
 
     <StackPanel Spacing="16">
         <CheckBox Content="Show all hits" IsChecked="{Binding ShowAllHits, Mode=TwoWay}" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <CheckBox IsChecked="{Binding IsHitLimitEnabled, Mode=TwoWay}"
+                      VerticalAlignment="Center" AutomationProperties.Name="Hit Limits" />
+            <TextBlock Text="Hit Limits" VerticalAlignment="Center" />
+            <NumericUpDown Value="{Binding HitCountInitial, Mode=TwoWay}"
+                           Minimum="0" Maximum="2147483647" Increment="1" FormatString="0"
+                           ClipValueToMinMax="True" ShowButtonSpinner="False"
+                           AutomationProperties.Name="Initial hit count" />
+        </StackPanel>
         <Button Content="Reset shooting" Command="{Binding ResetCommand}" />
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>

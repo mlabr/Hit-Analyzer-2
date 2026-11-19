@@ -101,6 +101,14 @@ namespace HitAnalyzer2
                 if (json is JsonObject distanceRoot &&
                     distanceRoot[nameof(AppSettings.Shooting)] is JsonObject shootingSection)
                 {
+                    if (!shootingSection.ContainsKey(nameof(ShootingSettings.HitLimit)) &&
+                        shootingSection["HitCountInitial"] is { } legacyHitCount)
+                        shootingSection[nameof(ShootingSettings.HitLimit)] = legacyHitCount.DeepClone();
+
+                    if (!shootingSection.ContainsKey(nameof(ShootingSettings.IsHitLimitEnable)) &&
+                        shootingSection["IsHitLimitEnabled"] is { } legacyHitLimitEnabled)
+                        shootingSection[nameof(ShootingSettings.IsHitLimitEnable)] = legacyHitLimitEnabled.DeepClone();
+
                     foreach (string name in new[] { nameof(TargetSettings.RealDistanceMeters), nameof(TargetSettings.SimulatedDistanceMeters) })
                     {
                         if (!shootingSection.TryGetPropertyValue(name, out var distance))

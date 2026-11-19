@@ -52,6 +52,24 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private bool showAllHits;
 
+        public bool IsHitLimitEnabled
+        {
+            get => _shootingSession.SessionLimits.IsHitLimitEnabled;
+            set => SetProperty(ref _shootingSession.SessionLimits.IsHitLimitEnabled, value);
+        }
+
+        public int HitCountInitial
+        {
+            get => _shootingSession.SessionLimits.HitCountInitial;
+            set => SetProperty(ref _shootingSession.SessionLimits.HitCountInitial, Math.Max(0, value));
+        }
+
+        internal ShootingSettings GetConfiguration(ShootingSettings current) => current with
+        {
+            IsHitLimitEnable = IsHitLimitEnabled,
+            HitLimit = HitCountInitial
+        };
+
         public int HitCount => _recording.GetHitRecordCount();
         public double LastHitScore => _recording.GetLastHitScore();
         public double TotalScore => _recording.GetTotalScore();

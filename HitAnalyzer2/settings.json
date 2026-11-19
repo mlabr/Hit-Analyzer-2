@@ -1,6 +1,8 @@
 {
   "Theme": "System",
   "Shooting": {
+    "IsHitLimitEnable": false,
+    "HitLimit": 50,
     "AimPathTimeLimit": 15,
     "AimPathTimeoutMs": 400,
     "AimPathTimeoutMinimumDuration": 1.5,

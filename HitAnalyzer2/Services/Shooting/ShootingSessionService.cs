@@ -18,6 +18,12 @@ namespace HitAnalyzer2.Services.Shooting
     {
         internal const int NextDetectionMinimumInterval = 100;
         internal const int NextDetectionMaximumInterval = 5000;
+        internal SessionLimits SessionLimits { get; } = new()
+        {
+            IsHitLimitEnabled = shootingSettings.IsHitLimitEnable,
+            HitCountInitial = Math.Max(0, shootingSettings.HitLimit)
+        };
+
         private readonly TimeSpan _aimPathTimeoutMinimumDuration =
             TimeSpan.FromSeconds(shootingSettings.AimPathTimeoutMinimumDuration);
 
