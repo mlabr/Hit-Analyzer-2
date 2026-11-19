@@ -54,6 +54,10 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private bool showAllHits;
 
+        [ObservableProperty]
+        private bool showSmallestHitGroup;
+        public bool IsEnhancedR80Available => false;
+
         public bool IsHitLimitEnabled
         {
             get => _shootingSession.SessionLimits.IsHitLimitEnabled;
@@ -114,6 +118,7 @@ namespace HitAnalyzer2.ViewModels
             HitLimit = HitCountInitial,
             IsTimeLimitEnable = IsTimeLimitEnabled,
             Countdown = Countdown,
+            ShowSmallestHitGroup = ShowSmallestHitGroup,
             TimeLimitSeconds = _shootingSession.SessionLimits.TimeLimitSecondsInitial
         };
 
@@ -167,6 +172,7 @@ namespace HitAnalyzer2.ViewModels
             _saveConfiguration = saveConfiguration;
             selectedThemeIndex = (int)settings.Current.Theme;
             countdown = settings.Current.Shooting.Countdown;
+            showSmallestHitGroup = settings.Current.Shooting.ShowSmallestHitGroup;
             _realDistanceMeters = settings.Current.Target.RealDistanceMeters;
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;

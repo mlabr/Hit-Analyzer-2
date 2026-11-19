@@ -6,6 +6,8 @@
 
     <StackPanel Spacing="16">
         <CheckBox Content="Show all hits" IsChecked="{Binding ShowAllHits, Mode=TwoWay}" />
+        <CheckBox Content="Show smallest 80% circle" IsChecked="{Binding ShowSmallestHitGroup, Mode=TwoWay}"
+                  IsVisible="{Binding IsEnhancedR80Available}" />
         <StackPanel Orientation="Horizontal" Spacing="8">
             <CheckBox IsChecked="{Binding IsHitLimitEnabled, Mode=TwoWay}"
                       VerticalAlignment="Center" AutomationProperties.Name="Hit Limits" />

@@ -1,10 +1,11 @@
 {
-  "Theme": "Dark",
+  "Theme": "System",
   "Shooting": {
-    "IsHitLimitEnable": false,
-    "HitLimit": 5,
-    "IsTimeLimitEnable": true,
+    "IsHitLimitEnable": true,
+    "HitLimit": 10,
+    "IsTimeLimitEnable": false,
     "Countdown": true,
+    "ShowSmallestHitGroup": true,
     "TimeLimitSeconds": 10,
     "AimPathTimeLimit": 15,
     "AimPathTimeoutMs": 400,

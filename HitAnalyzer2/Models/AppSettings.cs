@@ -46,6 +46,7 @@ namespace HitAnalyzer2
         public int HitLimit { get; init; } = 40;
         public bool IsTimeLimitEnable { get; init; }
         public bool Countdown { get; init; }
+        public bool ShowSmallestHitGroup { get; init; }
         public int TimeLimitSeconds { get; init; } = 900;
         public int AimPathTimeLimit { get; init; } = 15;
         public int AimPathTimeoutMs { get; init; } = 400;

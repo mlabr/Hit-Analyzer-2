@@ -2,6 +2,7 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Models;
+using HitAnalyzer2.Models.Shooting;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Rendering;
@@ -10,7 +11,9 @@ using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +26,12 @@ namespace HitAnalyzer2.ViewModels
         private readonly ShootingSessionService _shootingSession;
         private readonly RecordingService _recording;
         private readonly DetectionSettings _detectionSettings;
+        private SessionResult? _sessionResult;
+        private HitGroupCircle? _smallestHitGroup;
+        private CancellationTokenSource? _hitGroupCalculation;
+
+        private sealed record SessionResult(TargetModel Target, double CaliberMm, int PreviewSide,
+            IReadOnlyList<HitRecord> Hits, Position[] Points, HitGroupCircle? Cep50, HitGroupCircle? Cep80);
         internal volatile bool IsTargetPreviewActive = true;
         internal volatile bool IsWeaponPreviewActive;
         internal volatile bool IsDarkTheme;
@@ -38,6 +47,12 @@ namespace HitAnalyzer2.ViewModels
         private string? configurationMessage;
         [ObservableProperty]
         private Bitmap? sessionResultsImage;
+        [ObservableProperty]
+        private string? meanHitGroupText;
+        [ObservableProperty]
+        private string? cep50Text;
+        [ObservableProperty]
+        private string? smallestHitGroupText;
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
             WeaponSettingsViewModel weaponSettings, TargetSettingsViewModel targetSettings, ShootingSessionService shootingSession,
@@ -66,27 +81,110 @@ namespace HitAnalyzer2.ViewModels
             CameraSettings = new CameraSettingsViewModel(settings, captureSession, cameraCalibration);
             ShootingSettings.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName == nameof(ShootingSettingsViewModel.IsSessionComplete))
+                if (e.PropertyName is nameof(ShootingSettingsViewModel.IsSessionComplete) or
+                    nameof(ShootingSettingsViewModel.ShowSmallestHitGroup))
                     RefreshSessionResults();
             };
         }
 
         internal void RefreshSessionResults()
         {
-            var previous = SessionResultsImage;
-            SessionResultsImage = null;
-            previous?.Dispose();
             var status = _shootingSession.GetSessionStatus();
             if (status.EndReason is null)
+            {
+                StopHitGroupCalculation();
+                _sessionResult = null;
+                _smallestHitGroup = null;
+                SetSessionResultsImage(null);
+                MeanHitGroupText = null;
+                Cep50Text = null;
+                SmallestHitGroupText = null;
                 return;
+            }
 
-            var previewSize = CameraPreview.WebcamImage?.PixelSize;
-            int side = previewSize is { } size ? Math.Min(size.Width, size.Height) : 480;
-            using var results = new Mat(side, side, MatType.CV_8UC4);
-            TargetRenderer.DrawTargetPreview(results, null, CameraSettings.Calibration.Settings,
-                status.LastHitCaliberMm, _recording.GetNormalizedHitRecordList(), IsDarkTheme,
-                highlightLastRecordedHit: true);
-            SessionResultsImage = CameraPreviewViewModel.CreateBitmap(results);
+            if (_sessionResult is null)
+            {
+                var previewSize = CameraPreview.WebcamImage?.PixelSize;
+                int side = previewSize is { } size ? Math.Min(size.Width, size.Height) : 480;
+                var hits = _recording.GetNormalizedHitRecordList();
+                var points = hits.Select(hit => (Position)hit.HitPosition).ToArray();
+                (HitGroupCircle? Cep50, HitGroupCircle? Cep80) circles =
+                    points.Length > 0 ? HitGroup.AroundMean(points) : (null, null);
+                _sessionResult = new(CameraSettings.Calibration.Settings, status.LastHitCaliberMm, side,
+                    hits, points, circles.Cep50, circles.Cep80);
+            }
+
+            if (!ShowEnhancedR80)
+                StopHitGroupCalculation();
+            else if (_smallestHitGroup is null && _hitGroupCalculation is null && _sessionResult.Cep80 is { } mean)
+            {
+                _hitGroupCalculation = new CancellationTokenSource();
+                _ = CalculateSmallestHitGroupAsync(_sessionResult, mean, _hitGroupCalculation);
+            }
+            RenderSessionResults(_sessionResult);
+        }
+
+        private bool ShowEnhancedR80 => ShootingSettings.IsEnhancedR80Available && ShootingSettings.ShowSmallestHitGroup;
+
+        private async Task CalculateSmallestHitGroupAsync(SessionResult result, HitGroupCircle mean,
+            CancellationTokenSource calculation)
+        {
+            try
+            {
+                var circle = await Task.Run(() => HitGroup.SmallestCircle(result.Points, mean, calculation.Token),
+                    calculation.Token);
+                if (ReferenceEquals(_hitGroupCalculation, calculation))
+                {
+                    _hitGroupCalculation = null;
+                    _smallestHitGroup = circle;
+                    RenderSessionResults(result);
+                }
+            }
+            catch (OperationCanceledException) when (calculation.IsCancellationRequested)
+            {
+            }
+            finally
+            {
+                calculation.Dispose();
+            }
+        }
+
+        private void StopHitGroupCalculation()
+        {
+            _hitGroupCalculation?.Cancel();
+            _hitGroupCalculation = null;
+        }
+
+        private void RenderSessionResults(SessionResult result)
+        {
+            var smallest = ShowEnhancedR80 ? _smallestHitGroup : null;
+            using var image = new Mat(result.PreviewSide, result.PreviewSide, MatType.CV_8UC4);
+            TargetRenderer.DrawTargetPreview(image, null, result.Target, result.CaliberMm, result.Hits, IsDarkTheme,
+                cep50: result.Cep50, cep80: result.Cep80, smallestCircle: smallest);
+            SetSessionResultsImage(CameraPreviewViewModel.CreateBitmap(image));
+            Cep50Text = FormatGroup("CEP50 (R50)", result.Cep50);
+            MeanHitGroupText = FormatGroup("CEP80 (R80)", result.Cep80);
+            SmallestHitGroupText = _hitGroupCalculation is not null
+                ? "Enhanced R80: calculating…"
+                : FormatGroup("Enhanced R80", smallest);
+
+            string? FormatGroup(string label, HitGroupCircle? circle)
+            {
+                if (circle is null)
+                    return null;
+
+                string coverage = $"{circle.CoveredHits}/{result.Points.Length} hits";
+                return result.Target.MaxDiameterMm is > 0 and < double.PositiveInfinity and var diameterMm
+                    ? $"{label} · Ø {2 * circle.Radius * diameterMm:0.0} mm · {coverage}"
+                    : $"{label} · {coverage}";
+            }
+        }
+
+        private void SetSessionResultsImage(Bitmap? image)
+        {
+            var previous = SessionResultsImage;
+            SessionResultsImage = image;
+            previous?.Dispose();
         }
 
         internal Task RefreshCamerasAsync() => CameraSettings.RefreshCamerasAsync();

@@ -1,4 +1,5 @@
 using HitAnalyzer2.Models;
+using HitAnalyzer2.Models.Shooting;
 using HitAnalyzer2.Services.Target;
 using OpenCvSharp;
 using System;
@@ -27,7 +28,8 @@ namespace HitAnalyzer2.Services.Rendering
 
         internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings,
             double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null, bool isDarkTheme = false,
-            Position? originalTargetHit = null, bool highlightLastRecordedHit = false)
+            Position? originalTargetHit = null, HitGroupCircle? cep50 = null,
+            HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -51,26 +53,43 @@ namespace HitAnalyzer2.Services.Rendering
 
             if (recordedHits is not null)
             {
-                for (int i = 0; i < recordedHits.Count; i++)
-                    DrawHit(recordedHits[i].HitPosition, highlightLastRecordedHit && i == recordedHits.Count - 1);
+                foreach (var record in recordedHits)
+                    DrawHit(record.HitPosition);
             }
             else if (lastTargetHit is { } hit)
                 DrawHit(hit);
 
-            void DrawHit(Position hit, bool highlight = false)
+            Scalar meanColor = isDarkTheme ? new(209, 213, 169, 255) : new(101, 93, 36, 255);
+            Scalar cep50Color = isDarkTheme ? new(242, 183, 212, 255) : new(139, 67, 108, 255);
+            Scalar smallestColor = isDarkTheme ? new(125, 189, 249, 255) : new(17, 78, 163, 255);
+            if (smallestCircle is { Radius: > 0 } smallest)
+                Cv2.Circle(preview, ToTargetPixel(smallest.Center), RadiusPixels(smallest), smallestColor, 2, LineTypes.AntiAlias);
+            if (cep50 is { Radius: > 0 } inner)
+                Cv2.Circle(preview, ToTargetPixel(inner.Center), RadiusPixels(inner), cep50Color, 2, LineTypes.AntiAlias);
+            if (cep80 is { Radius: > 0 } group)
+            {
+                int radius = RadiusPixels(group);
+                int arcStep = Math.Clamp((int)Math.Round(360 / (Math.Tau * radius) * 12), 6, 45);
+                for (int angle = 0; angle < 360; angle += arcStep)
+                    Cv2.Ellipse(preview, ToTargetPixel(group.Center), new Size(radius, radius), 0,
+                        angle, Math.Min(360, angle + arcStep * 0.6), meanColor, 2, LineTypes.AntiAlias);
+            }
+            if (cep80?.Center is { } mean && IsInsidePreview(mean))
+            {
+                var marker = ToTargetPixel(mean);
+                Cv2.DrawMarker(preview, marker, palette.HitOutline, MarkerTypes.Cross, 12, 4, LineTypes.AntiAlias);
+                Cv2.DrawMarker(preview, marker, meanColor, MarkerTypes.Cross, 12, 2, LineTypes.AntiAlias);
+            }
+
+            int RadiusPixels(HitGroupCircle circle) => Math.Max(1, (int)Math.Round(circle.Radius * diameterPixels));
+
+            void DrawHit(Position hit)
             {
                 if (!IsInsidePreview(hit))
                     return;
 
                 var marker = ToTargetPixel(hit);
                 double? projectileDiameterPixels = caliberDiameterMm / settings.MaxDiameterMm * diameterPixels;
-                if (highlight)
-                {
-                    int radius = (int)Math.Ceiling(Math.Max(markerSize / 2.0,
-                        projectileDiameterPixels.GetValueOrDefault() / 2.0)) + 4;
-                    Cv2.Circle(preview, marker, radius, palette.HitOutline, 4, LineTypes.AntiAlias);
-                    Cv2.Circle(preview, marker, radius, palette.Hit, 2, LineTypes.AntiAlias);
-                }
                 AimTraceRenderer.DrawAimPosition(preview, marker.X, marker.Y, markerSize,
                     palette.Hit, projectileDiameterPixels, palette.HitOutline);
             }

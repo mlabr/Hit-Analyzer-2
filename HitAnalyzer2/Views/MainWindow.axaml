@@ -54,8 +54,26 @@
                 <Grid x:Name="SessionStartOverlay" IsHitTestVisible="False">
                     <Border Background="{DynamicResource AppBackgroundBrush}"
                             IsVisible="{Binding ShootingSettings.IsSessionComplete}">
-                        <Image Source="{Binding SessionResultsImage}" Stretch="Uniform" StretchDirection="DownOnly" />
+                        <Image x:Name="ResultTargetImage" Source="{Binding SessionResultsImage}"
+                               Stretch="Uniform" StretchDirection="DownOnly"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
+                    <Grid Width="{Binding #ResultTargetImage.Bounds.Width}" Height="{Binding #ResultTargetImage.Bounds.Height}"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          IsVisible="{Binding MeanHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="6"
+                                Background="{DynamicResource PanelBrush}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{Binding Cep50Text}" Foreground="{DynamicResource Cep50Brush}"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding MeanHitGroupText}" Foreground="{DynamicResource MeanHitGroupBrush}"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding SmallestHitGroupText}" Foreground="{DynamicResource SmallestHitGroupBrush}"
+                                           TextWrapping="Wrap"
+                                           IsVisible="{Binding SmallestHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                     <Viewbox x:Name="SessionStartCountdown" Stretch="Uniform"
                              HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Viewbox.IsVisible>
@@ -90,16 +108,16 @@
                 <views:HelpView x:Name="HelpContent" IsVisible="False" />
             </Grid>
             <StackPanel x:Name="HitCounter" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
-                <TextBlock Text="Score:" FontSize="32" />
-                <TextBlock x:Name="RecordedScore" Text="{Binding ShootingSettings.LastHitScore}"
-                           Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
-                <TextBlock x:Name="WeaponPreviewScore" Text="{Binding CameraPreview.WeaponPreviewScore, TargetNullValue='0'}"
-                           Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0"
-                           IsVisible="False" />
-                <TextBlock Text="Hits:" FontSize="32" />
-                <TextBlock Text="{Binding ShootingSettings.HitCount}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
-                <TextBlock Text="Total:" FontSize="32" />
-                <TextBlock Text="{Binding ShootingSettings.TotalScore}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" MinWidth="72" />
+                    <TextBlock Text="Score:" FontSize="32" />
+                    <TextBlock x:Name="RecordedScore" Text="{Binding ShootingSettings.LastHitScore}"
+                               Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
+                    <TextBlock x:Name="WeaponPreviewScore" Text="{Binding CameraPreview.WeaponPreviewScore, TargetNullValue='0'}"
+                               Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0"
+                               IsVisible="False" />
+                    <TextBlock Text="Hits:" FontSize="32" />
+                    <TextBlock Text="{Binding ShootingSettings.HitCount}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
+                    <TextBlock Text="Total:" FontSize="32" />
+                    <TextBlock Text="{Binding ShootingSettings.TotalScore}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" MinWidth="72" />
             </StackPanel>
             <Border x:Name="SettingsPanel" Grid.RowSpan="3" Width="280" BorderThickness="0,0,1,0"
                     Background="{DynamicResource PanelBrush}"
