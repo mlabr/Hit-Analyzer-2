@@ -13,6 +13,7 @@ namespace HitAnalyzer2.Views
     {
         private const double HandleRadius = 6;
         private const double HitRadius = 12;
+        private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
         private Rect _imageBounds;
         private CameraSettingsViewModel? _settings;
         private IPointer? _dragPointer;
@@ -31,6 +32,8 @@ namespace HitAnalyzer2.Views
             _settings = settings;
             _imageBounds = imageBounds;
             IsVisible = visible;
+            if (!visible)
+                Cursor = null;
             InvalidateVisual();
         }
 
@@ -101,6 +104,28 @@ namespace HitAnalyzer2.Views
                 return;
 
             var pointerPosition = e.GetPosition(this);
+            if (FindDragHandle(settings, pointerPosition) is not { } handle)
+                return;
+
+            if (handle.Corner < 0)
+            {
+                _translationStart = settings.Calibration.Settings.Corners;
+                _translationPointerStart = pointerPosition;
+            }
+            else
+            {
+                _dragCorner = handle.Corner;
+                _dragOffset = handle.Position - pointerPosition;
+            }
+
+            _dragPointer = e.Pointer;
+            Cursor = HandCursor;
+            e.Pointer.Capture(this);
+            e.Handled = true;
+        }
+
+        private (int Corner, Point Position)? FindDragHandle(CameraSettingsViewModel settings, Point pointerPosition)
+        {
             var points = GetPreviewCorners(settings);
             double closestSquared = HitRadius * HitRadius;
             int corner = -1;
@@ -115,32 +140,23 @@ namespace HitAnalyzer2.Views
             }
 
             if (settings.Calibration.CameraTargetCenter is { } center &&
-                settings.Calibration.Settings.Corners is { } corners &&
+                settings.Calibration.Settings.Corners is not null &&
                 DistanceSquared(ToPreview(center), pointerPosition) < closestSquared)
-            {
-                _translationStart = corners;
-                _translationPointerStart = pointerPosition;
-            }
-            else if (corner >= 0)
-            {
-                _dragCorner = corner;
-                _dragOffset = points[corner] - pointerPosition;
-            }
-            else
-                return;
+                return (-1, ToPreview(center));
 
-            _dragPointer = e.Pointer;
-            e.Pointer.Capture(this);
-            e.Handled = true;
+            return corner >= 0 ? (corner, points[corner]) : null;
         }
 
         protected override void OnPointerMoved(PointerEventArgs e)
         {
             base.OnPointerMoved(e);
-            if (_dragPointer != e.Pointer || _settings is not { } settings)
-                return;
-
             var pointer = e.GetPosition(this);
+            if (_dragPointer != e.Pointer || _settings is not { } settings)
+            {
+                UpdateHandleCursor(pointer);
+                return;
+            }
+
             if (_translationStart is { } start)
             {
                 Position[] corners = [start.TopLeft, start.TopRight, start.BottomRight, start.BottomLeft];
@@ -169,6 +185,7 @@ namespace HitAnalyzer2.Views
             if (_dragPointer == e.Pointer && e.InitialPressMouseButton == MouseButton.Left)
             {
                 e.Pointer.Capture(null);
+                UpdateHandleCursor(e.GetPosition(this));
                 e.Handled = true;
             }
         }
@@ -180,7 +197,21 @@ namespace HitAnalyzer2.Views
             {
                 _dragPointer = null;
                 _translationStart = null;
+                Cursor = null;
             }
+        }
+
+        protected override void OnPointerExited(PointerEventArgs e)
+        {
+            base.OnPointerExited(e);
+            if (_dragPointer is null)
+                Cursor = null;
+        }
+
+        private void UpdateHandleCursor(Point pointer)
+        {
+            Cursor = _dragPointer is not null ||
+                (_settings is { } settings && FindDragHandle(settings, pointer) is not null) ? HandCursor : null;
         }
 
         private static double DistanceSquared(Point a, Point b)

@@ -18,6 +18,7 @@ namespace HitAnalyzer2.Views
     public partial class MainWindow : Window
     {
         private static readonly Thickness PreviewMargin = new(12);
+        private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
         private PixelSize? _previewPixelSize;
         private bool _stoppingCamera;
         private bool _cameraStopped;
@@ -37,16 +38,23 @@ namespace HitAnalyzer2.Views
             CameraPreview.PointerReleased += (_, e) =>
             {
                 if (_offsetDrag?.Pointer == e.Pointer)
+                {
                     EndOffsetDrag();
+                    UpdateWeaponOffsetCursor(e.GetPosition(PreviewImage));
+                }
             };
             CameraPreview.PointerCaptureLost += (_, e) =>
             {
                 if (_offsetDrag?.Pointer == e.Pointer)
+                {
                     _offsetDrag = null;
+                    CameraPreview.Cursor = null;
+                }
             };
             CameraPreview.PointerExited += (_, _) =>
             {
                 _zoomPointer = null;
+                UpdateWeaponOffsetCursor(null);
                 UpdateCalibrationZoom();
             };
             TargetSettings.ZoomSelector.SelectionChanged += (_, _) => UpdateCalibrationZoom();
@@ -176,6 +184,7 @@ namespace HitAnalyzer2.Views
             if (About.IsVisible)
                 MinWidth = 450;
             _zoomPointer = null;
+            UpdateWeaponOffsetCursor(null);
             UpdateCalibrationZoom();
             UpdateWeaponOffsetZoom();
             UpdateCalibrationOverlay();
@@ -196,33 +205,50 @@ namespace HitAnalyzer2.Views
         private void UpdateZoomPointer(object? sender, PointerEventArgs e)
         {
             _zoomPointer = e.GetPosition(PreviewImage);
+            UpdateWeaponOffsetCursor(_zoomPointer);
             UpdateCalibrationZoom();
         }
 
         private void StartOffsetDrag(object? sender, PointerPressedEventArgs e)
         {
-            if (!WeaponSettings.IsVisible || !e.GetCurrentPoint(PreviewImage).Properties.IsLeftButtonPressed ||
-                DataContext is not MainWindowViewModel vm || vm.ShootingSettings.IsSessionComplete ||
-                vm.CameraPreview.WeaponPreviewHit is not { } hit ||
-                !TryGetTargetPoint(e, out var target, out double diameter))
+            if (_offsetDrag is not null ||
+                e.GetCurrentPoint(PreviewImage).Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed ||
+                DataContext is not MainWindowViewModel vm ||
+                GetWeaponDragAnchor(vm, e.GetPosition(PreviewImage)) is not { } anchor)
                 return;
+
+            _offsetDrag = (e.Pointer, anchor, vm.WeaponSettings.OffsetX, vm.WeaponSettings.OffsetY);
+            CameraPreview.Cursor = HandCursor;
+            e.Pointer.Capture(CameraPreview);
+            e.Handled = true;
+        }
+
+        private Position? GetWeaponDragAnchor(MainWindowViewModel vm, Point pointer)
+        {
+            if (!WeaponSettings.IsVisible || vm.ShootingSettings.IsSessionComplete ||
+                vm.CameraPreview.WeaponPreviewHit is not { } hit ||
+                !TryGetTargetPoint(pointer, out var target, out double diameter))
+                return null;
 
             const double hitTolerance = 12;
             double dx = (target.X - hit.X) * diameter;
             double dy = (target.Y - hit.Y) * diameter;
-            if (dx * dx + dy * dy > hitTolerance * hitTolerance ||
-                vm.CameraSettings.Calibration.MapTargetToCameraPixels(target.X, target.Y) is not { } anchor)
-                return;
+            return dx * dx + dy * dy <= hitTolerance * hitTolerance
+                ? vm.CameraSettings.Calibration.MapTargetToCameraPixels(target.X, target.Y)
+                : null;
+        }
 
-            _offsetDrag = (e.Pointer, anchor, vm.WeaponSettings.OffsetX, vm.WeaponSettings.OffsetY);
-            e.Pointer.Capture(CameraPreview);
-            e.Handled = true;
+        private void UpdateWeaponOffsetCursor(Point? pointer)
+        {
+            CameraPreview.Cursor = _offsetDrag is not null ||
+                (pointer is { } point && DataContext is MainWindowViewModel vm && GetWeaponDragAnchor(vm, point) is not null)
+                ? HandCursor : null;
         }
 
         private void UpdateOffsetDrag(object? sender, PointerEventArgs e)
         {
             if (_offsetDrag is not { } drag || drag.Pointer != e.Pointer ||
-                DataContext is not MainWindowViewModel vm || !TryGetTargetPoint(e, out var target, out _) ||
+                DataContext is not MainWindowViewModel vm || !TryGetTargetPoint(e.GetPosition(PreviewImage), out var target, out _) ||
                 vm.CameraSettings.Calibration.MapTargetToCameraPixels(target.X, target.Y) is not { } cursor)
                 return;
 
@@ -239,9 +265,10 @@ namespace HitAnalyzer2.Views
             var pointer = _offsetDrag?.Pointer;
             _offsetDrag = null;
             pointer?.Capture(null);
+            CameraPreview.Cursor = null;
         }
 
-        private bool TryGetTargetPoint(PointerEventArgs e, out Point target, out double diameter)
+        private bool TryGetTargetPoint(Point cursor, out Point target, out double diameter)
         {
             target = default;
             diameter = 0;
@@ -256,7 +283,6 @@ namespace HitAnalyzer2.Views
             if (diameter <= 0)
                 return false;
 
-            var cursor = e.GetPosition(PreviewImage);
             target = new Point((cursor.X - (bounds.Width - size.Width) / 2) / diameter - TargetPreviewModel.PreviewMargin,
                 (cursor.Y - (bounds.Height - size.Height) / 2) / diameter - TargetPreviewModel.PreviewMargin);
             return true;
@@ -323,6 +349,7 @@ namespace HitAnalyzer2.Views
         {
             if (e.Property == BoundsProperty)
             {
+                UpdateWeaponOffsetCursor(_zoomPointer);
                 UpdateCalibrationOverlay();
                 UpdateSessionStartCountdownSize();
                 UpdateCalibrationZoom();
@@ -332,6 +359,7 @@ namespace HitAnalyzer2.Views
             if (e.Property != Image.SourceProperty)
                 return;
 
+            UpdateWeaponOffsetCursor(_zoomPointer);
             UpdateCalibrationZoom();
             UpdateWeaponOffsetZoom();
             var pixelSize = (PreviewImage.Source as Bitmap)?.PixelSize;
