@@ -68,7 +68,11 @@ namespace HitAnalyzer2.ViewModels
         public bool IsTimeLimitEnabled
         {
             get => _shootingSession.SessionLimits.IsTimeLimitEnabled;
-            set => SetProperty(ref _shootingSession.SessionLimits.IsTimeLimitEnabled, value);
+            set
+            {
+                if (SetProperty(ref _shootingSession.SessionLimits.IsTimeLimitEnabled, value))
+                    OnPropertyChanged(nameof(SessionElapsedText));
+            }
         }
 
         public int TimeLimitMinutes
@@ -103,8 +107,11 @@ namespace HitAnalyzer2.ViewModels
         {
             get
             {
+                if (!IsTimeLimitEnabled)
+                    return "--:--";
+
                 var elapsed = _shootingSession.GetSessionStatus().Elapsed;
-                return $"Elapsed {(long)elapsed.TotalMinutes:00}:{elapsed.Seconds:00}";
+                return $"{(long)elapsed.TotalMinutes:00}:{elapsed.Seconds:00}";
             }
         }
 

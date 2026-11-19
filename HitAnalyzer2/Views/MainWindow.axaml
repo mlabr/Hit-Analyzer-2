@@ -28,8 +28,14 @@
             <MenuItem Header="_Detection" Click="ShowDetectionSettings" Classes.active="{Binding #DetectionSettings.IsVisible}" />
             <MenuItem Header="_About" Click="ShowAbout" Classes.active="{Binding #About.IsVisible}" />
         </Menu>
-        <Grid Grid.Row="1" RowDefinitions="*,Auto" ColumnDefinitions="Auto,*">
-            <Grid x:Name="CameraPreview" Grid.Column="1">
+        <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto" ColumnDefinitions="Auto,*">
+            <StackPanel x:Name="SessionElapsed" Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                        Margin="0,0,12,0" HorizontalAlignment="Right" IsHitTestVisible="False">
+                <TextBlock Text="Time:" FontSize="32" />
+                <TextBlock Text="{Binding ShootingSettings.SessionElapsedText}"
+                           Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" />
+            </StackPanel>
+            <Grid x:Name="CameraPreview" Grid.Row="1" Grid.Column="1">
                 <Image x:Name="PreviewImage" Source="{Binding CameraPreview.WebcamImage}" Stretch="Uniform"
                        StretchDirection="DownOnly" />
                 <TextBlock Text="{Binding CameraPreview.StatusMessage}" TextWrapping="Wrap" Margin="16"
@@ -38,16 +44,12 @@
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
-                <TextBlock x:Name="SessionElapsed" Text="{Binding ShootingSettings.SessionElapsedText}"
-                           FontSize="32" FontWeight="SemiBold" Background="{DynamicResource PanelBrush}"
-                           Margin="10" Padding="6,2" HorizontalAlignment="Right" VerticalAlignment="Top"
-                           IsHitTestVisible="False" />
             </Grid>
-            <Grid x:Name="InformationPanel" Grid.Column="1" Grid.RowSpan="2" IsVisible="False">
+            <Grid x:Name="InformationPanel" Grid.Column="1" Grid.RowSpan="3" IsVisible="False">
                 <views:AboutView x:Name="AboutContent" />
                 <views:HelpView x:Name="HelpContent" IsVisible="False" />
             </Grid>
-            <StackPanel x:Name="HitCounter" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
+            <StackPanel x:Name="HitCounter" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
                 <TextBlock Text="Score:" FontSize="32" />
                 <TextBlock Text="{Binding ShootingSettings.LastHitScore}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
                 <TextBlock Text="Hits:" FontSize="32" />
@@ -55,7 +57,7 @@
                 <TextBlock Text="Total:" FontSize="32" />
                 <TextBlock Text="{Binding ShootingSettings.TotalScore}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" MinWidth="72" />
             </StackPanel>
-            <Border x:Name="SettingsPanel" Grid.RowSpan="2" Width="280" BorderThickness="0,0,1,0"
+            <Border x:Name="SettingsPanel" Grid.RowSpan="3" Width="280" BorderThickness="0,0,1,0"
                     Background="{DynamicResource PanelBrush}"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
                 <ScrollViewer Padding="12" HorizontalScrollBarVisibility="Disabled">

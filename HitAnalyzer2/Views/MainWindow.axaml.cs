@@ -241,7 +241,9 @@ namespace HitAnalyzer2.Views
 
             SettingsMenu.Measure(Size.Infinity);
             HitCounter.Measure(Size.Infinity);
-            double verticalSpace = verticalMargin + SettingsMenu.DesiredSize.Height + HitCounter.DesiredSize.Height;
+            SessionElapsed.Measure(Size.Infinity);
+            double verticalSpace = verticalMargin + SettingsMenu.DesiredSize.Height +
+                SessionElapsed.DesiredSize.Height + HitCounter.DesiredSize.Height;
             double scale = Math.Clamp(Math.Min(
                 (maxWidth - horizontalSpace) / imageSize.Width,
                 (maxHeight - verticalSpace) / imageSize.Height), 0, 1);
