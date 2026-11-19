@@ -1,3 +1,4 @@
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Models;
@@ -35,6 +36,8 @@ namespace HitAnalyzer2.ViewModels
 
         [ObservableProperty]
         private string? configurationMessage;
+        [ObservableProperty]
+        private Bitmap? sessionResultsImage;
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
             WeaponSettingsViewModel weaponSettings, TargetSettingsViewModel targetSettings, ShootingSessionService shootingSession,
@@ -61,6 +64,29 @@ namespace HitAnalyzer2.ViewModels
                 message => CameraPreview.StatusMessage = message);
 
             CameraSettings = new CameraSettingsViewModel(settings, captureSession, cameraCalibration);
+            ShootingSettings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(ShootingSettingsViewModel.IsSessionComplete))
+                    RefreshSessionResults();
+            };
+        }
+
+        internal void RefreshSessionResults()
+        {
+            var previous = SessionResultsImage;
+            SessionResultsImage = null;
+            previous?.Dispose();
+            var status = _shootingSession.GetSessionStatus();
+            if (status.EndReason is null)
+                return;
+
+            var previewSize = CameraPreview.WebcamImage?.PixelSize;
+            int side = previewSize is { } size ? Math.Min(size.Width, size.Height) : 480;
+            using var results = new Mat(side, side, MatType.CV_8UC4);
+            TargetRenderer.DrawTargetPreview(results, null, CameraSettings.Calibration.Settings,
+                status.LastHitCaliberMm, _recording.GetNormalizedHitRecordList(), IsDarkTheme,
+                highlightLastRecordedHit: true);
+            SessionResultsImage = CameraPreviewViewModel.CreateBitmap(results);
         }
 
         internal Task RefreshCamerasAsync() => CameraSettings.RefreshCamerasAsync();

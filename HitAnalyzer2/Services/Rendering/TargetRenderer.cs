@@ -27,7 +27,7 @@ namespace HitAnalyzer2.Services.Rendering
 
         internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings,
             double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null, bool isDarkTheme = false,
-            Position? originalTargetHit = null)
+            Position? originalTargetHit = null, bool highlightLastRecordedHit = false)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -51,19 +51,26 @@ namespace HitAnalyzer2.Services.Rendering
 
             if (recordedHits is not null)
             {
-                foreach (var record in recordedHits)
-                    DrawHit(record.HitPosition);
+                for (int i = 0; i < recordedHits.Count; i++)
+                    DrawHit(recordedHits[i].HitPosition, highlightLastRecordedHit && i == recordedHits.Count - 1);
             }
             else if (lastTargetHit is { } hit)
                 DrawHit(hit);
 
-            void DrawHit(Position hit)
+            void DrawHit(Position hit, bool highlight = false)
             {
                 if (!IsInsidePreview(hit))
                     return;
 
                 var marker = ToTargetPixel(hit);
                 double? projectileDiameterPixels = caliberDiameterMm / settings.MaxDiameterMm * diameterPixels;
+                if (highlight)
+                {
+                    int radius = (int)Math.Ceiling(Math.Max(markerSize / 2.0,
+                        projectileDiameterPixels.GetValueOrDefault() / 2.0)) + 4;
+                    Cv2.Circle(preview, marker, radius, palette.HitOutline, 4, LineTypes.AntiAlias);
+                    Cv2.Circle(preview, marker, radius, palette.Hit, 2, LineTypes.AntiAlias);
+                }
                 AimTraceRenderer.DrawAimPosition(preview, marker.X, marker.Y, markerSize,
                     palette.Hit, projectileDiameterPixels, palette.HitOutline);
             }

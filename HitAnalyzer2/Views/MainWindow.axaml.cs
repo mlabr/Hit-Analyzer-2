@@ -90,7 +90,11 @@ namespace HitAnalyzer2.Views
         private void UpdatePreviewTheme()
         {
             if (DataContext is MainWindowViewModel viewModel)
+            {
                 viewModel.IsDarkTheme = ActualThemeVariant == ThemeVariant.Dark;
+                if (viewModel.ShootingSettings.IsSessionComplete)
+                    viewModel.RefreshSessionResults();
+            }
         }
 
         private void ShowCameraSettings(object? sender, RoutedEventArgs e) => ShowSettings(CameraSettings);
@@ -188,7 +192,8 @@ namespace HitAnalyzer2.Views
         private void StartOffsetDrag(object? sender, PointerPressedEventArgs e)
         {
             if (!WeaponSettings.IsVisible || !e.GetCurrentPoint(PreviewImage).Properties.IsLeftButtonPressed ||
-                DataContext is not MainWindowViewModel vm || vm.CameraPreview.WeaponPreviewHit is not { } hit ||
+                DataContext is not MainWindowViewModel vm || vm.ShootingSettings.IsSessionComplete ||
+                vm.CameraPreview.WeaponPreviewHit is not { } hit ||
                 !TryGetTargetPoint(e, out var target, out double diameter))
                 return;
 

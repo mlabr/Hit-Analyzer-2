@@ -17,6 +17,8 @@ namespace HitAnalyzer2.Services.Shooting
         WeaponHandler weaponHandler, ShootingSettings shootingSettings, DetectionSettings detectionSettings, TargetCalibrationService calibration,
         RecordingService recording, long appStartedTimestampMs)
     {
+        internal enum SessionEndReason { TimeLimit, HitLimit }
+
         internal const int NextDetectionMinimumInterval = 100;
         internal const int NextDetectionMaximumInterval = 5000;
         internal SessionLimits SessionLimits { get; } = new()
@@ -48,6 +50,7 @@ namespace HitAnalyzer2.Services.Shooting
         private long? _sessionStartedAt;
         private int _startCountdown;
         private TimeSpan? _sessionEndedAt;
+        private SessionEndReason? _sessionEndReason;
         private TimeSpan? _sessionTimeLimit;
         private int? _remainingHits;
         private CancellationTokenSource? _sessionTimeout;
@@ -56,7 +59,8 @@ namespace HitAnalyzer2.Services.Shooting
 
         internal event Action? SessionStatusChanged;
 
-        internal (bool CanStart, bool IsRunning, TimeSpan Elapsed, TimeSpan? TimeLimit, int StartCountdown) GetSessionStatus()
+        internal (bool CanStart, bool IsRunning, TimeSpan Elapsed, TimeSpan? TimeLimit, int StartCountdown,
+            SessionEndReason? EndReason, double LastHitCaliberMm) GetSessionStatus()
         {
             lock (_hitGate)
             {
@@ -67,7 +71,7 @@ namespace HitAnalyzer2.Services.Shooting
                     elapsed = limit;
                 return (_startCountdown == 0 && _sessionStartedAt is null,
                     _sessionStartedAt.HasValue && !_sessionEndedAt.HasValue,
-                    elapsed, _sessionTimeLimit, _startCountdown);
+                    elapsed, _sessionTimeLimit, _startCountdown, _sessionEndReason, _lastHitCaliberDiameterMm);
             }
         }
 
@@ -109,7 +113,7 @@ namespace HitAnalyzer2.Services.Shooting
                             _sessionStartedAt = startedAt;
                             if (_remainingHits == 0)
                             {
-                                EndSession(TimeSpan.Zero);
+                                EndSession(TimeSpan.Zero, SessionEndReason.HitLimit);
                                 return;
                             }
                             if (_sessionTimeLimit is { } limit)
@@ -139,7 +143,7 @@ namespace HitAnalyzer2.Services.Shooting
                 lock (_hitGate)
                 {
                     if (!cancellationToken.IsCancellationRequested && _sessionStartedAt == startedAt)
-                        EndSession(limit);
+                        EndSession(limit, SessionEndReason.TimeLimit);
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -154,15 +158,16 @@ namespace HitAnalyzer2.Services.Shooting
             if (_sessionTimeLimit is { } limit && _sessionStartedAt is { } startedAt &&
                 Stopwatch.GetElapsedTime(startedAt) >= limit)
             {
-                EndSession(limit);
+                EndSession(limit, SessionEndReason.TimeLimit);
                 return false;
             }
             return true;
         }
 
-        private void EndSession(TimeSpan elapsed)
+        private void EndSession(TimeSpan elapsed, SessionEndReason reason)
         {
             _sessionEndedAt = elapsed;
+            _sessionEndReason = reason;
             StopSessionTimeout();
             CompleteRecordingFollowPath();
             SessionStatusChanged?.Invoke();
@@ -262,6 +267,7 @@ namespace HitAnalyzer2.Services.Shooting
                 _startCountdown = 0;
                 _sessionStartedAt = null;
                 _sessionEndedAt = null;
+                _sessionEndReason = null;
                 _sessionTimeLimit = null;
                 _remainingHits = null;
                 _spotWasVisible = false;
@@ -405,7 +411,8 @@ namespace HitAnalyzer2.Services.Shooting
                     if (_remainingHits == 0)
                     {
                         var sessionElapsed = Stopwatch.GetElapsedTime(sessionStart);
-                        EndSession(_sessionTimeLimit is { } limit && sessionElapsed > limit ? limit : sessionElapsed);
+                        EndSession(_sessionTimeLimit is { } limit && sessionElapsed > limit ? limit : sessionElapsed,
+                            SessionEndReason.HitLimit);
                     }
                 }
 

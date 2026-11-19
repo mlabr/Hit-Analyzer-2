@@ -31,8 +31,7 @@ namespace HitAnalyzer2.ViewModels
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            var bitmap = new WriteableBitmap(PixelFormat.Bgra8888, AlphaFormat.Opaque, pixels.Data,
-                new PixelSize(pixels.Width, pixels.Height), new Vector(96, 96), checked((int)pixels.Step()));
+            var bitmap = CreateBitmap(pixels);
 
             bool published = false;
             try
@@ -58,6 +57,10 @@ namespace HitAnalyzer2.ViewModels
                     bitmap.Dispose();
             }
         }
+
+        internal static Bitmap CreateBitmap(Mat pixels) =>
+            new WriteableBitmap(PixelFormat.Bgra8888, AlphaFormat.Opaque, pixels.Data,
+                new PixelSize(pixels.Width, pixels.Height), new Vector(96, 96), checked((int)pixels.Step()));
 
         internal void ClearPreview()
         {

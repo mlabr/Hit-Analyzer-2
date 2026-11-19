@@ -13,6 +13,7 @@ namespace HitAnalyzer2.ViewModels
         private readonly RecordingService _recording;
         private readonly Action _saveConfiguration;
         private readonly DispatcherTimer _sessionDisplayTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+        private readonly DispatcherTimer _sessionCompleteTimer = new() { Interval = TimeSpan.FromSeconds(1.5) };
         private decimal _realDistanceMeters;
         private decimal _simulatedDistanceMeters;
 
@@ -120,6 +121,15 @@ namespace HitAnalyzer2.ViewModels
         public int StartCountdown => _shootingSession.GetSessionStatus().StartCountdown;
         public bool IsStartCountdownVisible => StartCountdown > 0;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsSessionComplete))]
+        private string? sessionCompletionReason;
+
+        [ObservableProperty]
+        private bool isSessionCompleteOverlayVisible;
+
+        public bool IsSessionComplete => SessionCompletionReason is not null;
+
         public string SessionElapsedText
         {
             get
@@ -161,6 +171,11 @@ namespace HitAnalyzer2.ViewModels
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;
             _sessionDisplayTimer.Tick += (_, _) => OnPropertyChanged(nameof(SessionElapsedText));
+            _sessionCompleteTimer.Tick += (_, _) =>
+            {
+                _sessionCompleteTimer.Stop();
+                IsSessionCompleteOverlayVisible = false;
+            };
             shootingSession.SessionStatusChanged += () => Dispatcher.UIThread.Post(RefreshSessionStatus);
         }
 
@@ -195,10 +210,26 @@ namespace HitAnalyzer2.ViewModels
 
         private void RefreshSessionStatus()
         {
-            if (_shootingSession.GetSessionStatus().IsRunning)
+            var status = _shootingSession.GetSessionStatus();
+            if (status.IsRunning)
                 _sessionDisplayTimer.Start();
             else
                 _sessionDisplayTimer.Stop();
+
+            var reason = status.EndReason switch
+            {
+                ShootingSessionService.SessionEndReason.TimeLimit => "Time limit reached",
+                ShootingSessionService.SessionEndReason.HitLimit => "Hit limit reached",
+                _ => null
+            };
+            if (reason != SessionCompletionReason)
+            {
+                SessionCompletionReason = reason;
+                _sessionCompleteTimer.Stop();
+                IsSessionCompleteOverlayVisible = reason is not null;
+                if (IsSessionCompleteOverlayVisible)
+                    _sessionCompleteTimer.Start();
+            }
 
             StartSessionCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(SessionElapsedText));
