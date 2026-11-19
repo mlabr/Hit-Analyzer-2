@@ -35,4 +35,9 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <Folder Include="Services\Statistics\" />
+  </ItemGroup>
+
+
 </Project>

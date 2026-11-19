@@ -2,11 +2,11 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Models;
-using HitAnalyzer2.Models.Shooting;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Rendering;
 using HitAnalyzer2.Services.Shooting;
+using HitAnalyzer2.Services.Statistics;
 using HitAnalyzer2.Services.Target;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
@@ -29,11 +29,11 @@ namespace HitAnalyzer2.ViewModels
         private readonly RecordingService _recording;
         private readonly DetectionSettings _detectionSettings;
         private SessionResult? _sessionResult;
-        private HitGroupCircle? _smallestHitGroup;
+        private GroupStatistic? _smallestHitGroup;
         private CancellationTokenSource? _hitGroupCalculation;
 
         private sealed record SessionResult(TargetModel Target, double CaliberMm, int PreviewSide,
-            IReadOnlyList<HitRecord> Hits, Position[] Points, HitGroupCircle? Cep50, HitGroupCircle? Cep80);
+            IReadOnlyList<HitRecord> Hits, SessionStatistics Statistics);
         internal volatile bool IsTargetPreviewActive = true;
         internal volatile bool IsWeaponPreviewActive;
         internal volatile bool IsDarkTheme;
@@ -115,50 +115,41 @@ namespace HitAnalyzer2.ViewModels
                 var previewSize = CameraPreview.WebcamImage?.PixelSize;
                 int side = previewSize is { } size ? Math.Min(size.Width, size.Height) : 480;
                 var hits = _recording.GetNormalizedHitRecordList();
-                var points = hits.Select(hit => (Position)hit.HitPosition).ToArray();
-                (HitGroupCircle? Cep50, HitGroupCircle? Cep80) circles =
-                    points.Length > 0 ? HitGroup.AroundMean(points) : (null, null);
                 var target = CameraSettings.Calibration.Settings;
-                _sessionResult = new(target, status.LastHitCaliberMm, side,
-                    hits, points, circles.Cep50, circles.Cep80);
-                ScoreHistogram = BuildScoreHistogram(hits, target);
+                var statistics = StatisticService.Calculate(hits, target);
+                _sessionResult = new(target, status.LastHitCaliberMm, side, hits, statistics);
+                ScoreHistogram = CreateScoreHistogramBars(statistics.ScoreHistogram);
             }
 
             if (!ShowEnhancedR80)
                 StopHitGroupCalculation();
-            else if (_smallestHitGroup is null && _hitGroupCalculation is null && _sessionResult.Cep80 is { } mean)
+            else if (_smallestHitGroup is null && _hitGroupCalculation is null &&
+                _sessionResult.Statistics.Cep80 is { } cep80)
             {
                 _hitGroupCalculation = new CancellationTokenSource();
-                _ = CalculateSmallestHitGroupAsync(_sessionResult, mean, _hitGroupCalculation);
+                _ = CalculateSmallestHitGroupAsync(_sessionResult, cep80, _hitGroupCalculation);
             }
             RenderSessionResults(_sessionResult);
         }
 
-        private static IReadOnlyList<ScoreHistogramBin> BuildScoreHistogram(IReadOnlyList<HitRecord> hits, TargetModel target)
+        private static IReadOnlyList<ScoreHistogramBin> CreateScoreHistogramBars(IReadOnlyList<ScoreHistogram> histogram)
         {
-            var counts = hits.GroupBy(hit => hit.HitPosition.Score)
-                .ToDictionary(group => group.Key, group => group.Count());
-            counts.TryAdd(0, 0);
-            foreach (var ring in target.Rings)
-                counts.TryAdd(ring.PointValue, 0);
-
-            int maxCount = counts.Values.Max();
+            int maxCount = histogram.Max(bin => bin.Count);
             const double maxBarHeight = 44;
-            return counts.OrderBy(bin => bin.Key)
-                .Select(bin => new ScoreHistogramBin(bin.Key, bin.Value,
-                    bin.Value == 0 ? 0 : Math.Max(1, maxBarHeight * bin.Value / maxCount)))
+            return histogram.Select(bin => new ScoreHistogramBin(bin.Score, bin.Count,
+                    bin.Count == 0 ? 0 : Math.Max(1, maxBarHeight * bin.Count / maxCount)))
                 .ToArray();
         }
 
         private bool ShowEnhancedR80 => ShootingSettings.IsEnhancedR80Available && ShootingSettings.ShowSmallestHitGroup;
 
-        private async Task CalculateSmallestHitGroupAsync(SessionResult result, HitGroupCircle mean,
+        private async Task CalculateSmallestHitGroupAsync(SessionResult result, GroupStatistic cep80,
             CancellationTokenSource calculation)
         {
             try
             {
-                var circle = await Task.Run(() => HitGroup.SmallestCircle(result.Points, mean, calculation.Token),
-                    calculation.Token);
+                var circle = await StatisticService.CalculateEnhancedR80Async(result.Hits, result.Target,
+                    cep80, calculation.Token);
                 if (ReferenceEquals(_hitGroupCalculation, calculation))
                 {
                     _hitGroupCalculation = null;
@@ -184,35 +175,34 @@ namespace HitAnalyzer2.ViewModels
         private void RenderSessionResults(SessionResult result)
         {
             var smallest = ShowEnhancedR80 ? _smallestHitGroup : null;
+            var statistics = result.Statistics;
             using var image = new Mat(result.PreviewSide, result.PreviewSide, MatType.CV_8UC4);
             TargetRenderer.DrawTargetPreview(image, null, result.Target, result.CaliberMm, result.Hits, IsDarkTheme,
-                cep50: result.Cep50, cep80: result.Cep80, smallestCircle: smallest);
+                cep50: statistics.Cep50?.Circle, cep80: statistics.Cep80?.Circle, smallestCircle: smallest?.Circle);
             SetSessionResultsImage(CameraPreviewViewModel.CreateBitmap(image));
-            Cep50Text = FormatGroup("CEP50 (R50)", result.Cep50);
-            MeanHitGroupText = FormatGroup("CEP80 (R80)", result.Cep80);
+            Cep50Text = FormatGroup("CEP50 (R50)", statistics.Cep50);
+            MeanHitGroupText = FormatGroup("CEP80 (R80)", statistics.Cep80);
             SmallestHitGroupText = _hitGroupCalculation is not null
                 ? "Enhanced R80: calculating…"
                 : FormatGroup("Enhanced R80", smallest);
-            MeanPointOfImpactText = null;
-            if (result.Cep80 is { } group &&
-                result.Target.MaxDiameterMm is > 0 and < double.PositiveInfinity and var targetDiameterMm &&
-                result.Target.GetDistanceFromCenterMm(group.Center) is { } deviationMm && double.IsFinite(deviationMm))
+            if (statistics.MeanPointOfImpact is { } mpi)
             {
-                // Match the offset controls: positive X is right and positive Y is up.
-                double xMm = Math.Round((group.Center.X - TargetModel.Center.X) * targetDiameterMm, 1);
-                double yMm = Math.Round((TargetModel.Center.Y - group.Center.Y) * targetDiameterMm, 1);
+                double xMm = Math.Round(mpi.XMm, 1);
+                double yMm = Math.Round(mpi.YMm, 1);
                 MeanPointOfImpactText =
-                    $"MPI: {deviationMm:0.0} mm (X {xMm:+0.0;-0.0;0.0} mm, Y {yMm:+0.0;-0.0;0.0} mm)";
+                    $"MPI: {mpi.DistanceMm:0.0} mm (X {xMm:+0.0;-0.0;0.0} mm, Y {yMm:+0.0;-0.0;0.0} mm)";
             }
+            else
+                MeanPointOfImpactText = null;
 
-            string? FormatGroup(string label, HitGroupCircle? circle)
+            string? FormatGroup(string label, GroupStatistic? group)
             {
-                if (circle is null)
+                if (group is null)
                     return null;
 
-                string coverage = $"{circle.CoveredHits}/{result.Points.Length} hits";
-                return result.Target.MaxDiameterMm is > 0 and < double.PositiveInfinity and var diameterMm
-                    ? $"{label} · Ø {2 * circle.Radius * diameterMm:0.0} mm · {coverage}"
+                string coverage = $"{group.Circle.CoveredHits}/{result.Hits.Count} hits";
+                return group.DiameterMm is { } diameterMm
+                    ? $"{label} · Ø {diameterMm:0.0} mm · {coverage}"
                     : $"{label} · {coverage}";
             }
         }
