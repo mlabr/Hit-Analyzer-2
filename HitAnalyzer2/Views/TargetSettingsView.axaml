@@ -4,8 +4,8 @@
              xmlns:views="using:HitAnalyzer2.Views"
              x:Class="HitAnalyzer2.Views.TargetSettingsView"
              x:DataType="vm:TargetSettingsViewModel">
-    <StackPanel Spacing="8">
-        <TextBlock Text="Target" />
+    <StackPanel Spacing="8" Grid.IsSharedSizeScope="True">
+        <TextBlock Text="Select target" FontWeight="SemiBold" />
         <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Target"
                   PlaceholderText="Select a target" ItemsSource="{Binding Targets}"
                   SelectedItem="{Binding SelectedTarget, Mode=TwoWay}">
@@ -17,28 +17,40 @@
         </ComboBox>
         <TextBlock Text="{Binding LoadMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding LoadMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        <TextBlock Text="{Binding CalibratedScaleText}" />
-        <CheckBox Content="Adjust scale for distance"
-                  IsChecked="{Binding AdjustScaleForDistance, Mode=TwoWay}" />
-        <TextBlock Text="Calibration zoom" FontWeight="SemiBold" />
-        <ComboBox x:Name="ZoomSelector" SelectedIndex="{Binding CalibrationZoomIndex, Mode=TwoWay}" HorizontalAlignment="Stretch"
-                  AutomationProperties.Name="Calibration zoom">
-            <ComboBoxItem Content="2×" />
-            <ComboBoxItem Content="4×" />
-            <ComboBoxItem Content="8×" />
-        </ComboBox>
-        <views:CalibrationZoomView x:Name="ZoomPreview" Height="180" IsHitTestVisible="False" />
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-            <TextBlock Text="Real distance (m)" VerticalAlignment="Center" />
-            <NumericUpDown Grid.Column="1" Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShootingSettings.RealDistanceMeters, Mode=TwoWay}" Minimum="0.01"
+        <Grid RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="TargetSettingLabel" />
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Physical distance" VerticalAlignment="Center" />
+            <NumericUpDown Grid.Column="1" MinWidth="0"
+                           Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShootingSettings.RealDistanceMeters, Mode=TwoWay}" Minimum="0.01"
                            Increment="1" ClipValueToMinMax="True" ShowButtonSpinner="False"
-                           AutomationProperties.Name="Real distance in meters" />
-            <TextBlock Grid.Row="1" Text="Simulated distance (m)" VerticalAlignment="Center" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1"
+                           AutomationProperties.Name="Physical distance in meters" />
+            <TextBlock Grid.Column="2" Text="(m)" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="1" Text="Simulated distance" VerticalAlignment="Center" />
+            <NumericUpDown Grid.Row="1" Grid.Column="1" MinWidth="0"
                            Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShootingSettings.SimulatedDistanceMeters, Mode=TwoWay}" Minimum="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShootingSettings.RealDistanceMeters}"
                            Increment="1" ClipValueToMinMax="True" ShowButtonSpinner="False"
                            AutomationProperties.Name="Simulated distance in meters" />
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="(m)" VerticalAlignment="Center" />
         </Grid>
+        <TextBlock Text="{Binding SimulatedScaleText}" />
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="TargetSettingLabel" />
+                <ColumnDefinition Width="64" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Calibration zoom" VerticalAlignment="Center" />
+            <ComboBox x:Name="ZoomSelector" Grid.Column="1" SelectedIndex="{Binding CalibrationZoomIndex, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch" MinWidth="0" AutomationProperties.Name="Calibration zoom">
+                <ComboBoxItem Content="2×" />
+                <ComboBoxItem Content="4×" />
+                <ComboBoxItem Content="8×" />
+            </ComboBox>
+        </Grid>
+        <views:CalibrationZoomView x:Name="ZoomPreview" Height="180" IsHitTestVisible="False" />
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <Button Content="Save" HorizontalAlignment="Left"
                     Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />

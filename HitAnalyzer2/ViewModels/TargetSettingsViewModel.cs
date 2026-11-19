@@ -29,11 +29,6 @@ namespace HitAnalyzer2.ViewModels
         private int _calibrationZoomIndex;
         private ShootingSettingsViewModel? _shootingSettings;
 
-        [ObservableProperty]
-        private bool adjustScaleForDistance;
-
-        partial void OnAdjustScaleForDistanceChanged(bool value) => RefreshScale();
-
         internal void SetShootingSettings(ShootingSettingsViewModel shootingSettings)
         {
             _shootingSettings = shootingSettings;
@@ -56,7 +51,6 @@ namespace HitAnalyzer2.ViewModels
         {
             SelectedTargetFileName = SelectedTarget?.FileName,
             CalibrationZoom = 2 << CalibrationZoomIndex,
-            AdjustScaleForDistance = AdjustScaleForDistance,
             RealDistanceMeters = _shootingSettings!.RealDistanceMeters,
             SimulatedDistanceMeters = _shootingSettings.SimulatedDistanceMeters,
             Calibration = _calibration.Settings
@@ -64,14 +58,14 @@ namespace HitAnalyzer2.ViewModels
 
         public IReadOnlyList<TargetOption> Targets { get; }
         public string? LoadMessage { get; }
-        public string CalibratedScaleText
+        public string SimulatedScaleText
         {
             get
             {
-                double factor = AdjustScaleForDistance && _shootingSettings is { } shooting
-                    ? (double)(shooting.RealDistanceMeters / shooting.SimulatedDistanceMeters)
-                    : 1;
-                return $"Average camera scale: {FormatScale(_calibration.Settings.MmToPixel * factor)}";
+                double? scale = _shootingSettings is { } shooting
+                    ? _calibration.Settings.MmToPixel * ((double)shooting.SimulatedDistanceMeters / (double)shooting.RealDistanceMeters)
+                    : null;
+                return $"Scale at simulated distance: {FormatScale(scale)}";
             }
         }
 
@@ -82,7 +76,6 @@ namespace HitAnalyzer2.ViewModels
             string? selectedFileName, TargetSettings settings)
         {
             _calibration = calibration;
-            adjustScaleForDistance = settings.AdjustScaleForDistance;
             _calibrationZoomIndex = settings.CalibrationZoom switch { 4 => 1, 8 => 2, _ => 0 };
             Targets = repository.LoadTargets(out var loadError)
                 .Select(item => new TargetOption(item.FileName, item.Target)).ToList().AsReadOnly();
@@ -96,7 +89,7 @@ namespace HitAnalyzer2.ViewModels
         private void RefreshScale()
         {
             if (Dispatcher.UIThread.CheckAccess())
-                OnPropertyChanged(nameof(CalibratedScaleText));
+                OnPropertyChanged(nameof(SimulatedScaleText));
             else
                 Dispatcher.UIThread.Post(RefreshScale);
         }
