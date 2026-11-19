@@ -73,6 +73,9 @@
                                 <TextBlock Text="{Binding SmallestHitGroupText}" Foreground="{DynamicResource SmallestHitGroupBrush}"
                                            TextWrapping="Wrap"
                                            IsVisible="{Binding SmallestHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                <TextBlock Text="{Binding MeanPointOfImpactText}" Foreground="{DynamicResource MeanHitGroupBrush}"
+                                           TextWrapping="Wrap"
+                                           IsVisible="{Binding MeanPointOfImpactText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                             </StackPanel>
                         </Border>
                         <Border x:Name="ResultScoreHistogram" HorizontalAlignment="Right" VerticalAlignment="Bottom"

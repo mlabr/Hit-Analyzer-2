@@ -1,5 +1,5 @@
 {
-  "Theme": "Light",
+  "Theme": "System",
   "Shooting": {
     "IsHitLimitEnable": true,
     "HitLimit": 20,
@@ -32,20 +32,20 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2180,
-          "Y": 0.2736
+          "X": 0.2969,
+          "Y": 0.2764
         },
         "TopRight": {
-          "X": 0.5164,
-          "Y": 0.2375
+          "X": 0.5953,
+          "Y": 0.2403
         },
         "BottomRight": {
-          "X": 0.5172,
-          "Y": 0.8528
+          "X": 0.5961,
+          "Y": 0.8556
         },
         "BottomLeft": {
-          "X": 0.2133,
-          "Y": 0.8278
+          "X": 0.2922,
+          "Y": 0.8306
         }
       }
     }
@@ -69,9 +69,9 @@
       "Type": "ha_weapon",
       "Name": "weapon1",
       "Caliber": 4.50,
-      "OffsetX": 0,
-      "OffsetY": 0,
-      "Trigger": "FirstSpot",
+      "OffsetX": -5,
+      "OffsetY": -99,
+      "Trigger": "NewSpot",
       "NexDetectionInterval": 500
     }
   }
