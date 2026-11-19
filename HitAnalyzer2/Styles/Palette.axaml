@@ -20,6 +20,14 @@
                     <SolidColorBrush x:Key="AccentSurfaceBrush">#29474C</SolidColorBrush>
                     <SolidColorBrush x:Key="AccentTextBrush">#A9D5D1</SolidColorBrush>
                     <SolidColorBrush x:Key="HitTextBrush">#E6B2BB</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked">#3E6266</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver">#4B7175</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver">#4B7175</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed">#35565A</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed">#35565A</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked">#E3ECEB</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver">#E3ECEB</SolidColorBrush>
+                    <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed">#E3ECEB</SolidColorBrush>
                     <SolidColorBrush x:Key="SuccessSurfaceBrush">#2C4137</SolidColorBrush>
                     <SolidColorBrush x:Key="SuccessTextBrush">#B5D8BE</SolidColorBrush>
                 </ResourceDictionary>

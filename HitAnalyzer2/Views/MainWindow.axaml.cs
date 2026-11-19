@@ -124,6 +124,7 @@ namespace HitAnalyzer2.Views
 			ShootingSettings.IsVisible = view == ShootingSettings;
             bool showTargetPreview = view == ShootingSettings || view == WeaponSettings;
             SessionElapsed.IsVisible = showTargetPreview;
+            HitCounter.IsVisible = showTargetPreview;
             if (DataContext is MainWindowViewModel viewModel)
                 viewModel.IsTargetPreviewActive = showTargetPreview;
 			CameraSettings.IsVisible = view == CameraSettings;
@@ -134,7 +135,6 @@ namespace HitAnalyzer2.Views
             About.IsVisible = view == About;
             InformationPanel.IsVisible = About.IsVisible;
             CameraPreview.IsVisible = !About.IsVisible;
-            HitCounter.IsVisible = !About.IsVisible;
             if (About.IsVisible)
                 MinWidth = 450;
             _zoomPointer = null;
