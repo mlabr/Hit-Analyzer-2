@@ -1,10 +1,10 @@
 {
-  "Theme": "System",
+  "Theme": "Light",
   "Shooting": {
-    "IsTimeLimitEnable": false,
-    "TimeLimitSeconds": 900,
     "IsHitLimitEnable": false,
-    "HitLimit": 50,
+    "HitLimit": 5,
+    "IsTimeLimitEnable": true,
+    "TimeLimitSeconds": 10,
     "AimPathTimeLimit": 15,
     "AimPathTimeoutMs": 400,
     "AimPathTimeoutMinimumDuration": 1.5,
@@ -53,7 +53,7 @@
     "DetectionSensitivity": 1,
     "BrightnessPercent": 50,
     "ContrastPercent": 50,
-    "SaturationPercent": 0,
+    "SaturationPercent": 50,
     "MinimumHitAreaPixels": null,
     "ShowFlares": true,
     "ShowAllowedArea": false,

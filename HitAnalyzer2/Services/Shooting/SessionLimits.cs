@@ -10,7 +10,7 @@ namespace HitAnalyzer2.Services.Shooting
 
 		public bool IsHitLimitEnabled = false;
 
-		public int TimeLimitSeconds = 60;
+		public int TimeLimitSecondsInitial = 60;
 
 		public bool IsTimeLimitEnabled = false;
 

@@ -65,18 +65,19 @@ namespace HitAnalyzer2.Services.Recording
 				return hitRecordNormalizedList.Sum(record => record.HitPosition.Score);
 		}
 
-		internal void AddNormalizedHitRecord(HitRecord hitRecord, TargetPreviewModel calibrationAtHit)
+		internal bool TryAddNormalizedHitRecord(HitRecord hitRecord, TargetPreviewModel calibrationAtHit)
 		{
 			lock (_recordsGate)
 			{
 				if (!ReferenceEquals(calibrationAtHit, _target) ||
 					!ReferenceEquals(calibrationAtHit, _calibration.Settings))
-					return;
+					return false;
 
 				hitRecordNormalizedList.Add(hitRecord);
 			}
 
 			HitCountChanged?.Invoke();
+			return true;
 		}
 
 		public void ClearNormalizedHitRecordList()

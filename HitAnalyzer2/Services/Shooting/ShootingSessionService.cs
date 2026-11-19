@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 using HitAnalyzer2.Models;
 using HitAnalyzer2.Models.Shooting;
@@ -23,7 +24,7 @@ namespace HitAnalyzer2.Services.Shooting
             IsHitLimitEnabled = shootingSettings.IsHitLimitEnable,
             HitCountInitial = Math.Max(0, shootingSettings.HitLimit),
             IsTimeLimitEnabled = shootingSettings.IsTimeLimitEnable,
-            TimeLimitSeconds = Math.Max(1, shootingSettings.TimeLimitSeconds)
+            TimeLimitSecondsInitial = Math.Max(1, shootingSettings.TimeLimitSeconds)
         };
 
         private readonly TimeSpan _aimPathTimeoutMinimumDuration =
@@ -44,8 +45,104 @@ namespace HitAnalyzer2.Services.Shooting
         private long? _lastAcceptedExternalTriggerEventTimestamp;
         private long? _externalPressedAt;
         private long _externalReleasedAt;
+        private long? _sessionStartedAt;
+        private TimeSpan? _sessionEndedAt;
+        private TimeSpan? _sessionTimeLimit;
+        private int? _remainingHits;
+        private CancellationTokenSource? _sessionTimeout;
 
         private TimeSpan NextDetectionTimestamp { get; set; }
+
+        internal event Action? SessionEnded;
+
+        internal (bool CanStart, bool IsRunning, TimeSpan Elapsed) GetSessionStatus()
+        {
+            lock (_hitGate)
+            {
+                var elapsed = _sessionEndedAt ?? (_sessionStartedAt is { } startedAt
+                    ? Stopwatch.GetElapsedTime(startedAt)
+                    : TimeSpan.Zero);
+                if (_sessionTimeLimit is { } limit && elapsed > limit)
+                    elapsed = limit;
+                return (_sessionStartedAt is null, _sessionStartedAt.HasValue && !_sessionEndedAt.HasValue, elapsed);
+            }
+        }
+
+        internal void StartSession()
+        {
+            lock (_hitGate)
+            {
+                if (_sessionStartedAt.HasValue)
+                    return;
+
+                Reset();
+                long startedAt = Stopwatch.GetTimestamp();
+                _sessionStartedAt = startedAt;
+                _remainingHits = SessionLimits.IsHitLimitEnabled ? SessionLimits.HitCountInitial : null;
+                _sessionTimeLimit = SessionLimits.IsTimeLimitEnabled
+                    ? TimeSpan.FromSeconds(SessionLimits.TimeLimitSecondsInitial)
+                    : null;
+
+                if (_remainingHits == 0)
+                    EndSession(TimeSpan.Zero);
+                else if (_sessionTimeLimit is { } limit)
+                {
+                    _sessionTimeout = new CancellationTokenSource();
+                    _ = WaitForSessionLimitAsync(startedAt, limit, _sessionTimeout.Token);
+                }
+            }
+        }
+
+        private async Task WaitForSessionLimitAsync(long startedAt, TimeSpan limit, CancellationToken cancellationToken)
+        {
+            try
+            {
+                TimeSpan remaining;
+                while ((remaining = limit - Stopwatch.GetElapsedTime(startedAt)) > TimeSpan.Zero)
+                {
+                    // Bound the delay for limits longer than the timer API supports.
+                    var delay = TimeSpan.FromMilliseconds(Math.Clamp(remaining.TotalMilliseconds, 1, 86_400_000));
+                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                }
+
+                lock (_hitGate)
+                {
+                    if (!cancellationToken.IsCancellationRequested && _sessionStartedAt == startedAt)
+                        EndSession(limit);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+            }
+        }
+
+        private bool CanDetectHits()
+        {
+            if (_sessionEndedAt.HasValue)
+                return false;
+            if (_sessionTimeLimit is { } limit && _sessionStartedAt is { } startedAt &&
+                Stopwatch.GetElapsedTime(startedAt) >= limit)
+            {
+                EndSession(limit);
+                return false;
+            }
+            return true;
+        }
+
+        private void EndSession(TimeSpan elapsed)
+        {
+            _sessionEndedAt = elapsed;
+            StopSessionTimeout();
+            CompleteRecordingFollowPath();
+            SessionEnded?.Invoke();
+        }
+
+        private void StopSessionTimeout()
+        {
+            _sessionTimeout?.Cancel();
+            _sessionTimeout?.Dispose();
+            _sessionTimeout = null;
+        }
 
         // Raised on the capture thread. The target point is present only with a valid calibration.
         internal event Action<LaserPosition?, Position?, TimeSpan>? LaserPositionEvaluated;
@@ -112,6 +209,15 @@ namespace HitAnalyzer2.Services.Shooting
         {
             lock (_hitGate)
             {
+                StopSessionTimeout();
+                _sessionStartedAt = null;
+                _sessionEndedAt = null;
+                _sessionTimeLimit = null;
+                _remainingHits = null;
+                _spotWasVisible = false;
+                _externalPressedAt = null;
+                _lastAcceptedExternalTriggerEventTimestamp = null;
+                NextDetectionTimestamp = TimeSpan.Zero;
                 ClearShotState();
                 recording.ClearNormalizedHitRecordList();
             }
@@ -149,6 +255,9 @@ namespace HitAnalyzer2.Services.Shooting
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                if (!CanDetectHits() || (_sessionStartedAt is { } startedAt && frameCapturedTimestampMs < startedAt))
+                    return GetLastHitSnapshot();
+
                 position = _laserDetector.GetLaserPosition(frame, elapsed);
                 bool startFollowPath = false;
                 HitRecord? hitRecord = null;
@@ -184,6 +293,9 @@ namespace HitAnalyzer2.Services.Shooting
                         }
                     }
                 }
+
+                if (registeredHit is not null && !CanDetectHits())
+                    return GetLastHitSnapshot();
 
                 if (registeredHit is { } registered)
                 {
@@ -235,8 +347,17 @@ namespace HitAnalyzer2.Services.Shooting
                 if (!isCollecting)
                     CompleteRecordingFollowPath();
 
-                if (hitRecord is not null && calibrationAtHit is not null)
-                    recording.AddNormalizedHitRecord(hitRecord, calibrationAtHit);
+                if (hitRecord is not null && calibrationAtHit is not null &&
+                    recording.TryAddNormalizedHitRecord(hitRecord, calibrationAtHit) &&
+                    _remainingHits is { } remainingHits && _sessionStartedAt is { } sessionStart)
+                {
+                    _remainingHits = remainingHits - 1;
+                    if (_remainingHits == 0)
+                    {
+                        var sessionElapsed = Stopwatch.GetElapsedTime(sessionStart);
+                        EndSession(_sessionTimeLimit is { } limit && sessionElapsed > limit ? limit : sessionElapsed);
+                    }
+                }
 
                 followPath = _lastHitFollowPath;
                 lastTargetHit = _lastTargetHit;
@@ -251,6 +372,11 @@ namespace HitAnalyzer2.Services.Shooting
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
                 aimPath, followPath, lastTargetHit, caliberDiameterMm);
         }
+
+        private (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
+            Position? LastTargetHit, double CaliberDiameterMm) GetLastHitSnapshot() =>
+            (_lastHit is { } hit ? aimPositionHandler.GetAimPosition(hit) : null,
+                _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm);
 
         private IReadOnlyList<LaserPosition> MapAimPath(LaserPosition[] path, double offsetX, double offsetY,
             int frameWidth, int frameHeight)

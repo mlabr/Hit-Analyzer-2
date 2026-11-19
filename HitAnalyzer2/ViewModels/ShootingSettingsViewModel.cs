@@ -12,6 +12,7 @@ namespace HitAnalyzer2.ViewModels
         private readonly ShootingSessionService _shootingSession;
         private readonly RecordingService _recording;
         private readonly Action _saveConfiguration;
+        private readonly DispatcherTimer _sessionDisplayTimer = new() { Interval = TimeSpan.FromSeconds(1) };
         private decimal _realDistanceMeters;
         private decimal _simulatedDistanceMeters;
 
@@ -72,19 +73,19 @@ namespace HitAnalyzer2.ViewModels
 
         public int TimeLimitMinutes
         {
-            get => _shootingSession.SessionLimits.TimeLimitSeconds / 60;
+            get => _shootingSession.SessionLimits.TimeLimitSecondsInitial / 60;
             set => SetTimeLimit(Math.Max(0, value) * 60L + TimeLimitSecondsPart);
         }
 
         public int TimeLimitSecondsPart
         {
-            get => _shootingSession.SessionLimits.TimeLimitSeconds % 60;
+            get => _shootingSession.SessionLimits.TimeLimitSecondsInitial % 60;
             set => SetTimeLimit(TimeLimitMinutes * 60L + Math.Clamp(value, 0, 59));
         }
 
         private void SetTimeLimit(long seconds)
         {
-            _shootingSession.SessionLimits.TimeLimitSeconds = (int)Math.Clamp(seconds, 1, int.MaxValue);
+            _shootingSession.SessionLimits.TimeLimitSecondsInitial = (int)Math.Clamp(seconds, 1, int.MaxValue);
             OnPropertyChanged(nameof(TimeLimitMinutes));
             OnPropertyChanged(nameof(TimeLimitSecondsPart));
         }
@@ -94,10 +95,19 @@ namespace HitAnalyzer2.ViewModels
             IsHitLimitEnable = IsHitLimitEnabled,
             HitLimit = HitCountInitial,
             IsTimeLimitEnable = IsTimeLimitEnabled,
-            TimeLimitSeconds = _shootingSession.SessionLimits.TimeLimitSeconds
+            TimeLimitSeconds = _shootingSession.SessionLimits.TimeLimitSecondsInitial
         };
 
         public int HitCount => _recording.GetHitRecordCount();
+        public string SessionElapsedText
+        {
+            get
+            {
+                var elapsed = _shootingSession.GetSessionStatus().Elapsed;
+                return $"Elapsed {(long)elapsed.TotalMinutes:00}:{elapsed.Seconds:00}";
+            }
+        }
+
         public double LastHitScore => _recording.GetLastHitScore();
         public double TotalScore => _recording.GetTotalScore();
         public string LastHitDistanceText => _recording.GetLastHitDistanceFromCenterMm() is { } distance
@@ -114,6 +124,8 @@ namespace HitAnalyzer2.ViewModels
             _realDistanceMeters = settings.Current.Target.RealDistanceMeters;
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;
+            _sessionDisplayTimer.Tick += (_, _) => OnPropertyChanged(nameof(SessionElapsedText));
+            shootingSession.SessionEnded += () => Dispatcher.UIThread.Post(RefreshSessionStatus);
         }
 
         private void RefreshHitStatistics()
@@ -129,7 +141,31 @@ namespace HitAnalyzer2.ViewModels
                 Dispatcher.UIThread.Post(RefreshHitStatistics);
         }
 
+        private bool CanStartSession() => _shootingSession.GetSessionStatus().CanStart;
+
+        [RelayCommand(CanExecute = nameof(CanStartSession))]
+        private void StartSession()
+        {
+            _shootingSession.StartSession();
+            RefreshSessionStatus();
+        }
+
         [RelayCommand]
-        private void Reset() => _shootingSession.Reset();
+        private void Reset()
+        {
+            _shootingSession.Reset();
+            RefreshSessionStatus();
+        }
+
+        private void RefreshSessionStatus()
+        {
+            if (_shootingSession.GetSessionStatus().IsRunning)
+                _sessionDisplayTimer.Start();
+            else
+                _sessionDisplayTimer.Stop();
+
+            StartSessionCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(SessionElapsedText));
+        }
     }
 }

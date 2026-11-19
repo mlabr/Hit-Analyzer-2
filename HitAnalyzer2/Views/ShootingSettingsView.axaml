@@ -30,6 +30,7 @@
                            AutomationProperties.Name="Time limit seconds" />
             <TextBlock Text="s" VerticalAlignment="Center" />
         </StackPanel>
+        <Button Content="Start Session" Command="{Binding StartSessionCommand}" />
         <Button Content="Reset shooting" Command="{Binding ResetCommand}" />
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>

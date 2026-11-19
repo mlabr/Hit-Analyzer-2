@@ -38,6 +38,10 @@
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
+                <TextBlock x:Name="SessionElapsed" Text="{Binding ShootingSettings.SessionElapsedText}"
+                           FontSize="32" FontWeight="SemiBold" Background="{DynamicResource PanelBrush}"
+                           Margin="10" Padding="6,2" HorizontalAlignment="Right" VerticalAlignment="Top"
+                           IsHitTestVisible="False" />
             </Grid>
             <Grid x:Name="InformationPanel" Grid.Column="1" Grid.RowSpan="2" IsVisible="False">
                 <views:AboutView x:Name="AboutContent" />
