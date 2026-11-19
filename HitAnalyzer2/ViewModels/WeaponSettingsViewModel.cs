@@ -39,11 +39,7 @@ namespace HitAnalyzer2.ViewModels
         [NotifyPropertyChangedFor(nameof(DisplayOffsetY))]
         private int offsetY;
 
-        public int DisplayOffsetY
-        {
-            get => -OffsetY;
-            set => OffsetY = -value;
-        }
+        public int DisplayOffsetY => -OffsetY;
 
         internal WeaponSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
             WeaponHandler weaponHandler, WeaponFileRepository weaponProfiles)
@@ -155,6 +151,26 @@ namespace HitAnalyzer2.ViewModels
         private void ApplyOffset()
         {
             _weaponHandler.SetOffset(OffsetX, OffsetY);
+        }
+
+        [RelayCommand]
+        private void NudgeOffset(string direction)
+        {
+            switch (direction)
+            {
+                case "Left":
+                    OffsetX = Math.Max(OffsetX - 1, MinimumOffset);
+                    break;
+                case "Right":
+                    OffsetX = Math.Min(OffsetX + 1, MaximumOffset);
+                    break;
+                case "Up":
+                    OffsetY = Math.Max(OffsetY - 1, MinimumOffset);
+                    break;
+                case "Down":
+                    OffsetY = Math.Min(OffsetY + 1, MaximumOffset);
+                    break;
+            }
         }
 
         [RelayCommand]

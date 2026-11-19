@@ -67,7 +67,7 @@
     "Profile": {
       "Type": "ha_weapon",
       "Name": "weapon1",
-      "Caliber": 4.5,
+      "Caliber": 4.50,
       "OffsetX": 0,
       "OffsetY": 0,
       "Trigger": "FirstSpot",

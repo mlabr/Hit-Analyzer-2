@@ -49,6 +49,7 @@ namespace HitAnalyzer2.Views
                 UpdateCalibrationZoom();
             };
             TargetSettings.ZoomSelector.SelectionChanged += (_, _) => UpdateCalibrationZoom();
+            WeaponSettings.OffsetZoomSelector.SelectionChanged += (_, _) => UpdateWeaponOffsetZoom();
             TargetSettings.ResetCalibrationButton.Click += (_, _) => CalibrationOverlay.ResetToSquare();
             DataContextChanged += (_, _) =>
             {
@@ -162,6 +163,7 @@ namespace HitAnalyzer2.Views
                 MinWidth = 450;
             _zoomPointer = null;
             UpdateCalibrationZoom();
+            UpdateWeaponOffsetZoom();
             UpdateCalibrationOverlay();
             FitWindowToPreview();
         }
@@ -285,6 +287,23 @@ namespace HitAnalyzer2.Views
             TargetSettings.ResetCalibrationButton.IsEnabled = CalibrationOverlay.IsVisible;
         }
 
+        private void UpdateWeaponOffsetZoom()
+        {
+            Bitmap? source = null;
+            Point center = default;
+            if (WeaponSettings.IsVisible && PreviewImage.Source is Bitmap bitmap &&
+                DataContext is MainWindowViewModel vm && vm.CameraPreview.WeaponPreviewHit is { } hit)
+            {
+                source = bitmap;
+                int side = Math.Min(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+                double diameter = TargetPreviewModel.GetPreviewDiameterPixels(side);
+                center = new Point((hit.X + TargetPreviewModel.PreviewMargin) * diameter * bitmap.Size.Width / bitmap.PixelSize.Width,
+                    (hit.Y + TargetPreviewModel.PreviewMargin) * diameter * bitmap.Size.Height / bitmap.PixelSize.Height);
+            }
+            WeaponSettings.OffsetZoomPreview.Update(source, center,
+                2 << Math.Clamp(WeaponSettings.OffsetZoomSelector.SelectedIndex, 0, 2), null);
+        }
+
         private void OnPreviewImageChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
         {
             if (e.Property == BoundsProperty)
@@ -299,6 +318,7 @@ namespace HitAnalyzer2.Views
                 return;
 
             UpdateCalibrationZoom();
+            UpdateWeaponOffsetZoom();
             var pixelSize = (PreviewImage.Source as Bitmap)?.PixelSize;
             if (pixelSize == _previewPixelSize)
                 return;
