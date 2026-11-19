@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 
 namespace HitAnalyzer2.ViewModels
 {
+    public sealed record ScoreHistogramBin(double Score, int Count, double BarHeight);
+
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly SettingsService _settings;
@@ -53,6 +55,8 @@ namespace HitAnalyzer2.ViewModels
         private string? cep50Text;
         [ObservableProperty]
         private string? smallestHitGroupText;
+        [ObservableProperty]
+        private IReadOnlyList<ScoreHistogramBin> scoreHistogram = [];
 
         internal MainWindowViewModel(SettingsService settings, DetectionSettingsViewModel detectionSettings,
             WeaponSettingsViewModel weaponSettings, TargetSettingsViewModel targetSettings, ShootingSessionService shootingSession,
@@ -99,6 +103,7 @@ namespace HitAnalyzer2.ViewModels
                 MeanHitGroupText = null;
                 Cep50Text = null;
                 SmallestHitGroupText = null;
+                ScoreHistogram = [];
                 return;
             }
 
@@ -110,8 +115,10 @@ namespace HitAnalyzer2.ViewModels
                 var points = hits.Select(hit => (Position)hit.HitPosition).ToArray();
                 (HitGroupCircle? Cep50, HitGroupCircle? Cep80) circles =
                     points.Length > 0 ? HitGroup.AroundMean(points) : (null, null);
-                _sessionResult = new(CameraSettings.Calibration.Settings, status.LastHitCaliberMm, side,
+                var target = CameraSettings.Calibration.Settings;
+                _sessionResult = new(target, status.LastHitCaliberMm, side,
                     hits, points, circles.Cep50, circles.Cep80);
+                ScoreHistogram = BuildScoreHistogram(hits, target);
             }
 
             if (!ShowEnhancedR80)
@@ -122,6 +129,22 @@ namespace HitAnalyzer2.ViewModels
                 _ = CalculateSmallestHitGroupAsync(_sessionResult, mean, _hitGroupCalculation);
             }
             RenderSessionResults(_sessionResult);
+        }
+
+        private static IReadOnlyList<ScoreHistogramBin> BuildScoreHistogram(IReadOnlyList<HitRecord> hits, TargetModel target)
+        {
+            var counts = hits.GroupBy(hit => hit.HitPosition.Score)
+                .ToDictionary(group => group.Key, group => group.Count());
+            counts.TryAdd(0, 0);
+            foreach (var ring in target.Rings)
+                counts.TryAdd(ring.PointValue, 0);
+
+            int maxCount = counts.Values.Max();
+            const double maxBarHeight = 44;
+            return counts.OrderBy(bin => bin.Key)
+                .Select(bin => new ScoreHistogramBin(bin.Key, bin.Value,
+                    bin.Value == 0 ? 0 : Math.Max(1, maxBarHeight * bin.Value / maxCount)))
+                .ToArray();
         }
 
         private bool ShowEnhancedR80 => ShootingSettings.IsEnhancedR80Available && ShootingSettings.ShowSmallestHitGroup;

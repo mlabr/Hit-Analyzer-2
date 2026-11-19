@@ -58,11 +58,13 @@
                                Stretch="Uniform" StretchDirection="DownOnly"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <Grid Width="{Binding #ResultTargetImage.Bounds.Width}" Height="{Binding #ResultTargetImage.Bounds.Height}"
+                    <Grid x:Name="ResultStatistics" Width="{Binding #ResultTargetImage.Bounds.Width}"
+                          Height="{Binding #ResultTargetImage.Bounds.Height}"
                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                          IsVisible="{Binding MeanHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                        <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="6"
-                                Background="{DynamicResource PanelBrush}">
+                          IsVisible="{Binding ShootingSettings.IsSessionComplete}">
+                        <Border x:Name="ResultGroupLegend" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="6"
+                                Background="{DynamicResource PanelBrush}"
+                                IsVisible="{Binding MeanHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="{Binding Cep50Text}" Foreground="{DynamicResource Cep50Brush}"
                                            TextWrapping="Wrap" />
@@ -72,6 +74,30 @@
                                            TextWrapping="Wrap"
                                            IsVisible="{Binding SmallestHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                             </StackPanel>
+                        </Border>
+                        <Border x:Name="ResultScoreHistogram" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                Margin="8" Padding="6" Background="{DynamicResource PanelBrush}"
+                                Opacity="0" ClipToBounds="True">
+                            <ItemsControl ItemsSource="{Binding ScoreHistogram}" AutomationProperties.Name="Score distribution">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="2" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ScoreHistogramBin">
+                                        <Grid RowDefinitions="60,Auto" MinWidth="14">
+                                            <StackPanel VerticalAlignment="Bottom" Spacing="2">
+                                                <TextBlock Text="{Binding Count}" FontSize="11" HorizontalAlignment="Center" />
+                                                <Border Width="8" Height="{Binding BarHeight}" HorizontalAlignment="Center"
+                                                        Background="{DynamicResource AccentTextBrush}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="1" Text="{Binding Score}" FontSize="11"
+                                                       HorizontalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Border>
                     </Grid>
                     <Viewbox x:Name="SessionStartCountdown" Stretch="Uniform"

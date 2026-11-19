@@ -30,6 +30,7 @@ namespace HitAnalyzer2.Views
             InitializeComponent();
             CameraPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
+            ResultStatistics.LayoutUpdated += (_, _) => UpdateResultHistogramVisibility();
             CameraPreview.AddHandler(PointerMovedEvent, UpdateZoomPointer, RoutingStrategies.Tunnel, handledEventsToo: true);
             CameraPreview.PointerPressed += StartOffsetDrag;
             CameraPreview.PointerMoved += UpdateOffsetDrag;
@@ -83,6 +84,15 @@ namespace HitAnalyzer2.Views
                     e.Handled = true;
                 }
             }, RoutingStrategies.Tunnel);
+        }
+
+        private void UpdateResultHistogramVisibility()
+        {
+            var histogramBounds = ResultScoreHistogram.Bounds;
+            bool fits = (!ResultGroupLegend.IsVisible || histogramBounds.Left >= ResultGroupLegend.Bounds.Right + 8) &&
+                histogramBounds.Height + ResultScoreHistogram.Margin.Top + ResultScoreHistogram.Margin.Bottom <=
+                ResultStatistics.Bounds.Height;
+            ResultScoreHistogram.Opacity = fits ? 1 : 0;
         }
 
         private void ShowShootingSettings(object? sender, RoutedEventArgs e) => ShowSettings(ShootingSettings);
