@@ -198,11 +198,11 @@ namespace HitAnalyzer2.ViewModels
                 result.Target.MaxDiameterMm is > 0 and < double.PositiveInfinity and var targetDiameterMm &&
                 result.Target.GetDistanceFromCenterMm(group.Center) is { } deviationMm && double.IsFinite(deviationMm))
             {
-                // The preview uses horizontal X and downward Y. The display uses upward X and rightward Y.
-                double xMm = Math.Round((TargetModel.Center.Y - group.Center.Y) * targetDiameterMm, 1);
-                double yMm = Math.Round((group.Center.X - TargetModel.Center.X) * targetDiameterMm, 1);
+                // Match the offset controls: positive X is right and positive Y is up.
+                double xMm = Math.Round((group.Center.X - TargetModel.Center.X) * targetDiameterMm, 1);
+                double yMm = Math.Round((TargetModel.Center.Y - group.Center.Y) * targetDiameterMm, 1);
                 MeanPointOfImpactText =
-                    $"Mean Point of Impact (MPI): {deviationMm:0.0} mm (X {xMm:+0.0;-0.0;0.0} mm, Y {yMm:+0.0;-0.0;0.0} mm)";
+                    $"MPI: {deviationMm:0.0} mm (X {xMm:+0.0;-0.0;0.0} mm, Y {yMm:+0.0;-0.0;0.0} mm)";
             }
 
             string? FormatGroup(string label, HitGroupCircle? circle)

@@ -2,7 +2,7 @@
   "Theme": "System",
   "Shooting": {
     "IsHitLimitEnable": true,
-    "HitLimit": 20,
+    "HitLimit": 10,
     "IsTimeLimitEnable": false,
     "Countdown": true,
     "ShowSmallestHitGroup": true,
@@ -33,19 +33,19 @@
       "Corners": {
         "TopLeft": {
           "X": 0.2969,
-          "Y": 0.2764
+          "Y": 0.2750
         },
         "TopRight": {
-          "X": 0.5953,
-          "Y": 0.2403
+          "X": 0.5937,
+          "Y": 0.2347
         },
         "BottomRight": {
-          "X": 0.5961,
-          "Y": 0.8556
+          "X": 0.5969,
+          "Y": 0.8487
         },
         "BottomLeft": {
-          "X": 0.2922,
-          "Y": 0.8306
+          "X": 0.2938,
+          "Y": 0.8223
         }
       }
     }

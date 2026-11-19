@@ -58,6 +58,10 @@ namespace HitAnalyzer2.ViewModels
 
         public IReadOnlyList<TargetOption> Targets { get; }
         public string? LoadMessage { get; }
+        public string OffsetStepText => _calibration.Settings.MmToPixel is { } scale
+            ? $"({scale:F2} mm)"
+            : "(—)";
+
         public string SimulatedScaleText
         {
             get
@@ -89,7 +93,10 @@ namespace HitAnalyzer2.ViewModels
         private void RefreshScale()
         {
             if (Dispatcher.UIThread.CheckAccess())
+            {
                 OnPropertyChanged(nameof(SimulatedScaleText));
+                OnPropertyChanged(nameof(OffsetStepText));
+            }
             else
                 Dispatcher.UIThread.Post(RefreshScale);
         }
