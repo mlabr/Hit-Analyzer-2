@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.Styling;
+using HitAnalyzer2.Models;
 using HitAnalyzer2.ViewModels;
 using System;
 using System.ComponentModel;
@@ -22,6 +23,7 @@ namespace HitAnalyzer2.Views
         private bool _cameraStopped;
         private CameraSettingsViewModel? _cameraSettingsViewModel;
         private Point? _zoomPointer;
+        private (IPointer Pointer, Position Anchor, int OffsetX, int OffsetY)? _offsetDrag;
 
         public MainWindow()
         {
@@ -29,6 +31,18 @@ namespace HitAnalyzer2.Views
             CameraPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
             CameraPreview.AddHandler(PointerMovedEvent, UpdateZoomPointer, RoutingStrategies.Tunnel, handledEventsToo: true);
+            CameraPreview.PointerPressed += StartOffsetDrag;
+            CameraPreview.PointerMoved += UpdateOffsetDrag;
+            CameraPreview.PointerReleased += (_, e) =>
+            {
+                if (_offsetDrag?.Pointer == e.Pointer)
+                    EndOffsetDrag();
+            };
+            CameraPreview.PointerCaptureLost += (_, e) =>
+            {
+                if (_offsetDrag?.Pointer == e.Pointer)
+                    _offsetDrag = null;
+            };
             CameraPreview.PointerExited += (_, _) =>
             {
                 _zoomPointer = null;
@@ -123,6 +137,8 @@ namespace HitAnalyzer2.Views
         {
 			ShootingSettings.IsVisible = view == ShootingSettings;
             bool showWeaponPreview = view == WeaponSettings;
+            if (!showWeaponPreview)
+                EndOffsetDrag();
             bool showTargetPreview = view == ShootingSettings || showWeaponPreview;
             SessionElapsed.IsVisible = showTargetPreview;
             SessionStartOverlay.IsVisible = showTargetPreview;
@@ -165,6 +181,68 @@ namespace HitAnalyzer2.Views
         {
             _zoomPointer = e.GetPosition(PreviewImage);
             UpdateCalibrationZoom();
+        }
+
+        private void StartOffsetDrag(object? sender, PointerPressedEventArgs e)
+        {
+            if (!WeaponSettings.IsVisible || !e.GetCurrentPoint(PreviewImage).Properties.IsLeftButtonPressed ||
+                DataContext is not MainWindowViewModel vm || vm.CameraPreview.WeaponPreviewHit is not { } hit ||
+                !TryGetTargetPoint(e, out var target, out double diameter))
+                return;
+
+            const double hitTolerance = 12;
+            double dx = (target.X - hit.X) * diameter;
+            double dy = (target.Y - hit.Y) * diameter;
+            if (dx * dx + dy * dy > hitTolerance * hitTolerance ||
+                vm.CameraSettings.Calibration.MapTargetToCameraPixels(target.X, target.Y) is not { } anchor)
+                return;
+
+            _offsetDrag = (e.Pointer, anchor, vm.WeaponSettings.OffsetX, vm.WeaponSettings.OffsetY);
+            e.Pointer.Capture(CameraPreview);
+            e.Handled = true;
+        }
+
+        private void UpdateOffsetDrag(object? sender, PointerEventArgs e)
+        {
+            if (_offsetDrag is not { } drag || drag.Pointer != e.Pointer ||
+                DataContext is not MainWindowViewModel vm || !TryGetTargetPoint(e, out var target, out _) ||
+                vm.CameraSettings.Calibration.MapTargetToCameraPixels(target.X, target.Y) is not { } cursor)
+                return;
+
+            var weapon = vm.WeaponSettings;
+            weapon.OffsetX = (int)Math.Clamp(Math.Round(drag.OffsetX + cursor.X - drag.Anchor.X),
+                weapon.MinimumOffset, weapon.MaximumOffset);
+            weapon.OffsetY = (int)Math.Clamp(Math.Round(drag.OffsetY + cursor.Y - drag.Anchor.Y),
+                weapon.MinimumOffset, weapon.MaximumOffset);
+            e.Handled = true;
+        }
+
+        private void EndOffsetDrag()
+        {
+            var pointer = _offsetDrag?.Pointer;
+            _offsetDrag = null;
+            pointer?.Capture(null);
+        }
+
+        private bool TryGetTargetPoint(PointerEventArgs e, out Point target, out double diameter)
+        {
+            target = default;
+            diameter = 0;
+            if (PreviewImage.Source is not Bitmap bitmap)
+                return false;
+
+            var bounds = PreviewImage.Bounds.Size;
+            var size = Stretch.Uniform.CalculateSize(bounds, bitmap.Size, StretchDirection.DownOnly);
+            int bitmapSide = Math.Min(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
+            diameter = TargetPreviewModel.GetPreviewDiameterPixels(bitmapSide) *
+                Math.Min(size.Width, size.Height) / bitmapSide;
+            if (diameter <= 0)
+                return false;
+
+            var cursor = e.GetPosition(PreviewImage);
+            target = new Point((cursor.X - (bounds.Width - size.Width) / 2) / diameter - TargetPreviewModel.PreviewMargin,
+                (cursor.Y - (bounds.Height - size.Height) / 2) / diameter - TargetPreviewModel.PreviewMargin);
+            return true;
         }
 
         private void UpdateCalibrationZoom()

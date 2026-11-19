@@ -3,6 +3,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using HitAnalyzer2.Models;
 using OpenCvSharp;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,9 +23,10 @@ namespace HitAnalyzer2.ViewModels
 
         [ObservableProperty]
         private double? weaponPreviewScore;
+        internal Position? WeaponPreviewHit { get; private set; }
 
         internal async Task ShowFrameAsync(Mat pixels, string? measuredFps, CancellationToken cancellationToken,
-            double? previewScore = null)
+            double? previewScore = null, Position? weaponPreviewHit = null)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
@@ -43,6 +45,7 @@ namespace HitAnalyzer2.ViewModels
                     var previous = WebcamImage;
                     published = true;
                     WeaponPreviewScore = previewScore;
+                    WeaponPreviewHit = weaponPreviewHit;
                     WebcamImage = bitmap;
                     previous?.Dispose();
                     FpsText = measuredFps is null ? null : $"FPS: {measuredFps}";
@@ -63,6 +66,7 @@ namespace HitAnalyzer2.ViewModels
             previous?.Dispose();
             FpsText = null;
             WeaponPreviewScore = null;
+            WeaponPreviewHit = null;
         }
     }
 }

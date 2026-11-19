@@ -32,18 +32,18 @@
       "Corners": {
         "TopLeft": {
           "X": 0.2180,
-          "Y": 0.2708
+          "Y": 0.2736
         },
         "TopRight": {
-          "X": 0.5188,
-          "Y": 0.2333
+          "X": 0.5164,
+          "Y": 0.2375
         },
         "BottomRight": {
-          "X": 0.5203,
-          "Y": 0.8500
+          "X": 0.5172,
+          "Y": 0.8528
         },
         "BottomLeft": {
-          "X": 0.2141,
+          "X": 0.2133,
           "Y": 0.8278
         }
       }
@@ -54,7 +54,7 @@
     "DetectionSensitivity": 1,
     "BrightnessPercent": 50,
     "ContrastPercent": 50,
-    "SaturationPercent": 50,
+    "SaturationPercent": 0,
     "MinimumHitAreaPixels": null,
     "ShowFlares": true,
     "ShowAllowedArea": false,

@@ -19,6 +19,7 @@ namespace HitAnalyzer2.ViewModels
 
         public int MinimumOffset => WeaponHandler.MinimumOffset;
         public int MaximumOffset => WeaponHandler.MaximumOffset;
+        internal double CaliberDiameterMm => (double)_weaponHandler.CaliberDiameterMm;
         public string CaliberText
         {
             get

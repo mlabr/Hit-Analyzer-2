@@ -118,6 +118,7 @@ namespace HitAnalyzer2.ViewModels
                 using var target = new Mat(size, size, pixels.Type());
                 Position? originalTargetHit = null;
                 double? previewScore = null;
+                double previewCaliberMm = showWeaponOffsets ? WeaponSettings.CaliberDiameterMm : caliberDiameterMm;
                 if (showWeaponOffsets && lastHit is { } weaponHit)
                 {
                     var laser = weaponHit.LaserPosition;
@@ -126,15 +127,16 @@ namespace HitAnalyzer2.ViewModels
                     lastTargetHit = calibration.MapHit(weaponHit.X / pixels.Width, weaponHit.Y / pixels.Height,
                         out var targetAtHit);
                     if (lastTargetHit is { } correctedHit)
-                        previewScore = targetAtHit.CalculateScore(correctedHit, caliberDiameterMm);
+                        previewScore = targetAtHit.CalculateScore(correctedHit, previewCaliberMm);
                 }
 
                 var recordedHits = !showWeaponOffsets && ShootingSettings.ShowAllHits
                     ? _recording.GetNormalizedHitRecordList()
                     : null;
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings,
-                    caliberDiameterMm, recordedHits, IsDarkTheme, originalTargetHit);
-                await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore);
+                    previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit);
+                await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore,
+                    showWeaponOffsets ? lastTargetHit : null);
                 return;
             }
 

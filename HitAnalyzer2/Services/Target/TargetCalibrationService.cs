@@ -85,6 +85,15 @@ namespace HitAnalyzer2.Services.Target
         // Both input and output are relative coordinates with the origin at the top left.
         internal Position? MapHit(double x, double y) => Project(_snapshot.Matrix, x, y);
 
+        internal Position? MapTargetToCameraPixels(double x, double y)
+        {
+            var snapshot = _snapshot;
+            return snapshot.FrameWidth > 1 && snapshot.FrameHeight > 1 &&
+                Project(snapshot.InverseMatrix, x, y) is { } point
+                ? new Position(point.X * snapshot.FrameWidth, point.Y * snapshot.FrameHeight)
+                : null;
+        }
+
         internal Position? GetCameraTargetCenterPixels()
         {
             var snapshot = _snapshot;
@@ -181,13 +190,18 @@ namespace HitAnalyzer2.Services.Target
                 }
             }
 
-            return new CalibrationSnapshot(settings, matrix, center, outline) { MarkedRingOutline = markedOutline };
+            return new CalibrationSnapshot(settings, matrix, center, outline)
+            {
+                InverseMatrix = inverseMatrix,
+                MarkedRingOutline = markedOutline
+            };
         }
 
         private sealed record CalibrationSnapshot(
             TargetPreviewModel Settings, double[]? Matrix, Position? CameraTargetCenter,
             Position[] CameraTargetOutline, int FrameWidth = 0, int FrameHeight = 0)
         {
+            internal double[]? InverseMatrix { get; init; }
             internal Position[] MarkedRingOutline { get; init; } = [];
 
             internal CalibrationSnapshot WithFrameGeometry(int width, int height)
