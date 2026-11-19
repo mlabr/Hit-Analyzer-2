@@ -5,12 +5,16 @@
         <StackPanel Margin="24" Spacing="16" MaxWidth="760" HorizontalAlignment="Stretch">
             <Image Source="/Assets/HA2_icon.png" Width="160" Height="160" HorizontalAlignment="Left" />
             <TextBlock Text="Hit Analyzer 2" FontSize="28" FontWeight="SemiBold" />
-            <TextBlock Text="Part of LISHRA — Libre Shooting Range" TextWrapping="Wrap"
-                       Foreground="{DynamicResource AccentTextBrush}" />
+            
+           
             <TextBlock Text="Hit Analyzer 2 uses a webcam to detect a laser spot, register hits, and show where they landed on a calibrated target."
                        TextWrapping="Wrap" />
             <TextBlock Text="Open Help or press F1 for setup instructions, calibration, and troubleshooting."
                        TextWrapping="Wrap" />
+          
+          <Image Source="/Assets/logo_lishra3.png" Width="1072" Height="150" HorizontalAlignment="Center" />
+          <TextBlock Text="Hit Analyzer 2 is part of project LISHRA — Libre Shooting Range" TextWrapping="Wrap"
+                       Foreground="{DynamicResource AccentTextBrush}" HorizontalAlignment="Center"  />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

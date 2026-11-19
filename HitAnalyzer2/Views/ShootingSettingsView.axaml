@@ -32,8 +32,10 @@
         </StackPanel>
         <CheckBox Content="Countdown" IsChecked="{Binding Countdown, Mode=TwoWay}"
                   IsEnabled="{Binding IsTimeLimitEnabled}" />
-        <Button Content="Start Session" Command="{Binding StartSessionCommand}" />
-        <Button Content="Reset shooting" Command="{Binding ResetCommand}" />
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Button Content="Start Session" Command="{Binding StartSessionCommand}" HorizontalAlignment="Left" />
+            <Button Grid.Column="1" Content="Reset shooting" Command="{Binding ResetCommand}" />
+        </Grid>
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>
 
