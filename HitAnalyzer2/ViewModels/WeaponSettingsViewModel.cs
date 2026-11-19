@@ -166,6 +166,11 @@ namespace HitAnalyzer2.ViewModels
         [RelayCommand]
         private void ToCenter()
         {
+            if (_shootingSession.GetOffsetToCenterLastHit() is { } offset)
+            {
+                OffsetX = offset.X;
+                OffsetY = offset.Y;
+            }
         }
 
         internal SavedWeaponProfile? GetSelectedProfile() => SelectedWeapon is { } weapon

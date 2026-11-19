@@ -1,5 +1,5 @@
 {
-  "Theme": "Light",
+  "Theme": "System",
   "Shooting": {
     "IsHitLimitEnable": false,
     "HitLimit": 5,
@@ -67,7 +67,7 @@
     "Profile": {
       "Type": "ha_weapon",
       "Name": "weapon1",
-      "Caliber": 5,
+      "Caliber": 0.0,
       "OffsetX": 0,
       "OffsetY": 0,
       "Trigger": "FirstSpot",

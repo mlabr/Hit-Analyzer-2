@@ -122,11 +122,17 @@ namespace HitAnalyzer2.Views
         private void ShowSettings(Control view)
         {
 			ShootingSettings.IsVisible = view == ShootingSettings;
-            bool showTargetPreview = view == ShootingSettings || view == WeaponSettings;
+            bool showWeaponPreview = view == WeaponSettings;
+            bool showTargetPreview = view == ShootingSettings || showWeaponPreview;
             SessionElapsed.IsVisible = showTargetPreview;
             HitCounter.IsVisible = showTargetPreview;
+            RecordedScore.IsVisible = !showWeaponPreview;
+            WeaponPreviewScore.IsVisible = showWeaponPreview;
             if (DataContext is MainWindowViewModel viewModel)
+            {
+                viewModel.IsWeaponPreviewActive = showWeaponPreview;
                 viewModel.IsTargetPreviewActive = showTargetPreview;
+            }
 			CameraSettings.IsVisible = view == CameraSettings;
             DetectionSettings.IsVisible = view == DetectionSettings;
             WeaponSettings.IsVisible = view == WeaponSettings;

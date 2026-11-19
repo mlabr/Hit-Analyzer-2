@@ -26,7 +26,8 @@ namespace HitAnalyzer2.Services.Rendering
             new(187, 178, 230, 255), new(40, 37, 24, 255));
 
         internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings,
-            double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null, bool isDarkTheme = false)
+            double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null, bool isDarkTheme = false,
+            Position? originalTargetHit = null)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -35,10 +36,18 @@ namespace HitAnalyzer2.Services.Rendering
                 return;
 
             double diameterPixels = TargetPreviewModel.GetPreviewDiameterPixels(size);
+            int markerSize = Math.Max(1, (int)Math.Round(size * AimTraceRenderer.MarkerSizeRatio));
             var guide = palette.Outline;
             Cv2.Rectangle(preview, default(Point), new Point(size - 1, size - 1), guide);
             var center = ToTargetPixel(TargetModel.Center);
             DrawTargetRings(preview, center, diameterPixels, settings, palette);
+
+            if (originalTargetHit is { } original && IsInsidePreview(original))
+            {
+                var marker = ToTargetPixel(original);
+                AimTraceRenderer.DrawLaserPosition(preview, marker.X, marker.Y, markerSize,
+                    AimTraceRenderer.LaserPositionMarkerColor);
+            }
 
             if (recordedHits is not null)
             {
@@ -53,7 +62,6 @@ namespace HitAnalyzer2.Services.Rendering
                 if (!IsInsidePreview(hit))
                     return;
 
-                int markerSize = Math.Max(1, (int)Math.Round(size * AimTraceRenderer.MarkerSizeRatio));
                 var marker = ToTargetPixel(hit);
                 double? projectileDiameterPixels = caliberDiameterMm / settings.MaxDiameterMm * diameterPixels;
                 AimTraceRenderer.DrawAimPosition(preview, marker.X, marker.Y, markerSize,

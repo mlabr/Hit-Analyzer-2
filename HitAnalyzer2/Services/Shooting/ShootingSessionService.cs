@@ -206,6 +206,20 @@ namespace HitAnalyzer2.Services.Shooting
                 ClearShotState();
         }
 
+        internal (int X, int Y)? GetOffsetToCenterLastHit()
+        {
+            lock (_hitGate)
+            {
+                if (_lastHit is not { } hit || calibration.GetCameraTargetCenterPixels() is not { } center)
+                    return null;
+
+                return (ClampOffset(center.X - hit.X), ClampOffset(center.Y - hit.Y));
+            }
+
+            static int ClampOffset(double offset) =>
+                (int)Math.Clamp(Math.Round(offset), WeaponHandler.MinimumOffset, WeaponHandler.MaximumOffset);
+        }
+
         internal void Reset()
         {
             lock (_hitGate)

@@ -85,6 +85,14 @@ namespace HitAnalyzer2.Services.Target
         // Both input and output are relative coordinates with the origin at the top left.
         internal Position? MapHit(double x, double y) => Project(_snapshot.Matrix, x, y);
 
+        internal Position? GetCameraTargetCenterPixels()
+        {
+            var snapshot = _snapshot;
+            return snapshot is { CameraTargetCenter: { } center, FrameWidth: > 1, FrameHeight: > 1 }
+                ? new Position(center.X * snapshot.FrameWidth, center.Y * snapshot.FrameHeight)
+                : null;
+        }
+
         internal Position? MapHit(double x, double y, out TargetPreviewModel target)
         {
             var snapshot = _snapshot;

@@ -20,7 +20,11 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private string? fpsText;
 
-        internal async Task ShowFrameAsync(Mat pixels, string? measuredFps, CancellationToken cancellationToken)
+        [ObservableProperty]
+        private double? weaponPreviewScore;
+
+        internal async Task ShowFrameAsync(Mat pixels, string? measuredFps, CancellationToken cancellationToken,
+            double? previewScore = null)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
@@ -38,6 +42,7 @@ namespace HitAnalyzer2.ViewModels
 
                     var previous = WebcamImage;
                     published = true;
+                    WeaponPreviewScore = previewScore;
                     WebcamImage = bitmap;
                     previous?.Dispose();
                     FpsText = measuredFps is null ? null : $"FPS: {measuredFps}";
@@ -57,6 +62,7 @@ namespace HitAnalyzer2.ViewModels
             WebcamImage = null;
             previous?.Dispose();
             FpsText = null;
+            WeaponPreviewScore = null;
         }
     }
 }

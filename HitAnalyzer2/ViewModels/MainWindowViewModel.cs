@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Rendering;
@@ -22,6 +23,7 @@ namespace HitAnalyzer2.ViewModels
         private readonly RecordingService _recording;
         private readonly DetectionSettings _detectionSettings;
         internal volatile bool IsTargetPreviewActive = true;
+        internal volatile bool IsWeaponPreviewActive;
         internal volatile bool IsDarkTheme;
 
         public CameraSettingsViewModel CameraSettings { get; }
@@ -107,16 +109,32 @@ namespace HitAnalyzer2.ViewModels
             var pixels = FramePreprocessor.ApplyImageAdjustments(frame, output, DetectionSettings.BrightnessPercent,
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
             bool showTargetPreview = IsTargetPreviewActive;
+            bool showWeaponOffsets = IsWeaponPreviewActive;
             var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             if (showTargetPreview)
             {
                 int size = Math.Min(pixels.Rows, pixels.Cols);
                 using var target = new Mat(size, size, pixels.Type());
-                var recordedHits = ShootingSettings.ShowAllHits ? _recording.GetNormalizedHitRecordList() : null;
+                Position? originalTargetHit = null;
+                double? previewScore = null;
+                if (showWeaponOffsets && lastHit is { } weaponHit)
+                {
+                    var laser = weaponHit.LaserPosition;
+                    var calibration = CameraSettings.Calibration;
+                    originalTargetHit = calibration.MapHit(laser.X / pixels.Width, laser.Y / pixels.Height);
+                    lastTargetHit = calibration.MapHit(weaponHit.X / pixels.Width, weaponHit.Y / pixels.Height,
+                        out var targetAtHit);
+                    if (lastTargetHit is { } correctedHit)
+                        previewScore = targetAtHit.CalculateScore(correctedHit, caliberDiameterMm);
+                }
+
+                var recordedHits = !showWeaponOffsets && ShootingSettings.ShowAllHits
+                    ? _recording.GetNormalizedHitRecordList()
+                    : null;
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings,
-                    caliberDiameterMm, recordedHits, IsDarkTheme);
-                await CameraPreview.ShowFrameAsync(target, null, cancellationToken);
+                    caliberDiameterMm, recordedHits, IsDarkTheme, originalTargetHit);
+                await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore);
                 return;
             }
 
