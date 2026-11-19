@@ -81,6 +81,18 @@ namespace HitAnalyzer2.ViewModels
             set => SetTimeLimit(Math.Max(0, value) * 60L + TimeLimitSecondsPart);
         }
 
+        public bool Countdown
+        {
+            get => countdown;
+            set
+            {
+                if (SetProperty(ref countdown, value))
+                    OnPropertyChanged(nameof(SessionElapsedText));
+            }
+        }
+
+        private bool countdown;
+
         public int TimeLimitSecondsPart
         {
             get => _shootingSession.SessionLimits.TimeLimitSecondsInitial % 60;
@@ -92,6 +104,7 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession.SessionLimits.TimeLimitSecondsInitial = (int)Math.Clamp(seconds, 1, int.MaxValue);
             OnPropertyChanged(nameof(TimeLimitMinutes));
             OnPropertyChanged(nameof(TimeLimitSecondsPart));
+            OnPropertyChanged(nameof(SessionElapsedText));
         }
 
         internal ShootingSettings GetConfiguration(ShootingSettings current) => current with
@@ -99,6 +112,7 @@ namespace HitAnalyzer2.ViewModels
             IsHitLimitEnable = IsHitLimitEnabled,
             HitLimit = HitCountInitial,
             IsTimeLimitEnable = IsTimeLimitEnabled,
+            Countdown = Countdown,
             TimeLimitSeconds = _shootingSession.SessionLimits.TimeLimitSecondsInitial
         };
 
@@ -110,8 +124,19 @@ namespace HitAnalyzer2.ViewModels
                 if (!IsTimeLimitEnabled)
                     return "--:--";
 
-                var elapsed = _shootingSession.GetSessionStatus().Elapsed;
-                return $"{(long)elapsed.TotalMinutes:00}:{elapsed.Seconds:00}";
+                var session = _shootingSession.GetSessionStatus();
+                long seconds = (long)session.Elapsed.TotalSeconds;
+                if (Countdown)
+                {
+                    var limit = session.CanStart
+                        ? TimeSpan.FromSeconds(_shootingSession.SessionLimits.TimeLimitSecondsInitial)
+                        : session.TimeLimit;
+                    if (limit is null)
+                        return "--:--";
+
+                    seconds = (long)Math.Ceiling((limit.Value - session.Elapsed).TotalSeconds);
+                }
+                return $"{seconds / 60:00}:{seconds % 60:00}";
             }
         }
 
@@ -128,6 +153,7 @@ namespace HitAnalyzer2.ViewModels
             _recording = recording;
             _saveConfiguration = saveConfiguration;
             selectedThemeIndex = (int)settings.Current.Theme;
+            countdown = settings.Current.Shooting.Countdown;
             _realDistanceMeters = settings.Current.Target.RealDistanceMeters;
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;

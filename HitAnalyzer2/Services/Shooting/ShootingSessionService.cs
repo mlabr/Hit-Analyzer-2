@@ -55,7 +55,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         internal event Action? SessionEnded;
 
-        internal (bool CanStart, bool IsRunning, TimeSpan Elapsed) GetSessionStatus()
+        internal (bool CanStart, bool IsRunning, TimeSpan Elapsed, TimeSpan? TimeLimit) GetSessionStatus()
         {
             lock (_hitGate)
             {
@@ -64,7 +64,8 @@ namespace HitAnalyzer2.Services.Shooting
                     : TimeSpan.Zero);
                 if (_sessionTimeLimit is { } limit && elapsed > limit)
                     elapsed = limit;
-                return (_sessionStartedAt is null, _sessionStartedAt.HasValue && !_sessionEndedAt.HasValue, elapsed);
+                return (_sessionStartedAt is null, _sessionStartedAt.HasValue && !_sessionEndedAt.HasValue,
+                    elapsed, _sessionTimeLimit);
             }
         }
 
