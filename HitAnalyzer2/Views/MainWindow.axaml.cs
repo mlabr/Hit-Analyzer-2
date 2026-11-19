@@ -125,6 +125,7 @@ namespace HitAnalyzer2.Views
             bool showWeaponPreview = view == WeaponSettings;
             bool showTargetPreview = view == ShootingSettings || showWeaponPreview;
             SessionElapsed.IsVisible = showTargetPreview;
+            SessionStartOverlay.IsVisible = showTargetPreview;
             HitCounter.IsVisible = showTargetPreview;
             RecordedScore.IsVisible = !showWeaponPreview;
             WeaponPreviewScore.IsVisible = showWeaponPreview;
@@ -211,6 +212,7 @@ namespace HitAnalyzer2.Views
             if (e.Property == BoundsProperty)
             {
                 UpdateCalibrationOverlay();
+                UpdateSessionStartCountdownSize();
                 UpdateCalibrationZoom();
                 return;
             }
@@ -225,7 +227,17 @@ namespace HitAnalyzer2.Views
 
             _previewPixelSize = pixelSize;
             UpdateCalibrationOverlay();
+            UpdateSessionStartCountdownSize();
             FitWindowToPreview();
+        }
+
+        private void UpdateSessionStartCountdownSize()
+        {
+            var size = PreviewImage.Source is Bitmap bitmap
+                ? Stretch.Uniform.CalculateSize(PreviewImage.Bounds.Size, bitmap.Size, StretchDirection.DownOnly)
+                : default;
+            double side = Math.Min(size.Width, size.Height);
+            SessionStartCountdown.Width = SessionStartCountdown.Height = side > 0 ? side : double.NaN;
         }
 
         private void FitWindowToPreview()

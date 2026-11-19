@@ -44,6 +44,19 @@
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
+                <Grid x:Name="SessionStartOverlay" IsHitTestVisible="False">
+                    <Viewbox x:Name="SessionStartCountdown" Stretch="Uniform"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                             IsVisible="{Binding ShootingSettings.IsStartCountdownVisible}">
+                        <Grid Width="160" Height="160">
+                            <Border Background="{DynamicResource PanelBrush}" Opacity="0.85" />
+                            <TextBlock Text="{Binding ShootingSettings.StartCountdown}"
+                                       Foreground="{DynamicResource AccentTextBrush}"
+                                       FontSize="128" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                    </Viewbox>
+                </Grid>
             </Grid>
             <Grid x:Name="InformationPanel" Grid.Column="1" Grid.RowSpan="3" IsVisible="False">
                 <views:AboutView x:Name="AboutContent" />

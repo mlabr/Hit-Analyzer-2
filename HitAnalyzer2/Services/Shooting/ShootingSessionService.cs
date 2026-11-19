@@ -46,6 +46,7 @@ namespace HitAnalyzer2.Services.Shooting
         private long? _externalPressedAt;
         private long _externalReleasedAt;
         private long? _sessionStartedAt;
+        private int _startCountdown;
         private TimeSpan? _sessionEndedAt;
         private TimeSpan? _sessionTimeLimit;
         private int? _remainingHits;
@@ -53,9 +54,9 @@ namespace HitAnalyzer2.Services.Shooting
 
         private TimeSpan NextDetectionTimestamp { get; set; }
 
-        internal event Action? SessionEnded;
+        internal event Action? SessionStatusChanged;
 
-        internal (bool CanStart, bool IsRunning, TimeSpan Elapsed, TimeSpan? TimeLimit) GetSessionStatus()
+        internal (bool CanStart, bool IsRunning, TimeSpan Elapsed, TimeSpan? TimeLimit, int StartCountdown) GetSessionStatus()
         {
             lock (_hitGate)
             {
@@ -64,8 +65,9 @@ namespace HitAnalyzer2.Services.Shooting
                     : TimeSpan.Zero);
                 if (_sessionTimeLimit is { } limit && elapsed > limit)
                     elapsed = limit;
-                return (_sessionStartedAt is null, _sessionStartedAt.HasValue && !_sessionEndedAt.HasValue,
-                    elapsed, _sessionTimeLimit);
+                return (_startCountdown == 0 && _sessionStartedAt is null,
+                    _sessionStartedAt.HasValue && !_sessionEndedAt.HasValue,
+                    elapsed, _sessionTimeLimit, _startCountdown);
             }
         }
 
@@ -73,24 +75,52 @@ namespace HitAnalyzer2.Services.Shooting
         {
             lock (_hitGate)
             {
-                if (_sessionStartedAt.HasValue)
+                if (_startCountdown > 0 || _sessionStartedAt.HasValue)
                     return;
 
                 Reset();
-                long startedAt = Stopwatch.GetTimestamp();
-                _sessionStartedAt = startedAt;
                 _remainingHits = SessionLimits.IsHitLimitEnabled ? SessionLimits.HitCountInitial : null;
                 _sessionTimeLimit = SessionLimits.IsTimeLimitEnabled
                     ? TimeSpan.FromSeconds(SessionLimits.TimeLimitSecondsInitial)
                     : null;
 
-                if (_remainingHits == 0)
-                    EndSession(TimeSpan.Zero);
-                else if (_sessionTimeLimit is { } limit)
+                _startCountdown = 3;
+                _sessionTimeout = new CancellationTokenSource();
+                _ = RunStartCountdownAsync(_sessionTimeout.Token);
+            }
+        }
+
+        private async Task RunStartCountdownAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                for (int remaining = 2; remaining >= 0; remaining--)
                 {
-                    _sessionTimeout = new CancellationTokenSource();
-                    _ = WaitForSessionLimitAsync(startedAt, limit, _sessionTimeout.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                    lock (_hitGate)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            return;
+
+                        _startCountdown = remaining;
+                        if (remaining == 0)
+                        {
+                            long startedAt = Stopwatch.GetTimestamp();
+                            _sessionStartedAt = startedAt;
+                            if (_remainingHits == 0)
+                            {
+                                EndSession(TimeSpan.Zero);
+                                return;
+                            }
+                            if (_sessionTimeLimit is { } limit)
+                                _ = WaitForSessionLimitAsync(startedAt, limit, cancellationToken);
+                        }
+                        SessionStatusChanged?.Invoke();
+                    }
                 }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
             }
         }
 
@@ -119,7 +149,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         private bool CanDetectHits()
         {
-            if (_sessionEndedAt.HasValue)
+            if (_startCountdown > 0 || _sessionEndedAt.HasValue)
                 return false;
             if (_sessionTimeLimit is { } limit && _sessionStartedAt is { } startedAt &&
                 Stopwatch.GetElapsedTime(startedAt) >= limit)
@@ -135,7 +165,7 @@ namespace HitAnalyzer2.Services.Shooting
             _sessionEndedAt = elapsed;
             StopSessionTimeout();
             CompleteRecordingFollowPath();
-            SessionEnded?.Invoke();
+            SessionStatusChanged?.Invoke();
         }
 
         private void StopSessionTimeout()
@@ -175,6 +205,10 @@ namespace HitAnalyzer2.Services.Shooting
         {
             lock (_hitGate)
             {
+                if (_startCountdown > 0 || _sessionEndedAt.HasValue ||
+                    (_sessionStartedAt is { } startedAt && timestamp < startedAt))
+                    return;
+
                 if (isPressed)
                 {
                     if (_trigger == TriggerTypeEnum.ExternalEvent &&
@@ -225,6 +259,7 @@ namespace HitAnalyzer2.Services.Shooting
             lock (_hitGate)
             {
                 StopSessionTimeout();
+                _startCountdown = 0;
                 _sessionStartedAt = null;
                 _sessionEndedAt = null;
                 _sessionTimeLimit = null;

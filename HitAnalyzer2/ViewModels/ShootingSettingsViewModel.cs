@@ -117,6 +117,9 @@ namespace HitAnalyzer2.ViewModels
         };
 
         public int HitCount => _recording.GetHitRecordCount();
+        public int StartCountdown => _shootingSession.GetSessionStatus().StartCountdown;
+        public bool IsStartCountdownVisible => StartCountdown > 0;
+
         public string SessionElapsedText
         {
             get
@@ -158,7 +161,7 @@ namespace HitAnalyzer2.ViewModels
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;
             _sessionDisplayTimer.Tick += (_, _) => OnPropertyChanged(nameof(SessionElapsedText));
-            shootingSession.SessionEnded += () => Dispatcher.UIThread.Post(RefreshSessionStatus);
+            shootingSession.SessionStatusChanged += () => Dispatcher.UIThread.Post(RefreshSessionStatus);
         }
 
         private void RefreshHitStatistics()
@@ -199,6 +202,8 @@ namespace HitAnalyzer2.ViewModels
 
             StartSessionCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(SessionElapsedText));
+            OnPropertyChanged(nameof(StartCountdown));
+            OnPropertyChanged(nameof(IsStartCountdownVisible));
         }
     }
 }
