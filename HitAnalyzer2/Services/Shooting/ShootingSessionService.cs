@@ -21,7 +21,9 @@ namespace HitAnalyzer2.Services.Shooting
         internal SessionLimits SessionLimits { get; } = new()
         {
             IsHitLimitEnabled = shootingSettings.IsHitLimitEnable,
-            HitCountInitial = Math.Max(0, shootingSettings.HitLimit)
+            HitCountInitial = Math.Max(0, shootingSettings.HitLimit),
+            IsTimeLimitEnabled = shootingSettings.IsTimeLimitEnable,
+            TimeLimitSeconds = Math.Max(1, shootingSettings.TimeLimitSeconds)
         };
 
         private readonly TimeSpan _aimPathTimeoutMinimumDuration =

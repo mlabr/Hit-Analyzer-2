@@ -64,10 +64,37 @@ namespace HitAnalyzer2.ViewModels
             set => SetProperty(ref _shootingSession.SessionLimits.HitCountInitial, Math.Max(0, value));
         }
 
+        public bool IsTimeLimitEnabled
+        {
+            get => _shootingSession.SessionLimits.IsTimeLimitEnabled;
+            set => SetProperty(ref _shootingSession.SessionLimits.IsTimeLimitEnabled, value);
+        }
+
+        public int TimeLimitMinutes
+        {
+            get => _shootingSession.SessionLimits.TimeLimitSeconds / 60;
+            set => SetTimeLimit(Math.Max(0, value) * 60L + TimeLimitSecondsPart);
+        }
+
+        public int TimeLimitSecondsPart
+        {
+            get => _shootingSession.SessionLimits.TimeLimitSeconds % 60;
+            set => SetTimeLimit(TimeLimitMinutes * 60L + Math.Clamp(value, 0, 59));
+        }
+
+        private void SetTimeLimit(long seconds)
+        {
+            _shootingSession.SessionLimits.TimeLimitSeconds = (int)Math.Clamp(seconds, 1, int.MaxValue);
+            OnPropertyChanged(nameof(TimeLimitMinutes));
+            OnPropertyChanged(nameof(TimeLimitSecondsPart));
+        }
+
         internal ShootingSettings GetConfiguration(ShootingSettings current) => current with
         {
             IsHitLimitEnable = IsHitLimitEnabled,
-            HitLimit = HitCountInitial
+            HitLimit = HitCountInitial,
+            IsTimeLimitEnable = IsTimeLimitEnabled,
+            TimeLimitSeconds = _shootingSession.SessionLimits.TimeLimitSeconds
         };
 
         public int HitCount => _recording.GetHitRecordCount();
