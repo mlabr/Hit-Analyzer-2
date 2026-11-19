@@ -60,7 +60,7 @@ namespace HitAnalyzer2.Services.Rendering
                 DrawHit(hit);
 
             Scalar meanColor = isDarkTheme ? new(209, 213, 169, 255) : new(101, 93, 36, 255);
-            Scalar cep50Color = isDarkTheme ? new(242, 183, 212, 255) : new(139, 67, 108, 255);
+            Scalar cep50Color = isDarkTheme ? new(242, 183, 212, 255) : new(159, 73, 206, 255);
             Scalar smallestColor = isDarkTheme ? new(125, 189, 249, 255) : new(17, 78, 163, 255);
             if (smallestCircle is { Radius: > 0 } smallest)
                 Cv2.Circle(preview, ToTargetPixel(smallest.Center), RadiusPixels(smallest), smallestColor, 2, LineTypes.AntiAlias);

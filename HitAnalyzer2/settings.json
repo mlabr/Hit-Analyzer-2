@@ -2,7 +2,7 @@
   "Theme": "System",
   "Shooting": {
     "IsHitLimitEnable": true,
-    "HitLimit": 10,
+    "HitLimit": 20,
     "IsTimeLimitEnable": false,
     "Countdown": true,
     "ShowSmallestHitGroup": true,
