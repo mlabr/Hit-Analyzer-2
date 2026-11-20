@@ -20,7 +20,8 @@ namespace HitAnalyzer2.ViewModels
 
         internal string FileName { get; }
         internal TargetModel Target { get; }
-        public string Label => $"{Target.TargetName} ({Path.GetFileNameWithoutExtension(FileName)})";
+        public string? Name => Target.TargetName;
+        public string Label => $"{Name} ({Path.GetFileNameWithoutExtension(FileName)})";
     }
 
     public partial class TargetSettingsViewModel : ViewModelBase

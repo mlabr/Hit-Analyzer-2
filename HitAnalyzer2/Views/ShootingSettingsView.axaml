@@ -4,7 +4,23 @@
              x:Class="HitAnalyzer2.Views.ShootingSettingsView"
              x:DataType="vm:ShootingSettingsViewModel">
 
-    <StackPanel Spacing="16">
+    <StackPanel Spacing="4">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="24,24,24,24" ColumnSpacing="8" RowSpacing="4">
+            <TextBlock Text="Shooter" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBox Grid.Column="1" Classes="settingsInput"
+                     Text="{Binding Shooter, Mode=TwoWay}" AutomationProperties.Name="Shooter" />
+            <TextBlock Grid.Row="1" Text="Target" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="1" Grid.Column="1" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                       Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TargetSettings.SelectedTarget.Name, TargetNullValue='—'}" />
+            <TextBlock Grid.Row="2" Text="Weapon" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="2" Grid.Column="1" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                       Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).WeaponSettings.SelectedWeapon.Name, TargetNullValue='—'}" />
+            <TextBlock Grid.Row="3" Text="Caliber" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <TextBlock Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).WeaponSettings.CaliberText}" />
+                <TextBlock Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).WeaponSettings.CaliberUnit}" />
+            </StackPanel>
+        </Grid>
         <CheckBox Content="Show all hits" IsChecked="{Binding ShowAllHits, Mode=TwoWay}" />
         <CheckBox Content="Show smallest 80% circle" IsChecked="{Binding ShowSmallestHitGroup, Mode=TwoWay}"
                   IsVisible="{Binding IsEnhancedR80Available}" />

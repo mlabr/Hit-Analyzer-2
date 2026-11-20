@@ -8,7 +8,8 @@ namespace HitAnalyzer2.ViewModels
             Profile = profile;
         }
 
-        public string Label => $"{Profile.Name} ({FileName})";
+        public string? Name => Profile.Name;
+        public string Label => $"{Name} ({FileName})";
         internal string FileName { get; }
         internal WeaponProfile Profile { get; set; }
     }

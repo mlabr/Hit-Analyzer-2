@@ -4,7 +4,7 @@
              xmlns:views="using:HitAnalyzer2.Views"
              x:Class="HitAnalyzer2.Views.TargetSettingsView"
              x:DataType="vm:TargetSettingsViewModel">
-    <StackPanel Spacing="8" Grid.IsSharedSizeScope="True">
+    <StackPanel Spacing="4" Grid.IsSharedSizeScope="True">
         <TextBlock Text="Select target" FontWeight="SemiBold" />
         <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Target"
                   PlaceholderText="Select a target" ItemsSource="{Binding Targets}"
@@ -17,7 +17,7 @@
         </ComboBox>
         <TextBlock Text="{Binding LoadMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding LoadMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        <Grid RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+        <Grid RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" SharedSizeGroup="TargetSettingLabel" />
                 <ColumnDefinition Width="64" />

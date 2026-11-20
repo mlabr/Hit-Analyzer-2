@@ -4,69 +4,69 @@
              x:Class="HitAnalyzer2.Views.DetectionSettingsView"
              x:DataType="vm:DetectionSettingsViewModel">
     <UserControl.Styles>
-        <Style Selector="Slider.compact">
-            <Setter Property="Height" Value="24" />
+        <Style Selector="Grid.detectionAdjustment">
+            <Setter Property="Margin" Value="0,0,8,0" />
         </Style>
-        <Style Selector="NumericUpDown.compact">
-            <Setter Property="Width" Value="44" />
+        <Style Selector="Slider">
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+        <Style Selector="NumericUpDown">
+            <Setter Property="Width" Value="38" />
             <Setter Property="MinWidth" Value="0" />
-            <Setter Property="MinHeight" Value="24" />
-            <Setter Property="Padding" Value="5,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="4,1" />
             <Setter Property="TextAlignment" Value="Center" />
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="8">
+    <StackPanel Spacing="4">
         <ComboBox HorizontalAlignment="Stretch"
                   AutomationProperties.Name="Detection method"
                   ItemsSource="{Binding Methods}"
                   SelectedItem="{Binding SelectedMethod, Mode=TwoWay}" />
       
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+        <Grid Classes="detectionAdjustment" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6" RowSpacing="4">
             <TextBlock Grid.ColumnSpan="2" Text="Sensitiviy:" />
             <Slider Grid.Row="1" Minimum="1" Maximum="99" TickFrequency="1" SmallChange="1"
                     IsSnapToTickEnabled="True" VerticalAlignment="Center"
                     Value="{Binding DetectionSensitivity, Mode=TwoWay}"
                     AutomationProperties.Name="Detection sensitivity" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" MinWidth="56" Minimum="1" Maximum="99" Increment="1"
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="1" Maximum="99" Increment="1"
                            ShowButtonSpinner="False" ClipValueToMinMax="True"
                            ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding DetectionSensitivity, Mode=TwoWay}"
                            AutomationProperties.Name="Manual sensitivity input" />
         </Grid>
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+        <Grid Classes="detectionAdjustment" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6" RowSpacing="4">
             <TextBlock Grid.ColumnSpan="2" Text="Brightness (%)" />
-            <Slider Grid.Row="1" Classes="compact"
+            <Slider Grid.Row="1"
                     Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
                     Value="{Binding BrightnessPercent, Mode=TwoWay}"
                     VerticalAlignment="Center" AutomationProperties.Name="Brightness (percent)" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="100" Increment="1"
                            ShowButtonSpinner="False"
                            ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding BrightnessPercent, Mode=TwoWay}"
                            AutomationProperties.Name="Manual brightness input" />
         </Grid>
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+        <Grid Classes="detectionAdjustment" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6" RowSpacing="4">
             <TextBlock Grid.ColumnSpan="2" Text="Contrast (%)" />
-            <Slider Grid.Row="1" Classes="compact"
+            <Slider Grid.Row="1"
                     Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
                     Value="{Binding ContrastPercent, Mode=TwoWay}"
                     VerticalAlignment="Center" AutomationProperties.Name="Contrast (percent)" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="100" Increment="1"
                            ShowButtonSpinner="False"
                            ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding ContrastPercent, Mode=TwoWay}"
                            AutomationProperties.Name="Manual contrast input" />
         </Grid>
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+        <Grid Classes="detectionAdjustment" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6" RowSpacing="4">
             <TextBlock Grid.ColumnSpan="2" Text="Saturation (%)" />
-            <Slider Grid.Row="1" Classes="compact"
+            <Slider Grid.Row="1"
                     Minimum="0" Maximum="100" TickFrequency="1" SmallChange="1" IsSnapToTickEnabled="True"
                     Value="{Binding SaturationPercent, Mode=TwoWay}"
                     VerticalAlignment="Center" AutomationProperties.Name="Saturation (percent)" />
-            <NumericUpDown Grid.Row="1" Grid.Column="1" Classes="compact" Minimum="0" Maximum="100" Increment="1"
+            <NumericUpDown Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="100" Increment="1"
                            ShowButtonSpinner="False"
                            ClipValueToMinMax="True" ParsingNumberStyle="Integer" FormatString="0"
                            Value="{Binding SaturationPercent, Mode=TwoWay}"

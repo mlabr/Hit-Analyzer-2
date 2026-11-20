@@ -151,8 +151,47 @@
             <Border x:Name="SettingsPanel" Grid.RowSpan="3" Width="280" BorderThickness="0,0,1,0"
                     Background="{DynamicResource PanelBrush}"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                <Border.Resources>
+                    <x:Double x:Key="CheckBoxMinHeight">24</x:Double>
+                    <x:Double x:Key="SliderHorizontalHeight">24</x:Double>
+                    <x:Double x:Key="SliderHorizontalThumbWidth">14</x:Double>
+                    <x:Double x:Key="SliderHorizontalThumbHeight">14</x:Double>
+                    <GridLength x:Key="SliderPreContentMargin">5</GridLength>
+                    <GridLength x:Key="SliderPostContentMargin">5</GridLength>
+                </Border.Resources>
+                <Border.Styles>
+                    <Style Selector="CheckBox, Slider">
+                        <Setter Property="Height" Value="24" />
+                        <Setter Property="MinHeight" Value="0" />
+                    </Style>
+                    <Style Selector="Slider">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+                    <Style Selector="Slider /template/ Grid#HorizontalTemplate">
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+                    <Style Selector="TextBox.settingsInput, NumericUpDown">
+                        <Setter Property="Height" Value="24" />
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="Padding" Value="6,1" />
+                    </Style>
+                    <Style Selector="TextBox.settingsInput">
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                    <Style Selector="NumericUpDown">
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                    <Style Selector="NumericUpDown /template/ ButtonSpinner#PART_Spinner, NumericUpDown /template/ TextBox#PART_TextBox">
+                        <Setter Property="MinHeight" Value="0" />
+                    </Style>
+                    <Style Selector="Button, RepeatButton.settingsButton, ComboBox">
+                        <Setter Property="Height" Value="24" />
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="Padding" Value="8,1" />
+                    </Style>
+                </Border.Styles>
                 <ScrollViewer Padding="12" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Spacing="8">
+                    <StackPanel Spacing="4">
                         <Grid>
                             <views:CameraSettingsView x:Name="CameraSettings" IsVisible="False"
                                                       DataContext="{Binding CameraSettings}" />
@@ -164,8 +203,8 @@
                                                         DataContext="{Binding ShootingSettings}" />
                             <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
                                                       DataContext="{Binding TargetSettings}" />
-                            <StackPanel x:Name="About" IsVisible="False" Spacing="16">
-                                <StackPanel Spacing="6">
+                            <StackPanel x:Name="About" IsVisible="False" Spacing="4">
+                                <StackPanel Spacing="4">
                                     <TextBlock Text="Theme" />
                                     <ComboBox ItemsSource="{Binding ShootingSettings.ThemeOptions}"
                                               SelectedIndex="{Binding ShootingSettings.SelectedThemeIndex, Mode=TwoWay}"

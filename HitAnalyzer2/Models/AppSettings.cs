@@ -42,6 +42,7 @@ namespace HitAnalyzer2
 
     internal sealed record ShootingSettings
     {
+        public string Shooter { get; init; } = string.Empty;
         public bool IsHitLimitEnable { get; init; }
         public int HitLimit { get; init; } = 40;
         public bool IsTimeLimitEnable { get; init; }

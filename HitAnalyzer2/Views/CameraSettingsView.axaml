@@ -3,7 +3,7 @@
              xmlns:vm="using:HitAnalyzer2.ViewModels"
              x:Class="HitAnalyzer2.Views.CameraSettingsView"
              x:DataType="vm:CameraSettingsViewModel">
-    <StackPanel Spacing="8">
+    <StackPanel Spacing="4">
         <ComboBox PlaceholderText="Select camera" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding Cameras}" SelectedItem="{Binding SelectedCamera, Mode=TwoWay}"
                   IsEnabled="{Binding !IsDiscoveringCameras}"

@@ -1,6 +1,7 @@
 {
-  "Theme": "Light",
+  "Theme": "System",
   "Shooting": {
+    "Shooter": "",
     "IsHitLimitEnable": true,
     "HitLimit": 10,
     "IsTimeLimitEnable": false,
@@ -13,14 +14,14 @@
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u002622fbc4d2\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_1e2f\u0026pid_9801\u0026mi_00#6\u00261a040c39\u00261\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
-      "Width": 1280,
-      "Height": 720,
+      "Width": 640,
+      "Height": 480,
       "FpsNumerator": 30,
       "FpsDenominator": 1,
-      "Format": "47504a4d-0000-0010-8000-00aa00389b71"
+      "Format": "3231564e-0000-0010-8000-00aa00389b71"
     },
     "Flip": null
   },
@@ -32,20 +33,20 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2969,
-          "Y": 0.2750
+          "X": 0.2000,
+          "Y": 0.1000
         },
         "TopRight": {
-          "X": 0.5937,
-          "Y": 0.2347
+          "X": 0.8000,
+          "Y": 0.1000
         },
         "BottomRight": {
-          "X": 0.5969,
-          "Y": 0.8487
+          "X": 0.8000,
+          "Y": 0.9000
         },
         "BottomLeft": {
-          "X": 0.2938,
-          "Y": 0.8223
+          "X": 0.2000,
+          "Y": 0.9000
         }
       }
     }
@@ -69,8 +70,8 @@
       "Type": "ha_weapon",
       "Name": "weapon1",
       "Caliber": 4.50,
-      "OffsetX": -5,
-      "OffsetY": -99,
+      "OffsetX": 5,
+      "OffsetY": -57,
       "Trigger": "NewSpot",
       "NexDetectionInterval": 500
     }
