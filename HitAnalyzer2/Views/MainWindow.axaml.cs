@@ -31,7 +31,6 @@ namespace HitAnalyzer2.Views
             InitializeComponent();
             CameraPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
-            ResultStatistics.LayoutUpdated += (_, _) => UpdateResultHistogramVisibility();
             CameraPreview.AddHandler(PointerMovedEvent, UpdateZoomPointer, RoutingStrategies.Tunnel, handledEventsToo: true);
             CameraPreview.PointerPressed += StartOffsetDrag;
             CameraPreview.PointerMoved += UpdateOffsetDrag;
@@ -71,6 +70,7 @@ namespace HitAnalyzer2.Views
                 UpdatePreviewTheme();
             };
             ScalingChanged += (_, _) => FitWindowToPreview();
+            PositionChanged += (_, _) => UpdateMinimumWindowSize();
             PropertyChanged += (_, e) =>
             {
                 if (e.Property == ActualThemeVariantProperty)
@@ -80,6 +80,7 @@ namespace HitAnalyzer2.Views
             };
             Opened += async (_, _) =>
             {
+                UpdateMinimumWindowSize();
                 if (DataContext is MainWindowViewModel viewModel)
                     await viewModel.RefreshCamerasAsync();
             };
@@ -94,13 +95,16 @@ namespace HitAnalyzer2.Views
             }, RoutingStrategies.Tunnel);
         }
 
-        private void UpdateResultHistogramVisibility()
+        private void UpdateMinimumWindowSize()
         {
-            var histogramBounds = ResultScoreHistogram.Bounds;
-            bool fits = (!ResultGroupLegend.IsVisible || histogramBounds.Left >= ResultGroupLegend.Bounds.Right + 8) &&
-                histogramBounds.Height + ResultScoreHistogram.Margin.Top + ResultScoreHistogram.Margin.Bottom <=
-                ResultStatistics.Bounds.Height;
-            ResultScoreHistogram.Opacity = fits ? 1 : 0;
+            var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+            var frame = FrameSize ?? ClientSize;
+            double frameWidth = Math.Max(0, frame.Width - ClientSize.Width);
+            double frameHeight = Math.Max(0, frame.Height - ClientSize.Height);
+            MinWidth = screen is null ? 850
+                : Math.Min(850, Math.Max(1, screen.WorkingArea.Width / DesktopScaling - frameWidth));
+            MinHeight = screen is null ? 600
+                : Math.Min(600, Math.Max(1, screen.WorkingArea.Height / DesktopScaling - frameHeight));
         }
 
         private void ShowShootingSettings(object? sender, RoutedEventArgs e) => ShowSettings(ShootingSettings);
@@ -163,6 +167,7 @@ namespace HitAnalyzer2.Views
             if (!showWeaponPreview)
                 EndOffsetDrag();
             bool showTargetPreview = view == ShootingSettings || showWeaponPreview;
+            PreviewImage.StretchDirection = showTargetPreview ? StretchDirection.Both : StretchDirection.DownOnly;
             SessionElapsed.IsVisible = showTargetPreview;
             SessionStartOverlay.IsVisible = showTargetPreview;
             HitCounter.IsVisible = showTargetPreview;
@@ -181,8 +186,7 @@ namespace HitAnalyzer2.Views
             About.IsVisible = view == About;
             InformationPanel.IsVisible = About.IsVisible;
             CameraPreview.IsVisible = !About.IsVisible;
-            if (About.IsVisible)
-                MinWidth = 450;
+            UpdateMinimumWindowSize();
             _zoomPointer = null;
             UpdateWeaponOffsetCursor(null);
             UpdateCalibrationZoom();
@@ -276,7 +280,7 @@ namespace HitAnalyzer2.Views
                 return false;
 
             var bounds = PreviewImage.Bounds.Size;
-            var size = Stretch.Uniform.CalculateSize(bounds, bitmap.Size, StretchDirection.DownOnly);
+            var size = Stretch.Uniform.CalculateSize(bounds, bitmap.Size, PreviewImage.StretchDirection);
             int bitmapSide = Math.Min(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
             diameter = TargetPreviewModel.GetPreviewDiameterPixels(bitmapSide) *
                 Math.Min(size.Width, size.Height) / bitmapSide;
@@ -375,7 +379,7 @@ namespace HitAnalyzer2.Views
         private void UpdateSessionStartCountdownSize()
         {
             var size = PreviewImage.Source is Bitmap bitmap
-                ? Stretch.Uniform.CalculateSize(PreviewImage.Bounds.Size, bitmap.Size, StretchDirection.DownOnly)
+                ? Stretch.Uniform.CalculateSize(PreviewImage.Bounds.Size, bitmap.Size, PreviewImage.StretchDirection)
                 : default;
             double side = Math.Min(size.Width, size.Height);
             SessionStartCountdown.Width = SessionStartCountdown.Height = side > 0 ? side : double.NaN;
@@ -383,6 +387,7 @@ namespace HitAnalyzer2.Views
 
         private void FitWindowToPreview()
         {
+            UpdateMinimumWindowSize();
             if (About.IsVisible || _previewPixelSize is not { } pixels || WindowState != WindowState.Normal || _stoppingCamera)
                 return;
 
@@ -408,10 +413,6 @@ namespace HitAnalyzer2.Views
                 (maxHeight - verticalSpace) / imageSize.Height), 0, 1);
 
             double previewWidth = Math.Ceiling(imageSize.Width * scale + horizontalSpace);
-            double statisticsWidth = Math.Ceiling(SettingsPanel.Width + HitCounter.DesiredSize.Width + 20);
-            MinWidth = DataContext is MainWindowViewModel { IsTargetPreviewActive: true }
-                ? Math.Min(maxWidth, Math.Max(450, Math.Max(previewWidth + 20, statisticsWidth)))
-                : 450;
             Width = Math.Min(maxWidth, Math.Max(MinWidth, previewWidth));
             Height = Math.Min(maxHeight, Math.Max(MinHeight, Math.Ceiling(imageSize.Height * scale + verticalSpace)));
 

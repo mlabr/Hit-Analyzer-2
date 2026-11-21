@@ -8,7 +8,7 @@
         x:Class="HitAnalyzer2.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/HA2_icon.ico"
-        Width="800" Height="450" MinWidth="450" MinHeight="150"
+        Width="800" Height="600" MinWidth="800" MinHeight="600"
         Title="Hit Analyzer 2">
 
     <Window.Styles>
@@ -44,25 +44,26 @@
             </Grid>
             <Grid x:Name="CameraPreview" Grid.Row="1" Grid.Column="1">
                 <Image x:Name="PreviewImage" Source="{Binding CameraPreview.WebcamImage}" Stretch="Uniform"
-                       StretchDirection="DownOnly" />
+                       StretchDirection="Both" />
                 <TextBlock Text="{Binding CameraPreview.StatusMessage}" TextWrapping="Wrap" Margin="16"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding CameraPreview.FpsText}" Foreground="{DynamicResource SuccessTextBrush}" Background="{DynamicResource SuccessSurfaceBrush}"
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
-                <Grid x:Name="SessionStartOverlay" IsHitTestVisible="False">
-                    <Border Background="{DynamicResource AppBackgroundBrush}"
+                <Grid x:Name="SessionStartOverlay" RowDefinitions="*,Auto" IsHitTestVisible="False">
+                    <Border Grid.RowSpan="2" Background="{DynamicResource AppBackgroundBrush}"
+                            IsVisible="{Binding ShootingSettings.IsSessionComplete}" />
+                    <Border
                             IsVisible="{Binding ShootingSettings.IsSessionComplete}">
                         <Image x:Name="ResultTargetImage" Source="{Binding SessionResultsImage}"
-                               Stretch="Uniform" StretchDirection="DownOnly"
+                               Stretch="Uniform" StretchDirection="Both"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <Grid x:Name="ResultStatistics" Width="{Binding #ResultTargetImage.Bounds.Width}"
-                          Height="{Binding #ResultTargetImage.Bounds.Height}"
-                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                    <WrapPanel x:Name="ResultStatistics" Grid.Row="1"
+                          Orientation="Horizontal" HorizontalAlignment="Center"
                           IsVisible="{Binding ShootingSettings.IsSessionComplete}">
-                        <Border x:Name="ResultGroupLegend" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="6"
+                        <Border x:Name="ResultGroupLegend" MaxWidth="300" Margin="8" Padding="6"
                                 Background="{DynamicResource PanelBrush}"
                                 IsVisible="{Binding MeanHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                             <StackPanel Spacing="2">
@@ -78,9 +79,9 @@
                                            IsVisible="{Binding MeanPointOfImpactText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                             </StackPanel>
                         </Border>
-                        <Border x:Name="ResultScoreHistogram" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        <Border x:Name="ResultScoreHistogram"
                                 Margin="8" Padding="6" Background="{DynamicResource PanelBrush}"
-                                Opacity="0" ClipToBounds="True">
+                                ClipToBounds="True">
                             <ItemsControl ItemsSource="{Binding ScoreHistogram}" AutomationProperties.Name="Score distribution">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -102,7 +103,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </Border>
-                    </Grid>
+                    </WrapPanel>
                     <Viewbox x:Name="SessionStartCountdown" Stretch="Uniform"
                              HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Viewbox.IsVisible>
