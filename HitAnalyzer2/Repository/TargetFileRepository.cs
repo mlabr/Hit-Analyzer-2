@@ -43,8 +43,25 @@ namespace HitAnalyzer2.Repository
                 {
                     using var stream = File.OpenRead(path);
                     var data = JsonSerializer.Deserialize<TargetFile>(stream, JsonOptions);
-                    if (data is null || string.IsNullOrWhiteSpace(data.TargetName) ||
-                        data.TargetType is not (TargetTypeEnum.CircleMetric or TargetTypeEnum.CircleImperial) ||
+                    if (data is null || string.IsNullOrWhiteSpace(data.TargetName))
+                        throw new JsonException("Missing target name.");
+
+                    if (data.TargetType == TargetTypeEnum.Monoscope)
+                    {
+                        if (data.Width <= 0 || data.Height <= 0)
+                            throw new JsonException("Monoscope width and height must be positive pixel dimensions.");
+
+                        targets.Add((fileName, new TargetModel
+                        {
+                            TargetName = data.TargetName,
+                            TargetType = data.TargetType,
+                            Width = data.Width,
+                            Height = data.Height
+                        }));
+                        continue;
+                    }
+
+                    if (data.TargetType is not (TargetTypeEnum.CircleMetric or TargetTypeEnum.CircleImperial) ||
                         data.Rings is not { Length: > 0 } ||
                         data.Rings.Any(ring => ring is null || !double.IsFinite(ring.Diameter) ||
                             ring.Diameter <= 0 || !double.IsFinite(ring.PointValue)))
@@ -71,7 +88,9 @@ namespace HitAnalyzer2.Repository
         {
             public required string TargetName { get; init; }
             public required TargetTypeEnum TargetType { get; init; }
-            public required TargetRingModel[] Rings { get; init; }
+            public TargetRingModel[]? Rings { get; init; }
+            public int Width { get; init; }
+            public int Height { get; init; }
             public double? MarkedRingPoints { get; init; }
         }
     }

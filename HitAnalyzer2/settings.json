@@ -4,7 +4,7 @@
     "Shooter": "",
     "IsHitLimitEnable": true,
     "HitLimit": 10,
-    "IsTimeLimitEnable": false,
+    "IsTimeLimitEnable": true,
     "Countdown": true,
     "ShowSmallestHitGroup": true,
     "TimeLimitSeconds": 10,
@@ -26,7 +26,7 @@
     "Flip": "X"
   },
   "Target": {
-    "SelectedTargetFileName": "10m_air_pistol.json",
+    "SelectedTargetFileName": "monoscope_640.json",
     "CalibrationZoom": 4,
     "RealDistanceMeters": 5,
     "SimulatedDistanceMeters": 10,
@@ -34,18 +34,18 @@
       "Corners": {
         "TopLeft": {
           "X": 0.2922,
-          "Y": 0.2854
+          "Y": 0.2896
         },
         "TopRight": {
-          "X": 0.6719,
-          "Y": 0.2813
+          "X": 0.6672,
+          "Y": 0.2833
         },
         "BottomRight": {
           "X": 0.6937,
-          "Y": 0.7875
+          "Y": 0.7896
         },
         "BottomLeft": {
-          "X": 0.2484,
+          "X": 0.2500,
           "Y": 0.7896
         }
       }

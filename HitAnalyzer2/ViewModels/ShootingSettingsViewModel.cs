@@ -79,7 +79,10 @@ namespace HitAnalyzer2.ViewModels
             set
             {
                 if (SetProperty(ref _shootingSession.SessionLimits.IsTimeLimitEnabled, value))
+                {
                     OnPropertyChanged(nameof(SessionElapsedText));
+                    OnPropertyChanged(nameof(CanUseCountdown));
+                }
             }
         }
 
@@ -126,7 +129,9 @@ namespace HitAnalyzer2.ViewModels
             TimeLimitSeconds = _shootingSession.SessionLimits.TimeLimitSecondsInitial
         };
 
-        public int HitCount => _recording.GetHitRecordCount();
+        public bool IsMonoscope => _shootingSession.IsMonoscope;
+        public bool CanUseCountdown => !IsMonoscope && IsTimeLimitEnabled;
+        public int HitCount => IsMonoscope ? _shootingSession.MonoscopeHitCount : _recording.GetHitRecordCount();
         public int StartCountdown => _shootingSession.GetSessionStatus().StartCountdown;
         public bool IsStartCountdownVisible => StartCountdown > 0;
         public bool IsTabSwitchingEnabled
@@ -140,18 +145,20 @@ namespace HitAnalyzer2.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsSessionComplete))]
+        [NotifyPropertyChangedFor(nameof(ShowScoredSessionResults))]
         private string? sessionCompletionReason;
 
         [ObservableProperty]
         private bool isSessionCompleteOverlayVisible;
 
         public bool IsSessionComplete => SessionCompletionReason is not null;
+        public bool ShowScoredSessionResults => IsSessionComplete && !IsMonoscope;
 
         public string SessionElapsedText
         {
             get
             {
-                if (!IsTimeLimitEnabled)
+                if (IsMonoscope || !IsTimeLimitEnabled)
                     return "--:--";
 
                 var session = _shootingSession.GetSessionStatus();
@@ -189,6 +196,7 @@ namespace HitAnalyzer2.ViewModels
             _realDistanceMeters = settings.Current.Target.RealDistanceMeters;
             _simulatedDistanceMeters = Math.Max(_realDistanceMeters, settings.Current.Target.SimulatedDistanceMeters);
             recording.HitCountChanged += RefreshHitStatistics;
+            shootingSession.MonoscopeHitCountChanged += RefreshHitStatistics;
             _sessionDisplayTimer.Tick += (_, _) => OnPropertyChanged(nameof(SessionElapsedText));
             _sessionCompleteTimer.Tick += (_, _) =>
             {
@@ -196,6 +204,15 @@ namespace HitAnalyzer2.ViewModels
                 IsSessionCompleteOverlayVisible = false;
             };
             shootingSession.SessionStatusChanged += () => Dispatcher.UIThread.Post(RefreshSessionStatus);
+        }
+
+        internal void RefreshTargetMode()
+        {
+            OnPropertyChanged(nameof(IsMonoscope));
+            OnPropertyChanged(nameof(CanUseCountdown));
+            OnPropertyChanged(nameof(ShowScoredSessionResults));
+            OnPropertyChanged(nameof(HitCount));
+            OnPropertyChanged(nameof(SessionElapsedText));
         }
 
         private void RefreshHitStatistics()
@@ -230,7 +247,7 @@ namespace HitAnalyzer2.ViewModels
         private void RefreshSessionStatus()
         {
             var status = _shootingSession.GetSessionStatus();
-            if (status.IsRunning)
+            if (status.IsRunning && !IsMonoscope)
                 _sessionDisplayTimer.Start();
             else
                 _sessionDisplayTimer.Stop();

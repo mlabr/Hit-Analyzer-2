@@ -1,4 +1,5 @@
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Models;
@@ -75,6 +76,13 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession = shootingSession;
             _recording = recording;
             ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration);
+            shootingSession.MonoscopeHitEvaluated += position =>
+                Dispatcher.UIThread.Post(async () => await AppLink.SendMonoscopeHitAsync(position));
+            TargetSettings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(TargetSettingsViewModel.SelectedTarget))
+                    ShootingSettings.RefreshTargetMode();
+            };
             TargetSettings.SetShootingSettings(ShootingSettings);
             var captureSession = new CameraCaptureSession(
                 ProcessCameraFrameAsync,
@@ -98,7 +106,7 @@ namespace HitAnalyzer2.ViewModels
         internal void RefreshSessionResults()
         {
             var status = _shootingSession.GetSessionStatus();
-            if (status.EndReason is null)
+            if (status.EndReason is null || ShootingSettings.IsMonoscope)
             {
                 StopHitGroupCalculation();
                 _sessionResult = null;
@@ -283,7 +291,7 @@ namespace HitAnalyzer2.ViewModels
                         previewScore = targetAtHit.CalculateScore(correctedHit, previewCaliberMm);
                 }
 
-                var recordedHits = !showWeaponOffsets && ShootingSettings.ShowAllHits
+                var recordedHits = !showWeaponOffsets && !_shootingSession.IsMonoscope && ShootingSettings.ShowAllHits
                     ? _recording.GetNormalizedHitRecordList()
                     : null;
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings,

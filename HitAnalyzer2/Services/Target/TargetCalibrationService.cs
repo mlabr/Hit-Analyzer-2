@@ -160,6 +160,9 @@ namespace HitAnalyzer2.Services.Target
             }
 
             var center = Project(inverseMatrix, TargetModel.Center.X, TargetModel.Center.Y);
+            if (settings.IsMonoscope)
+                return new(settings, matrix, center, points) { InverseMatrix = inverseMatrix };
+
             var outline = new Position[OutlinePointCount];
             for (int i = 0; i < outline.Length; i++)
             {

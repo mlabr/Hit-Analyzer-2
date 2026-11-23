@@ -54,16 +54,16 @@
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
                 <Grid x:Name="SessionStartOverlay" RowDefinitions="*,Auto" IsHitTestVisible="False">
                     <Border Grid.RowSpan="2" Background="{DynamicResource AppBackgroundBrush}"
-                            IsVisible="{Binding ShootingSettings.IsSessionComplete}" />
+                            IsVisible="{Binding ShootingSettings.ShowScoredSessionResults}" />
                     <Border
-                            IsVisible="{Binding ShootingSettings.IsSessionComplete}">
+                            IsVisible="{Binding ShootingSettings.ShowScoredSessionResults}">
                         <Image x:Name="ResultTargetImage" Source="{Binding SessionResultsImage}"
                                Stretch="Uniform" StretchDirection="Both"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <WrapPanel x:Name="ResultStatistics" Grid.Row="1"
                           Orientation="Horizontal" HorizontalAlignment="Center"
-                          IsVisible="{Binding ShootingSettings.IsSessionComplete}">
+                          IsVisible="{Binding ShootingSettings.ShowScoredSessionResults}">
                         <Border x:Name="ResultGroupLegend" MaxWidth="300" Margin="8" Padding="6"
                                 Background="{DynamicResource PanelBrush}"
                                 IsVisible="{Binding MeanHitGroupText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">

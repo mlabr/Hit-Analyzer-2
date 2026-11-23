@@ -11,6 +11,9 @@ namespace HitAnalyzer2.Models
 
         internal string? TargetName { get; init; }
         internal TargetTypeEnum TargetType { get; init; }
+        internal bool IsMonoscope => TargetType == TargetTypeEnum.Monoscope;
+        internal int Width { get; init; }
+        internal int Height { get; init; }
         internal IReadOnlyList<TargetRingModel> Rings { get; init; } = [];
         internal double? MarkedRingPoints { get; init; }
         internal double? MaxDiameter => Rings.Count == 0 ? null : Rings.Max(ring => ring.Diameter);

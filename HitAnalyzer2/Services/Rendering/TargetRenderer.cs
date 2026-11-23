@@ -41,8 +41,20 @@ namespace HitAnalyzer2.Services.Rendering
             int markerSize = Math.Max(1, (int)Math.Round(size * AimTraceRenderer.MarkerSizeRatio));
             var guide = palette.Outline;
             Cv2.Rectangle(preview, default(Point), new Point(size - 1, size - 1), guide);
+            double width = settings.IsMonoscope && settings.Width < settings.Height
+                ? diameterPixels * settings.Width / settings.Height : diameterPixels;
+            double height = settings.IsMonoscope && settings.Height < settings.Width
+                ? diameterPixels * settings.Height / settings.Width : diameterPixels;
             var center = ToTargetPixel(TargetModel.Center);
-            DrawTargetRings(preview, center, diameterPixels, settings, palette);
+            if (settings.IsMonoscope)
+            {
+                var topLeft = ToTargetPixel(new Position(0, 0));
+                var bottomRight = ToTargetPixel(new Position(1, 1));
+                Cv2.Rectangle(preview, topLeft, bottomRight, palette.Paper, -1);
+                Cv2.Rectangle(preview, topLeft, bottomRight, palette.Outline);
+            }
+            else
+                DrawTargetRings(preview, center, diameterPixels, settings, palette);
 
             if (originalTargetHit is { } original && IsInsidePreview(original))
             {
@@ -95,8 +107,8 @@ namespace HitAnalyzer2.Services.Rendering
             }
 
             Point ToTargetPixel(Position point) =>
-                new(Math.Round((point.X + PreviewMargin) * diameterPixels),
-                    Math.Round((point.Y + PreviewMargin) * diameterPixels));
+                new(Math.Round((size - 1) * 0.5 + (point.X - 0.5) * width),
+                    Math.Round((size - 1) * 0.5 + (point.Y - 0.5) * height));
         }
 
         private static void DrawTargetRings(Mat preview, Point center, double diameterPixels,

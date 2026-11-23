@@ -17,6 +17,8 @@
         </ComboBox>
         <TextBlock Text="{Binding LoadMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding LoadMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        <TextBlock Text="Set four valid calibration corners." TextWrapping="Wrap"
+                   IsVisible="{Binding NeedsMonoscopeCalibration}" />
         <Grid RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" SharedSizeGroup="TargetSettingLabel" />

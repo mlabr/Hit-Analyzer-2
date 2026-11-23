@@ -53,11 +53,17 @@ namespace HitAnalyzer2.Services.Shooting
         private SessionEndReason? _sessionEndReason;
         private TimeSpan? _sessionTimeLimit;
         private int? _remainingHits;
+        private int _monoscopeHitCount;
         private CancellationTokenSource? _sessionTimeout;
 
         private TimeSpan NextDetectionTimestamp { get; set; }
 
         internal event Action? SessionStatusChanged;
+        internal event Action? MonoscopeHitCountChanged;
+        internal event Action<Position?>? MonoscopeHitEvaluated;
+
+        internal bool IsMonoscope => calibration.Settings.IsMonoscope;
+        internal int MonoscopeHitCount => Volatile.Read(ref _monoscopeHitCount);
 
         internal (bool CanStart, bool IsRunning, TimeSpan Elapsed, TimeSpan? TimeLimit, int StartCountdown,
             SessionEndReason? EndReason, double LastHitCaliberMm) GetSessionStatus()
@@ -83,6 +89,12 @@ namespace HitAnalyzer2.Services.Shooting
                     return;
 
                 Reset();
+                if (IsMonoscope)
+                {
+                    _sessionStartedAt = Stopwatch.GetTimestamp();
+                    return;
+                }
+
                 _remainingHits = SessionLimits.IsHitLimitEnabled ? SessionLimits.HitCountInitial : null;
                 _sessionTimeLimit = SessionLimits.IsTimeLimitEnabled
                     ? TimeSpan.FromSeconds(SessionLimits.TimeLimitSecondsInitial)
@@ -270,6 +282,7 @@ namespace HitAnalyzer2.Services.Shooting
                 _sessionEndReason = null;
                 _sessionTimeLimit = null;
                 _remainingHits = null;
+                _monoscopeHitCount = 0;
                 _spotWasVisible = false;
                 _externalPressedAt = null;
                 _lastAcceptedExternalTriggerEventTimestamp = null;
@@ -314,6 +327,10 @@ namespace HitAnalyzer2.Services.Shooting
                 if (!CanDetectHits() || (_sessionStartedAt is { } startedAt && frameCapturedTimestampMs < startedAt))
                     return GetLastHitSnapshot();
 
+                bool isMonoscope = IsMonoscope;
+                if (isMonoscope && !_sessionStartedAt.HasValue)
+                    return GetLastHitSnapshot();
+
                 position = _laserDetector.GetLaserPosition(frame, elapsed);
                 bool startFollowPath = false;
                 HitRecord? hitRecord = null;
@@ -322,7 +339,7 @@ namespace HitAnalyzer2.Services.Shooting
                     aimPositionHandler.GetTimedOutAimPosition(elapsed) is { } timedOutPosition)
                 {
                     if (aimPositionHandler.AimPathDuration >= _aimPathTimeoutMinimumDuration &&
-                        IsAimPositionInsideAllowedZone(aimPositionHandler.GetAimPosition(timedOutPosition), frame))
+                        (isMonoscope || IsAimPositionInsideAllowedZone(aimPositionHandler.GetAimPosition(timedOutPosition), frame)))
                     {
                         registeredHit = timedOutPosition;
                         _lastHitAimPath = aimPositionHandler.GetAimPathSnapshot();
@@ -352,6 +369,13 @@ namespace HitAnalyzer2.Services.Shooting
 
                 if (registeredHit is not null && !CanDetectHits())
                     return GetLastHitSnapshot();
+
+                if (isMonoscope)
+                {
+                    if (registeredHit is { } monoscopeHit)
+                        ProcessMonoscopeHit(monoscopeHit, frame.Width, frame.Height);
+                    return (null, [], [], _lastTargetHit, 0);
+                }
 
                 if (registeredHit is { } registered)
                 {
@@ -428,6 +452,29 @@ namespace HitAnalyzer2.Services.Shooting
 
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
                 aimPath, followPath, lastTargetHit, caliberDiameterMm);
+        }
+
+        private void ProcessMonoscopeHit(LaserPosition hit, int frameWidth, int frameHeight)
+        {
+            if (calibration.MapHit(hit.X / frameWidth, hit.Y / frameHeight, out var target) is not { } point ||
+                !target.IsMonoscope)
+                return;
+
+            // The perspective matrix uses float input points, so allow rounding at the edges.
+            const double tolerance = 1e-7;
+            Position? destinationPixel = null;
+            if (point.X is >= -tolerance and <= 1 + tolerance &&
+                point.Y is >= -tolerance and <= 1 + tolerance)
+            {
+                double x = Math.Clamp(point.X, 0, 1);
+                double y = Math.Clamp(point.Y, 0, 1);
+                _lastTargetHit = new Position(x, y);
+                destinationPixel = new Position(x * (target.Width - 1), y * (target.Height - 1));
+            }
+
+            _monoscopeHitCount++;
+            MonoscopeHitCountChanged?.Invoke();
+            MonoscopeHitEvaluated?.Invoke(destinationPixel);
         }
 
         private (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,

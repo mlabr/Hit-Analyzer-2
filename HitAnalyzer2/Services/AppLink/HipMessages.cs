@@ -44,6 +44,12 @@ namespace HitAnalyzer2.Services.AppLink
             return coordinate < 0 && magnitude != "0.0" ? $"N{magnitude}" : magnitude;
         }
 
+        public static string GetMonoscopeHit(double x, double y) =>
+            FormattableString.Invariant($"HA-0101-{Sid}-{x:0000.0}-{y:0000.0}");
+
+        public static string GetMonoscopeOutOfRange() =>
+            $"HA-0199-{Sid}-Hit is out of range.";
+
 
 
 

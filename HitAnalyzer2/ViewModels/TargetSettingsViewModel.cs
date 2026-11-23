@@ -77,6 +77,9 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private TargetOption? selectedTarget;
 
+        public bool IsMonoscope => _calibration.Settings.IsMonoscope;
+        public bool NeedsMonoscopeCalibration => IsMonoscope && !_calibration.IsValid;
+
         internal TargetSettingsViewModel(TargetFileRepository repository, TargetCalibrationService calibration,
             string? selectedFileName, TargetSettings settings)
         {
@@ -97,6 +100,8 @@ namespace HitAnalyzer2.ViewModels
             {
                 OnPropertyChanged(nameof(SimulatedScaleText));
                 OnPropertyChanged(nameof(OffsetStepText));
+                OnPropertyChanged(nameof(IsMonoscope));
+                OnPropertyChanged(nameof(NeedsMonoscopeCalibration));
             }
             else
                 Dispatcher.UIThread.Post(RefreshScale);

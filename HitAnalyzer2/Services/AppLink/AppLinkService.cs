@@ -7,13 +7,15 @@ namespace HitAnalyzer2.Services.AppLink
 {
     internal sealed class AppLinkService
     {
-        public async Task SendTestAsync(AppLinkSettings settings)
+        public Task SendTestAsync(AppLinkSettings settings) => SendAsync(settings, HipMessages.GetTest());
+
+        public async Task SendAsync(AppLinkSettings settings, string message)
         {
             var destination = new IPEndPoint(IPAddress.Parse(settings.DestinationAddress), settings.DestinationPort);
-            var message = Encoding.UTF8.GetBytes(HipMessages.GetTest());
+            var payload = Encoding.UTF8.GetBytes(message);
 
             using var client = new UdpClient(destination.AddressFamily);
-            await client.SendAsync(message, message.Length, destination);
+            await client.SendAsync(payload, payload.Length, destination);
         }
     }
 }

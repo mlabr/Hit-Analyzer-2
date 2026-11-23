@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.AppLink;
 using System.Globalization;
 using System.Linq;
@@ -71,6 +72,25 @@ namespace HitAnalyzer2.ViewModels
             catch (SocketException ex)
             {
                 TestStatus = $"Could not send UDP test message. {ex.Message}";
+            }
+        }
+
+        internal async Task SendMonoscopeHitAsync(Position? position)
+        {
+            if (!IsEnabled)
+                return;
+
+            try
+            {
+                var settings = GetConfiguration();
+                var message = position is null
+                    ? HipMessages.GetMonoscopeOutOfRange()
+                    : HipMessages.GetMonoscopeHit(position.X, position.Y);
+                await _appLinkService.SendAsync(settings, message);
+            }
+            catch (System.Exception ex) when (ex is JsonException or SocketException)
+            {
+                TestStatus = $"Could not send HIP message. {ex.Message}";
             }
         }
 
