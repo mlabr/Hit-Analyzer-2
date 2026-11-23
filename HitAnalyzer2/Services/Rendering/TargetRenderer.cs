@@ -47,12 +47,7 @@ namespace HitAnalyzer2.Services.Rendering
                 ? diameterPixels * settings.Height / settings.Width : diameterPixels;
             var center = ToTargetPixel(TargetModel.Center);
             if (settings.IsMonoscope)
-            {
-                var topLeft = ToTargetPixel(new Position(0, 0));
-                var bottomRight = ToTargetPixel(new Position(1, 1));
-                Cv2.Rectangle(preview, topLeft, bottomRight, palette.Paper, -1);
-                Cv2.Rectangle(preview, topLeft, bottomRight, palette.Outline);
-            }
+                DrawMonoscope(preview, ToTargetPixel(new Position(0, 0)), ToTargetPixel(new Position(1, 1)));
             else
                 DrawTargetRings(preview, center, diameterPixels, settings, palette);
 
@@ -109,6 +104,59 @@ namespace HitAnalyzer2.Services.Rendering
             Point ToTargetPixel(Position point) =>
                 new(Math.Round((size - 1) * 0.5 + (point.X - 0.5) * width),
                     Math.Round((size - 1) * 0.5 + (point.Y - 0.5) * height));
+        }
+
+        private static void DrawMonoscope(Mat preview, Point topLeft, Point bottomRight)
+        {
+            var black = new Scalar(16, 16, 16, 255);
+            var white = new Scalar(244, 244, 244, 255);
+            var grid = new Scalar(190, 190, 190, 255);
+            int width = bottomRight.X - topLeft.X;
+            int height = bottomRight.Y - topLeft.Y;
+            int shortSide = Math.Min(width, height);
+            Cv2.Rectangle(preview, topLeft, bottomRight, white, -1);
+            Cv2.Rectangle(preview, topLeft, bottomRight, black);
+            if (shortSide < 16)
+                return;
+
+            Point At(double x, double y) =>
+                new(topLeft.X + Math.Round(x * width), topLeft.Y + Math.Round(y * height));
+
+            for (int i = 1; i < 8; i++)
+            {
+                double step = i / 8.0;
+                Cv2.Line(preview, At(step, 0.08), At(step, 0.80), grid);
+                Cv2.Line(preview, At(0.08, step * 0.80), At(0.92, step * 0.80), grid);
+            }
+
+            var center = At(0.5, 0.5);
+            int radius = (int)Math.Round(shortSide * 0.28);
+            Cv2.Circle(preview, center, radius, black, 1, LineTypes.AntiAlias);
+            Cv2.Line(preview, At(0.08, 0.5), At(0.92, 0.5), black, 1, LineTypes.AntiAlias);
+            Cv2.Line(preview, At(0.5, 0.08), At(0.5, 0.80), black, 1, LineTypes.AntiAlias);
+
+            const int levels = 7;
+            for (int i = 0; i < levels; i++)
+            {
+                double shade = 255.0 * i / (levels - 1);
+                Cv2.Rectangle(preview, At(0.18 + 0.64 * i / levels, 0.84),
+                    At(0.18 + 0.64 * (i + 1) / levels, 0.94), new Scalar(shade, shade, shade, 255), -1);
+            }
+            Cv2.Rectangle(preview, At(0.18, 0.84), At(0.82, 0.94), black);
+
+            DrawCorner(0.04, 0.05, 1, 1);
+            DrawCorner(0.96, 0.05, -1, 1);
+            DrawCorner(0.04, 0.95, 1, -1);
+            DrawCorner(0.96, 0.95, -1, -1);
+
+            void DrawCorner(double x, double y, int directionX, int directionY)
+            {
+                int arm = Math.Max(2, shortSide / 12);
+                int thickness = Math.Max(1, shortSide / 75);
+                var corner = At(x, y);
+                Cv2.Line(preview, corner, new Point(corner.X + directionX * arm, corner.Y), black, thickness);
+                Cv2.Line(preview, corner, new Point(corner.X, corner.Y + directionY * arm), black, thickness);
+            }
         }
 
         private static void DrawTargetRings(Mat preview, Point center, double diameterPixels,
