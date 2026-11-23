@@ -20,7 +20,7 @@
     </Window.Styles>
 
     <Grid RowDefinitions="Auto,*">
-        <Menu x:Name="SettingsMenu">
+        <Menu x:Name="SettingsMenu" IsEnabled="{Binding ShootingSettings.IsTabSwitchingEnabled}">
             <MenuItem Header="_Shooting" Click="ShowShootingSettings" Classes.active="{Binding #ShootingSettings.IsVisible}" />
             <MenuItem Header="_Weapon" Click="ShowWeaponSettings" Classes.active="{Binding #WeaponSettings.IsVisible}" />
             <MenuItem Header="_Target" Click="ShowTargetSettings" Classes.active="{Binding #TargetSettings.IsVisible}" />

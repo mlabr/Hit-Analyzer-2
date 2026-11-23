@@ -14,7 +14,7 @@
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u0026a348e72\u00264\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_1e2f\u0026pid_9801\u0026mi_00#6\u00261a040c39\u00261\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
       "Width": 640,
@@ -33,20 +33,20 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.3203,
-          "Y": 0.1229
+          "X": 0.2000,
+          "Y": 0.1000
         },
         "TopRight": {
-          "X": 0.7766,
-          "Y": 0.1229
+          "X": 0.8000,
+          "Y": 0.1000
         },
         "BottomRight": {
-          "X": 0.8203,
-          "Y": 0.7229
+          "X": 0.8000,
+          "Y": 0.9000
         },
         "BottomLeft": {
-          "X": 0.2672,
-          "Y": 0.7146
+          "X": 0.2000,
+          "Y": 0.9000
         }
       }
     }
@@ -69,9 +69,9 @@
     "Profile": {
       "Type": "ha_weapon",
       "Name": "weapon1",
-      "Caliber": 5,
-      "OffsetX": 0,
-      "OffsetY": 0,
+      "Caliber": 20,
+      "OffsetX": 45,
+      "OffsetY": -35,
       "Trigger": "FirstSpot",
       "NexDetectionInterval": 500
     }

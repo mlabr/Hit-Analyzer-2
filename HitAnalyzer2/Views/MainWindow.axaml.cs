@@ -131,14 +131,16 @@ namespace HitAnalyzer2.Views
 
         private void ShowAbout(object? sender, RoutedEventArgs e)
         {
-            ShowSettings(About);
+            if (!ShowSettings(About))
+                return;
             AboutContent.IsVisible = true;
             HelpContent.IsVisible = false;
         }
 
         private void ShowHelp(object? sender, RoutedEventArgs e)
         {
-            ShowSettings(About);
+            if (!ShowSettings(About))
+                return;
             AboutContent.IsVisible = false;
             HelpContent.IsVisible = true;
         }
@@ -160,8 +162,12 @@ namespace HitAnalyzer2.Views
             }
         }
 
-        private void ShowSettings(Control view)
+        private bool ShowSettings(Control view)
         {
+            if (view != ShootingSettings &&
+                DataContext is MainWindowViewModel { ShootingSettings.IsTabSwitchingEnabled: false })
+                return false;
+
 			ShootingSettings.IsVisible = view == ShootingSettings;
             bool showWeaponPreview = view == WeaponSettings;
             if (!showWeaponPreview)
@@ -193,6 +199,7 @@ namespace HitAnalyzer2.Views
             UpdateWeaponOffsetZoom();
             UpdateCalibrationOverlay();
             FitWindowToPreview();
+            return true;
         }
 
         private void InvalidateCalibrationOverlay()

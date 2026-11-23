@@ -129,6 +129,14 @@ namespace HitAnalyzer2.ViewModels
         public int HitCount => _recording.GetHitRecordCount();
         public int StartCountdown => _shootingSession.GetSessionStatus().StartCountdown;
         public bool IsStartCountdownVisible => StartCountdown > 0;
+        public bool IsTabSwitchingEnabled
+        {
+            get
+            {
+                var status = _shootingSession.GetSessionStatus();
+                return !status.IsRunning && status.StartCountdown == 0;
+            }
+        }
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsSessionComplete))]
@@ -246,6 +254,7 @@ namespace HitAnalyzer2.ViewModels
             OnPropertyChanged(nameof(SessionElapsedText));
             OnPropertyChanged(nameof(StartCountdown));
             OnPropertyChanged(nameof(IsStartCountdownVisible));
+            OnPropertyChanged(nameof(IsTabSwitchingEnabled));
         }
     }
 }
