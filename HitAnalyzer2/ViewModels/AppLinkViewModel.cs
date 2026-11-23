@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using HitAnalyzer2.Services.Networking;
+using HitAnalyzer2.Services.AppLink;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace HitAnalyzer2.ViewModels
 {
-    public partial class NetworkingViewModel : ViewModelBase
+    public partial class AppLinkViewModel : ViewModelBase
     {
-        private readonly NetworkService _network = new();
+        private readonly AppLinkService _appLinkService = new();
 
         [ObservableProperty] private bool _isEnabled;
         [ObservableProperty] private bool _showAdvanced;
@@ -23,7 +23,7 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty] private string? _sid;
         [ObservableProperty] private string? _testStatus;
 
-        internal NetworkingViewModel(NetworkingSettings settings)
+        internal AppLinkViewModel(AppLinkSettings settings)
         {
             IsEnabled = settings.IsEnabled;
             ReceivePort = settings.ReceivePort.ToString(CultureInfo.InvariantCulture);
@@ -33,9 +33,15 @@ namespace HitAnalyzer2.ViewModels
             Sid = settings.Sid;
         }
 
-        internal NetworkingSettings GetConfiguration()
+        partial void OnSidChanged(string? value)
         {
-            return new NetworkingSettings
+            if (value is { Length: 8 } && value.All(char.IsAsciiDigit))
+                HipMessages.Sid = value;
+        }
+
+        internal AppLinkSettings GetConfiguration()
+        {
+            return new AppLinkSettings
             {
                 IsEnabled = IsEnabled,
                 ReceivePort = ParsePort(ReceivePort, "Receive port"),
@@ -55,7 +61,7 @@ namespace HitAnalyzer2.ViewModels
             try
             {
                 var settings = GetConfiguration();
-                await _network.SendTestAsync(settings);
+                await _appLinkService.SendTestAsync(settings);
                 TestStatus = "UDP test message sent. Check the receiving application.";
             }
             catch (JsonException ex)

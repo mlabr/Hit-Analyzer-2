@@ -1,5 +1,5 @@
 {
-  "Theme": "System",
+  "Theme": "Light",
   "Shooting": {
     "Shooter": "",
     "IsHitLimitEnable": true,
@@ -14,7 +14,7 @@
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_1e2f\u0026pid_9801\u0026mi_00#6\u00261a040c39\u00261\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u002622fbc4d2\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
       "Width": 640,
@@ -33,20 +33,20 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2000,
-          "Y": 0.1000
+          "X": 0.2922,
+          "Y": 0.2854
         },
         "TopRight": {
-          "X": 0.8000,
-          "Y": 0.1000
+          "X": 0.6719,
+          "Y": 0.2813
         },
         "BottomRight": {
-          "X": 0.8000,
-          "Y": 0.9000
+          "X": 0.6937,
+          "Y": 0.7875
         },
         "BottomLeft": {
-          "X": 0.2000,
-          "Y": 0.9000
+          "X": 0.2484,
+          "Y": 0.7896
         }
       }
     }
@@ -64,7 +64,7 @@
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },
-  "Networking": {
+  "AppLink": {
     "IsEnabled": true,
     "ReceivePort": 45100,
     "DestinationPort": 45101,
@@ -77,9 +77,9 @@
     "Profile": {
       "Type": "ha_weapon",
       "Name": "weapon1",
-      "Caliber": 20,
-      "OffsetX": 45,
-      "OffsetY": -35,
+      "Caliber": 5,
+      "OffsetX": -3,
+      "OffsetY": -5,
       "Trigger": "FirstSpot",
       "NexDetectionInterval": 500
     }

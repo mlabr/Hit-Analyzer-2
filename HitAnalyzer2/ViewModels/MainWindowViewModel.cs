@@ -44,7 +44,7 @@ namespace HitAnalyzer2.ViewModels
         public ShootingSettingsViewModel ShootingSettings { get; }
         public WeaponSettingsViewModel WeaponSettings { get; }
         public TargetSettingsViewModel TargetSettings { get; }
-        public NetworkingViewModel Networking { get; }
+        public AppLinkViewModel AppLink { get; }
 
         [ObservableProperty]
         private string? configurationMessage;
@@ -71,7 +71,7 @@ namespace HitAnalyzer2.ViewModels
             _detectionSettings = settings.Current.Detection;
             WeaponSettings = weaponSettings;
             TargetSettings = targetSettings;
-            Networking = new NetworkingViewModel(settings.Current.Networking ?? new NetworkingSettings());
+            AppLink = new AppLinkViewModel(settings.Current.AppLink ?? new AppLinkSettings());
             _shootingSession = shootingSession;
             _recording = recording;
             ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration);
@@ -242,7 +242,7 @@ namespace HitAnalyzer2.ViewModels
 
             try
             {
-                _settings.SaveConfiguration(configuration with { Networking = Networking.GetConfiguration() }, weapon);
+                _settings.SaveConfiguration(configuration with { AppLink = AppLink.GetConfiguration() }, weapon);
                 if (weapon is not null && WeaponSettings.SelectedWeapon is { } selected)
                     selected.Profile = weapon.Profile;
                 ConfigurationMessage = "Settings saved.";

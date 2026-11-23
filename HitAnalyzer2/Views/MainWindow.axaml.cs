@@ -123,7 +123,7 @@ namespace HitAnalyzer2.Views
 
         private void ShowDetectionSettings(object? sender, RoutedEventArgs e) => ShowSettings(DetectionSettings);
 
-        private void ShowNetworking(object? sender, RoutedEventArgs e) => ShowSettings(Networking);
+        private void ShowAppLink(object? sender, RoutedEventArgs e) => ShowSettings(AppLink);
 
         private void ShowTargetSettings(object? sender, RoutedEventArgs e) =>
             ShowSettings(TargetSettings);
@@ -188,7 +188,7 @@ namespace HitAnalyzer2.Views
             }
 			CameraSettings.IsVisible = view == CameraSettings;
             DetectionSettings.IsVisible = view == DetectionSettings;
-            Networking.IsVisible = view == Networking;
+            AppLink.IsVisible = view == AppLink;
             WeaponSettings.IsVisible = view == WeaponSettings;
             
             TargetSettings.IsVisible = view == TargetSettings;

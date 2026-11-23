@@ -36,7 +36,6 @@
 
 
   <ItemGroup>
-    <Folder Include="Services\Networking\" />
     <Folder Include="Services\Statistics\" />
   </ItemGroup>
 

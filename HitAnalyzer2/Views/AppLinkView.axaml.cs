@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace HitAnalyzer2.Views
 {
-    public partial class NetworkingView : UserControl
+    public partial class AppLinkView : UserControl
     {
-        public NetworkingView()
+        public AppLinkView()
         {
             InitializeComponent();
         }

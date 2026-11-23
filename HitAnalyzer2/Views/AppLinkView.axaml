@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:HitAnalyzer2.ViewModels"
-             x:Class="HitAnalyzer2.Views.NetworkingView"
-             x:DataType="vm:NetworkingViewModel">
+             x:Class="HitAnalyzer2.Views.AppLinkView"
+             x:DataType="vm:AppLinkViewModel">
     <StackPanel Spacing="4">
         <CheckBox Content="Enable HIP" IsChecked="{Binding IsEnabled}" />
         <TextBlock Text="Receive port" />

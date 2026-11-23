@@ -16,7 +16,7 @@ namespace HitAnalyzer2
         public CameraSettings Camera { get; init; } = new();
         public TargetSettings Target { get; init; } = new();
         public DetectionSettings Detection { get; init; } = new();
-        public NetworkingSettings Networking { get; init; } = new();
+        public AppLinkSettings AppLink { get; init; } = new();
         [JsonPropertyName("Weapon")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public WeaponSettings? LegacyWeapon { get; init; }
@@ -24,14 +24,16 @@ namespace HitAnalyzer2
         public SavedWeaponProfile? SelectedWeapon { get; init; }
     }
 
-    internal sealed record NetworkingSettings
+    internal sealed record AppLinkSettings
     {
+        internal const string DefaultSid = "00000001";
+
         public bool IsEnabled { get; init; }
         public int ReceivePort { get; init; } = 45100;
         public int DestinationPort { get; init; } = 45101;
         public string LocalAddress { get; init; } = "127.0.0.1";
         public string DestinationAddress { get; init; } = "127.0.0.1";
-        public string Sid { get; init; } = "00000001";
+        public string Sid { get; init; } = DefaultSid;
     }
 
     public enum ThemePreference
