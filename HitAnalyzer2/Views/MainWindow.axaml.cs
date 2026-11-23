@@ -194,7 +194,7 @@ namespace HitAnalyzer2.Views
             TargetSettings.IsVisible = view == TargetSettings;
             About.IsVisible = view == About;
             InformationPanel.IsVisible = About.IsVisible;
-            CameraPreview.IsVisible = !About.IsVisible;
+            CameraPreview.IsVisible = !About.IsVisible && !AppLink.IsVisible;
             UpdateMinimumWindowSize();
             _zoomPointer = null;
             UpdateWeaponOffsetCursor(null);
@@ -398,7 +398,8 @@ namespace HitAnalyzer2.Views
         private void FitWindowToPreview()
         {
             UpdateMinimumWindowSize();
-            if (About.IsVisible || _previewPixelSize is not { } pixels || WindowState != WindowState.Normal || _stoppingCamera)
+            if (!CameraPreview.IsVisible || _previewPixelSize is not { } pixels ||
+                WindowState != WindowState.Normal || _stoppingCamera)
                 return;
 
             var imageSize = new Size(pixels.Width / RenderScaling, pixels.Height / RenderScaling);
