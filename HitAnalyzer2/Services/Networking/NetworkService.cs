@@ -10,7 +10,7 @@ namespace HitAnalyzer2.Services.Networking
         public async Task SendTestAsync(NetworkingSettings settings)
         {
             var destination = new IPEndPoint(IPAddress.Parse(settings.DestinationAddress), settings.DestinationPort);
-            var message = Encoding.UTF8.GetBytes($"HA-0200-{settings.Sid}-Hello world!");
+            var message = Encoding.UTF8.GetBytes(HipMessages.CreateTest(settings.Sid));
 
             using var client = new UdpClient(destination.AddressFamily);
             await client.SendAsync(message, message.Length, destination);
