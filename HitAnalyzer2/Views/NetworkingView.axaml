@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HitAnalyzer2.ViewModels"
+             x:Class="HitAnalyzer2.Views.NetworkingView"
+             x:DataType="vm:NetworkingViewModel">
+    <StackPanel Spacing="4">
+        <CheckBox Content="Enable HIP" IsChecked="{Binding IsEnabled}" />
+        <TextBlock Text="Receive port" />
+        <TextBox Text="{Binding ReceivePort}" AutomationProperties.Name="Receive port" />
+        <TextBlock Text="Destination port" />
+        <TextBox Text="{Binding DestinationPort}" AutomationProperties.Name="Destination port" />
+        <CheckBox Content="Advanced settings" IsChecked="{Binding ShowAdvanced}" />
+        <StackPanel Spacing="4" IsVisible="{Binding ShowAdvanced}">
+            <TextBlock Text="Local IP address" />
+            <TextBox Text="{Binding LocalAddress}" AutomationProperties.Name="Local IP address" />
+            <TextBlock Text="Destination IP address" />
+            <TextBox Text="{Binding DestinationAddress}" AutomationProperties.Name="Destination IP address" />
+            <TextBlock Text="Application SID" />
+            <TextBox Text="{Binding Sid}" MaxLength="8" AutomationProperties.Name="Application SID" />
+        </StackPanel>
+        <Button Content="Send test message" Command="{Binding SendTestCommand}" IsEnabled="{Binding IsEnabled}" />
+        <TextBlock Text="{Binding TestStatus}" TextWrapping="Wrap" />
+        <Button Content="Save"
+                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
+    </StackPanel>
+</UserControl>

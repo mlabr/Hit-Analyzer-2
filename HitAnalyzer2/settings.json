@@ -64,6 +64,14 @@
     "VerticalForbiddenZoneSize": 50,
     "HorizontalForbiddenZoneSize": 50
   },
+  "Networking": {
+    "IsEnabled": true,
+    "ReceivePort": 45100,
+    "DestinationPort": 45101,
+    "LocalAddress": "127.0.0.1",
+    "DestinationAddress": "127.0.0.1",
+    "Sid": "00000001"
+  },
   "SelectedWeapon": {
     "FileName": "weapon1.json",
     "Profile": {

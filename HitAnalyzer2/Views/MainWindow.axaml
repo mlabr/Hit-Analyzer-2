@@ -26,6 +26,7 @@
             <MenuItem Header="_Target" Click="ShowTargetSettings" Classes.active="{Binding #TargetSettings.IsVisible}" />
             <MenuItem Header="_Camera" Click="ShowCameraSettings" Classes.active="{Binding #CameraSettings.IsVisible}" />
             <MenuItem Header="_Detection" Click="ShowDetectionSettings" Classes.active="{Binding #DetectionSettings.IsVisible}" />
+            <MenuItem Header="_Networking" Click="ShowNetworking" Classes.active="{Binding #Networking.IsVisible}" />
             <MenuItem Header="_About" Click="ShowAbout" Classes.active="{Binding #About.IsVisible}" />
         </Menu>
         <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto" ColumnDefinitions="Auto,*">
@@ -204,6 +205,8 @@
                                                         DataContext="{Binding ShootingSettings}" />
                             <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
                                                       DataContext="{Binding TargetSettings}" />
+                            <views:NetworkingView x:Name="Networking" IsVisible="False"
+                                                  DataContext="{Binding Networking}" />
                             <StackPanel x:Name="About" IsVisible="False" Spacing="4">
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Theme" />
