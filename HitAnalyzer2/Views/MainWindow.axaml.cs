@@ -85,6 +85,7 @@ namespace HitAnalyzer2.Views
                     await viewModel.RefreshCamerasAsync();
             };
             Closing += StopCameraBeforeClosing;
+            Closed += (_, _) => (DataContext as MainWindowViewModel)?.AudioSettings.Dispose();
             AddHandler(KeyDownEvent, (_, e) =>
             {
                 if (e.Key == Key.F1 && e.KeyModifiers == KeyModifiers.None)
@@ -120,6 +121,8 @@ namespace HitAnalyzer2.Views
         }
 
         private void ShowCameraSettings(object? sender, RoutedEventArgs e) => ShowSettings(CameraSettings);
+
+        private void ShowAudioSettings(object? sender, RoutedEventArgs e) => ShowSettings(AudioSettings);
 
         private void ShowDetectionSettings(object? sender, RoutedEventArgs e) => ShowSettings(DetectionSettings);
 
@@ -192,6 +195,7 @@ namespace HitAnalyzer2.Views
             WeaponSettings.IsVisible = view == WeaponSettings;
             
             TargetSettings.IsVisible = view == TargetSettings;
+            AudioSettings.IsVisible = view == AudioSettings;
             About.IsVisible = view == About;
             InformationPanel.IsVisible = About.IsVisible;
             CameraPreview.IsVisible = !About.IsVisible && !AppLink.IsVisible;

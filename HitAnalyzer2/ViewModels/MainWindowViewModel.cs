@@ -45,6 +45,7 @@ namespace HitAnalyzer2.ViewModels
         public ShootingSettingsViewModel ShootingSettings { get; }
         public WeaponSettingsViewModel WeaponSettings { get; }
         public TargetSettingsViewModel TargetSettings { get; }
+        public AudioSettingsViewModel AudioSettings { get; }
         public AppLinkViewModel AppLink { get; }
 
         [ObservableProperty]
@@ -72,12 +73,21 @@ namespace HitAnalyzer2.ViewModels
             _detectionSettings = settings.Current.Detection;
             WeaponSettings = weaponSettings;
             TargetSettings = targetSettings;
+            AudioSettings = new AudioSettingsViewModel(settings.Current.Audio);
             AppLink = new AppLinkViewModel(settings.Current.AppLink ?? new AppLinkSettings());
             _shootingSession = shootingSession;
             _recording = recording;
             ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration);
             shootingSession.MonoscopeHitEvaluated += position =>
-                Dispatcher.UIThread.Post(async () => await AppLink.SendMonoscopeHitAsync(position));
+                Dispatcher.UIThread.Post(async () =>
+                {
+                    AudioSettings.PlayHit(null);
+                    await AppLink.SendMonoscopeHitAsync(position);
+                });
+            shootingSession.HitRecorded += hit =>
+                Dispatcher.UIThread.Post(() => AudioSettings.PlayHit(hit));
+            shootingSession.SessionRunningChanged += running =>
+                Dispatcher.UIThread.Post(() => AudioSettings.PlaySessionState(running));
             TargetSettings.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(TargetSettingsViewModel.SelectedTarget))
@@ -241,6 +251,7 @@ namespace HitAnalyzer2.ViewModels
                 Shooting = ShootingSettings.GetConfiguration(current.Shooting),
                 Camera = camera,
                 Target = TargetSettings.GetConfiguration(),
+                Audio = AudioSettings.GetConfiguration(),
                 Detection = detection,
                 SelectedWeapon = weapon ?? current.SelectedWeapon,
                 LegacyWeapon = weapon is null && current.SelectedWeapon is null

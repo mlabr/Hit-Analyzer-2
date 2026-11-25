@@ -24,7 +24,8 @@ namespace HitAnalyzer2
                 new JsonStringEnumConverter<ThemePreference>(),
                 new JsonStringEnumConverter<FlipMode>(),
                 new JsonStringEnumConverter<DetectionMethod>(),
-                new JsonStringEnumConverter<TriggerTypeEnum>()
+                new JsonStringEnumConverter<TriggerTypeEnum>(),
+                new JsonStringEnumConverter<AudioEffectMode>()
             }
         };
 
@@ -232,6 +233,9 @@ namespace HitAnalyzer2
 
             if (settings is not { Camera: { } camera, Detection: { } detection })
                 throw new JsonException("Camera or detection settings are missing.");
+
+            if (settings.Audio is not { } audio || !Enum.IsDefined(audio.Effect))
+                throw new JsonException("Invalid audio settings.");
 
             if (settings.Target is not { CalibrationZoom: 2 or 4 or 8, Calibration: not null })
                 throw new JsonException("Invalid target calibration zoom.");

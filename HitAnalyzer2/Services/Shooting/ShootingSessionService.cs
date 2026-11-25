@@ -59,6 +59,8 @@ namespace HitAnalyzer2.Services.Shooting
         private TimeSpan NextDetectionTimestamp { get; set; }
 
         internal event Action? SessionStatusChanged;
+        internal event Action<bool>? SessionRunningChanged;
+        internal event Action<HitPosition>? HitRecorded;
         internal event Action? MonoscopeHitCountChanged;
         internal event Action<Position?>? MonoscopeHitEvaluated;
 
@@ -92,6 +94,7 @@ namespace HitAnalyzer2.Services.Shooting
                 if (IsMonoscope)
                 {
                     _sessionStartedAt = Stopwatch.GetTimestamp();
+                    SessionRunningChanged?.Invoke(true);
                     return;
                 }
 
@@ -123,6 +126,7 @@ namespace HitAnalyzer2.Services.Shooting
                         {
                             long startedAt = Stopwatch.GetTimestamp();
                             _sessionStartedAt = startedAt;
+                            SessionRunningChanged?.Invoke(true);
                             if (_remainingHits == 0)
                             {
                                 EndSession(TimeSpan.Zero, SessionEndReason.HitLimit);
@@ -182,6 +186,7 @@ namespace HitAnalyzer2.Services.Shooting
             _sessionEndReason = reason;
             StopSessionTimeout();
             CompleteRecordingFollowPath();
+            SessionRunningChanged?.Invoke(false);
             SessionStatusChanged?.Invoke();
         }
 
@@ -275,6 +280,7 @@ namespace HitAnalyzer2.Services.Shooting
         {
             lock (_hitGate)
             {
+                bool wasRunning = _sessionStartedAt.HasValue && !_sessionEndedAt.HasValue;
                 StopSessionTimeout();
                 _startCountdown = 0;
                 _sessionStartedAt = null;
@@ -289,6 +295,8 @@ namespace HitAnalyzer2.Services.Shooting
                 NextDetectionTimestamp = TimeSpan.Zero;
                 ClearShotState();
                 recording.ClearNormalizedHitRecordList();
+                if (wasRunning)
+                    SessionRunningChanged?.Invoke(false);
             }
         }
 
@@ -428,15 +436,18 @@ namespace HitAnalyzer2.Services.Shooting
                     CompleteRecordingFollowPath();
 
                 if (hitRecord is not null && calibrationAtHit is not null &&
-                    recording.TryAddNormalizedHitRecord(hitRecord, calibrationAtHit) &&
-                    _remainingHits is { } remainingHits && _sessionStartedAt is { } sessionStart)
+                    recording.TryAddNormalizedHitRecord(hitRecord, calibrationAtHit))
                 {
-                    _remainingHits = remainingHits - 1;
-                    if (_remainingHits == 0)
+                    HitRecorded?.Invoke(hitRecord.HitPosition);
+                    if (_remainingHits is { } remainingHits && _sessionStartedAt is { } sessionStart)
                     {
-                        var sessionElapsed = Stopwatch.GetElapsedTime(sessionStart);
-                        EndSession(_sessionTimeLimit is { } limit && sessionElapsed > limit ? limit : sessionElapsed,
-                            SessionEndReason.HitLimit);
+                        _remainingHits = remainingHits - 1;
+                        if (_remainingHits == 0)
+                        {
+                            var sessionElapsed = Stopwatch.GetElapsedTime(sessionStart);
+                            EndSession(_sessionTimeLimit is { } limit && sessionElapsed > limit ? limit : sessionElapsed,
+                                SessionEndReason.HitLimit);
+                        }
                     }
                 }
 

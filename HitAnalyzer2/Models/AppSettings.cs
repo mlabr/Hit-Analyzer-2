@@ -15,6 +15,7 @@ namespace HitAnalyzer2
         public ShootingSettings Shooting { get; init; } = new();
         public CameraSettings Camera { get; init; } = new();
         public TargetSettings Target { get; init; } = new();
+        public AudioSettings Audio { get; init; } = new();
         public DetectionSettings Detection { get; init; } = new();
         public AppLinkSettings AppLink { get; init; } = new();
         [JsonPropertyName("Weapon")]
@@ -22,6 +23,20 @@ namespace HitAnalyzer2
         public WeaponSettings? LegacyWeapon { get; init; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public SavedWeaponProfile? SelectedWeapon { get; init; }
+    }
+
+    internal sealed record AudioSettings
+    {
+        public bool IsEnabled { get; init; }
+        public AudioEffectMode Effect { get; init; } = AudioEffectMode.HitOnly;
+    }
+
+    public enum AudioEffectMode
+    {
+        HitOnly,
+        SpotterScore,
+        Spotter8Directions,
+        Spotter12Directions
     }
 
     internal sealed record AppLinkSettings

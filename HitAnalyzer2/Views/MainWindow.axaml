@@ -24,6 +24,7 @@
             <MenuItem Header="_Shooting" Click="ShowShootingSettings" Classes.active="{Binding #ShootingSettings.IsVisible}" />
             <MenuItem Header="_Weapon" Click="ShowWeaponSettings" Classes.active="{Binding #WeaponSettings.IsVisible}" />
             <MenuItem Header="_Target" Click="ShowTargetSettings" Classes.active="{Binding #TargetSettings.IsVisible}" />
+            <MenuItem Header="Audi_o" Click="ShowAudioSettings" Classes.active="{Binding #AudioSettings.IsVisible}" />
             <MenuItem Header="_Camera" Click="ShowCameraSettings" Classes.active="{Binding #CameraSettings.IsVisible}" />
             <MenuItem Header="_Detection" Click="ShowDetectionSettings" Classes.active="{Binding #DetectionSettings.IsVisible}" />
             <MenuItem Header="App_Link" Click="ShowAppLink" Classes.active="{Binding #AppLink.IsVisible}" />
@@ -205,6 +206,8 @@
                                                         DataContext="{Binding ShootingSettings}" />
                             <views:TargetSettingsView x:Name="TargetSettings" IsVisible="False"
                                                       DataContext="{Binding TargetSettings}" />
+                            <views:AudioSettingsView x:Name="AudioSettings" IsVisible="False"
+                                                     DataContext="{Binding AudioSettings}" />
                             <views:AppLinkView x:Name="AppLink" IsVisible="False"
                                                DataContext="{Binding AppLink}" />
                             <StackPanel x:Name="About" IsVisible="False" Spacing="4">

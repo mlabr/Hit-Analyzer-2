@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:HitAnalyzer2.ViewModels"
+             x:Class="HitAnalyzer2.Views.AudioSettingsView"
+             x:DataType="vm:AudioSettingsViewModel">
+    <StackPanel Spacing="8">
+        <CheckBox Content="Enable audio" IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+        <TextBlock Text="Hit sound effect" />
+        <ComboBox HorizontalAlignment="Stretch"
+                  AutomationProperties.Name="Hit sound effect"
+                  IsEnabled="{Binding IsEnabled}"
+                  ItemsSource="{Binding Effects}"
+                  SelectedItem="{Binding SelectedEffect, Mode=TwoWay}" />
+        <TextBlock Text="{Binding AudioError}" IsVisible="{Binding HasAudioError}" TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

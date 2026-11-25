@@ -14,7 +14,7 @@
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u002622fbc4d2\u00260\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_1e2f\u0026pid_9801\u0026mi_00#6\u00261a040c39\u00261\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
       "Width": 640,
@@ -26,36 +26,40 @@
     "Flip": "X"
   },
   "Target": {
-    "SelectedTargetFileName": "monoscope_640.json",
+    "SelectedTargetFileName": "10m_air_pistol.json",
     "CalibrationZoom": 4,
     "RealDistanceMeters": 5,
     "SimulatedDistanceMeters": 10,
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.2922,
-          "Y": 0.2896
+          "X": 0.2985,
+          "Y": 0.2333
         },
         "TopRight": {
-          "X": 0.6672,
-          "Y": 0.2833
+          "X": 0.7032,
+          "Y": 0.2542
         },
         "BottomRight": {
           "X": 0.6937,
-          "Y": 0.7896
+          "Y": 0.7729
         },
         "BottomLeft": {
-          "X": 0.2500,
-          "Y": 0.7896
+          "X": 0.2906,
+          "Y": 0.7833
         }
       }
     }
+  },
+  "Audio": {
+    "IsEnabled": true,
+    "Effect": "SpotterScore"
   },
   "Detection": {
     "Method": "Blob",
     "DetectionSensitivity": 1,
     "BrightnessPercent": 50,
-    "ContrastPercent": 50,
+    "ContrastPercent": 56,
     "SaturationPercent": 0,
     "MinimumHitAreaPixels": null,
     "ShowFlares": true,
@@ -78,8 +82,8 @@
       "Type": "ha_weapon",
       "Name": "weapon1",
       "Caliber": 5,
-      "OffsetX": -3,
-      "OffsetY": -5,
+      "OffsetX": 1,
+      "OffsetY": -26,
       "Trigger": "FirstSpot",
       "NexDetectionInterval": 500
     }
