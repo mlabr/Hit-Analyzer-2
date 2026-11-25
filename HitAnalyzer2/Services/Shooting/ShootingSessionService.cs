@@ -419,7 +419,7 @@ namespace HitAnalyzer2.Services.Shooting
                         ProcessMonoscopeHit(monoscopeHit, frame.Width, frame.Height);
                     return (null, [], [], _lastTargetHit, 0,
                         position is { } current ? aimPositionHandler.GetAimPosition(current) : null,
-                        GetDetectionReadiness(frame, elapsed, isMonoscope));
+                        GetDetectionReadiness(frame, elapsed, frameCapturedTimestampMs, isMonoscope, position));
                 }
 
                 if (registeredHit is { } registered)
@@ -491,7 +491,7 @@ namespace HitAnalyzer2.Services.Shooting
                 followPath = _lastHitFollowPath;
                 lastTargetHit = _lastTargetHit;
                 caliberDiameterMm = _lastHitCaliberDiameterMm;
-                readiness = GetDetectionReadiness(frame, elapsed, isMonoscope);
+                readiness = GetDetectionReadiness(frame, elapsed, frameCapturedTimestampMs, isMonoscope, position);
             }
 
             LaserPositionEvaluated?.Invoke(registeredHit, targetPoint, elapsed);
@@ -532,17 +532,34 @@ namespace HitAnalyzer2.Services.Shooting
             (_lastHit is { } hit ? aimPositionHandler.GetAimPosition(hit) : null,
                 _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm, null, HitDetectionReadiness.Waiting);
 
-        private HitDetectionReadiness GetDetectionReadiness(Mat frame, TimeSpan elapsed, bool isMonoscope)
+        private static readonly TimeSpan TrackingIndicatorMinimumDuration = TimeSpan.FromMilliseconds(100);
+
+        private HitDetectionReadiness GetDetectionReadiness(Mat frame, TimeSpan elapsed, long capturedAt,
+            bool isMonoscope, LaserPosition? position)
         {
             if (_sessionEndedAt.HasValue)
                 return HitDetectionReadiness.Waiting;
 
-            if (_trigger == TriggerTypeEnum.FirstSpot && elapsed >= NextDetectionTimestamp)
+            if (elapsed >= NextDetectionTimestamp &&
+                (_trigger == TriggerTypeEnum.FirstSpot || (_trigger == TriggerTypeEnum.NewSpot && !_spotWasVisible)))
                 return HitDetectionReadiness.Ready;
 
+            if (_trigger == TriggerTypeEnum.ExternalEvent)
+            {
+                if (IsExternalTriggerActive(capturedAt))
+                    return HitDetectionReadiness.Ready;
+
+                return position is not null ? HitDetectionReadiness.Tracking : HitDetectionReadiness.Waiting;
+            }
+
             if (_trigger == TriggerTypeEnum.TimeOut && aimPositionHandler.LastAimPosition is { } lastAim)
-                return IsTimeOutPathReady(lastAim, frame, isMonoscope)
-                    ? HitDetectionReadiness.Ready : HitDetectionReadiness.Tracking;
+            {
+                if (IsTimeOutPathReady(lastAim, frame, isMonoscope))
+                    return HitDetectionReadiness.Ready;
+
+                if (aimPositionHandler.AimPathDuration >= TrackingIndicatorMinimumDuration)
+                    return HitDetectionReadiness.Tracking;
+            }
 
             return HitDetectionReadiness.Waiting;
         }
@@ -585,8 +602,7 @@ namespace HitAnalyzer2.Services.Shooting
             if (_trigger == TriggerTypeEnum.ExternalEvent)
             {
                 // Compare against capture time, even if the frame is processed after key-up.
-                return position is not null && _externalPressedAt is { } pressedAt &&
-                    capturedAt >= pressedAt && capturedAt < _externalReleasedAt;
+                return position is not null && IsExternalTriggerActive(capturedAt);
             }
 
             if (_trigger == TriggerTypeEnum.FirstSpot)
@@ -597,5 +613,8 @@ namespace HitAnalyzer2.Services.Shooting
             _spotWasVisible = position is not null;
             return appeared && intervalElapsed;
         }
+
+        private bool IsExternalTriggerActive(long capturedAt) =>
+            _externalPressedAt is { } pressedAt && capturedAt >= pressedAt && capturedAt < _externalReleasedAt;
     }
 }

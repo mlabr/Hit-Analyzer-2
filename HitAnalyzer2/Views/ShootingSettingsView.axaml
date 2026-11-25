@@ -54,8 +54,7 @@
             <Button Content="Start Session" Command="{Binding StartSessionCommand}" HorizontalAlignment="Left" />
             <Button Grid.Column="1" Content="Reset shooting" Command="{Binding ResetCommand}" />
         </Grid>
-        <Border IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).WeaponSettings.ShowHitDetectionReadiness}"
-                Padding="0,4">
+        <Border Padding="0,4">
             <StackPanel Spacing="4"
                         DataContext="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CameraPreview}"
                         x:DataType="vm:CameraPreviewViewModel">
