@@ -318,7 +318,7 @@ namespace HitAnalyzer2.Services.Shooting
         }
 
         internal (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
-            Position? LastTargetHit, double CaliberDiameterMm) ProcessFrame(
+            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim) ProcessFrame(
             Mat frame, long frameCapturedTimestampMs, double detectedFps, CancellationToken cancellationToken)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(appStartedTimestampMs, frameCapturedTimestampMs);
@@ -415,7 +415,8 @@ namespace HitAnalyzer2.Services.Shooting
                 {
                     if (registeredHit is { } monoscopeHit)
                         ProcessMonoscopeHit(monoscopeHit, frame.Width, frame.Height);
-                    return (null, [], [], _lastTargetHit, 0);
+                    return (null, [], [], _lastTargetHit, 0,
+                        position is { } current ? aimPositionHandler.GetAimPosition(current) : null);
                 }
 
                 if (registeredHit is { } registered)
@@ -495,7 +496,8 @@ namespace HitAnalyzer2.Services.Shooting
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
-                aimPath, followPath, lastTargetHit, caliberDiameterMm);
+                aimPath, followPath, lastTargetHit, caliberDiameterMm,
+                position is { } currentPosition ? aimPositionHandler.GetAimPosition(currentPosition) : null);
         }
 
         private void ProcessMonoscopeHit(LaserPosition hit, int frameWidth, int frameHeight)
@@ -522,9 +524,9 @@ namespace HitAnalyzer2.Services.Shooting
         }
 
         private (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
-            Position? LastTargetHit, double CaliberDiameterMm) GetLastHitSnapshot() =>
+            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim) GetLastHitSnapshot() =>
             (_lastHit is { } hit ? aimPositionHandler.GetAimPosition(hit) : null,
-                _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm);
+                _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm, null);
 
         private IReadOnlyList<LaserPosition> MapAimPath(LaserPosition[] path, double offsetX, double offsetY,
             int frameWidth, int frameHeight)

@@ -31,7 +31,7 @@ namespace HitAnalyzer2.Services.Rendering
             Position? originalTargetHit = null, HitGroupCircle? cep50 = null,
             HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null, int directionCount = 0,
             IReadOnlyList<LaserPosition>? aimPath = null, IReadOnlyList<LaserPosition>? followPath = null,
-            Func<double, double, Position?>? mapFollowPoint = null)
+            Func<double, double, Position?>? mapFollowPoint = null, Position? liveAim = null, Position? liveOffsetAim = null)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -79,6 +79,16 @@ namespace HitAnalyzer2.Services.Rendering
             }
             else if (lastTargetHit is { } hit)
                 DrawHit(hit);
+
+            if (liveAim is { } aim && IsInsidePreview(aim))
+                Cv2.DrawMarker(preview, ToTargetPixel(aim), new Scalar(0, 0, 255, 255), MarkerTypes.Cross, 12, 2, LineTypes.AntiAlias);
+
+            if (liveOffsetAim is { } offsetAim && IsInsidePreview(offsetAim))
+            {
+                var point = ToTargetPixel(offsetAim);
+                Cv2.Circle(preview, point, 8, palette.HitOutline, 4, LineTypes.AntiAlias);
+                Cv2.Circle(preview, point, 8, AimTraceRenderer.AimPathAfterColor, 2, LineTypes.AntiAlias);
+            }
 
             Scalar meanColor = isDarkTheme ? new(209, 213, 169, 255) : new(101, 93, 36, 255);
             Scalar cep50Color = isDarkTheme ? new(242, 183, 212, 255) : new(159, 73, 206, 255);

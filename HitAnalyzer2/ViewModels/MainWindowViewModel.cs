@@ -301,7 +301,7 @@ namespace HitAnalyzer2.ViewModels
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
             bool showTargetPreview = IsTargetPreviewActive;
             bool showWeaponOffsets = IsWeaponPreviewActive;
-            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm) =
+            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             if (showTargetPreview)
             {
@@ -309,8 +309,17 @@ namespace HitAnalyzer2.ViewModels
                 int size = Math.Min(pixels.Rows, pixels.Cols);
                 using var target = new Mat(size, size, pixels.Type());
                 Position? originalTargetHit = null;
+                Position? liveAim = null;
+                Position? liveOffsetAim = null;
                 double? previewScore = null;
                 double previewCaliberMm = showWeaponOffsets ? WeaponSettings.CaliberDiameterMm : caliberDiameterMm;
+                if (showWeaponOffsets && currentAim is { } weaponAim)
+                {
+                    var laser = weaponAim.LaserPosition;
+                    liveAim = calibration.MapHit(laser.X / pixels.Width, laser.Y / pixels.Height);
+                    liveOffsetAim = calibration.MapHit(weaponAim.X / pixels.Width, weaponAim.Y / pixels.Height);
+                }
+
                 if (showWeaponOffsets && lastHit is { } weaponHit)
                 {
                     var laser = weaponHit.LaserPosition;
@@ -336,7 +345,7 @@ namespace HitAnalyzer2.ViewModels
                 }
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, calibration.Settings,
                     previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit, aimPath: targetAimPath,
-                    followPath: followPath, mapFollowPoint: mapFollowPoint);
+                    followPath: followPath, mapFollowPoint: mapFollowPoint, liveAim: liveAim, liveOffsetAim: liveOffsetAim);
                 await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore,
                     showWeaponOffsets ? lastTargetHit : null);
                 return;

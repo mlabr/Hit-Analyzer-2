@@ -56,9 +56,9 @@
     "Effect": "HitOnly",
     "EffectVolume": 50,
     "SGA": {
-      "IsEnabled": true,
+      "IsEnabled": false,
       "IsStereo": true,
-      "FocusOnTarget": true,
+      "FocusOnTarget": false,
       "Volume": 50,
       "OffTargetFrequencyHz": 200,
       "OnTargetMinimumFrequencyHz": 400,
@@ -98,7 +98,7 @@
       "Caliber": 5,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "NewSpot",
+      "Trigger": "TimeOut",
       "NexDetectionInterval": 500
     }
   }
