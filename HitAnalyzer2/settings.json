@@ -3,8 +3,8 @@
   "Shooting": {
     "Shooter": "",
     "IsHitLimitEnable": true,
-    "HitLimit": 10,
-    "IsTimeLimitEnable": true,
+    "HitLimit": 5,
+    "IsTimeLimitEnable": false,
     "Countdown": true,
     "ShowSmallestHitGroup": true,
     "TimeLimitSeconds": 10,
@@ -53,7 +53,7 @@
   },
   "Audio": {
     "IsEnabled": true,
-    "Effect": "Spotter12Directions"
+    "Effect": "Spotter8Directions"
   },
   "Detection": {
     "Method": "Blob",

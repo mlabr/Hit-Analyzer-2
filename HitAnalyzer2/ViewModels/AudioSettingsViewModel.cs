@@ -65,7 +65,13 @@ namespace HitAnalyzer2.ViewModels
         }
 
         internal void PlaySessionState(bool running) =>
-            Play(running ? "english/shooting_started.wav" : "english/shooting_stop.wav");
+            Play(audio =>
+            {
+                if (running)
+                    audio.PlaySessionStart("english/shooting_started.wav");
+                else
+                    audio.PlayAfterLastShot("english/shooting_stop.wav");
+            });
 
         internal void PlayHit(HitPosition? hit, TargetModel? target = null)
         {
@@ -73,7 +79,7 @@ namespace HitAnalyzer2.ViewModels
             var mode = SelectedEffect?.Mode ?? AudioEffectMode.HitOnly;
             if (mode == AudioEffectMode.HitOnly || hit is null)
             {
-                Play(hitSample);
+                Play(audio => audio.PlayShot([hitSample]));
                 return;
             }
 
@@ -89,7 +95,7 @@ namespace HitAnalyzer2.ViewModels
                 clips.Add(GetDirectionSample(x, y, sectorCount, target));
             }
 
-            Play(clips.ToArray());
+            Play(audio => audio.PlayShot(clips.ToArray()));
         }
 
         private static string GetDirectionSample(double x, double y, int sectorCount, TargetModel? target)
@@ -109,7 +115,7 @@ namespace HitAnalyzer2.ViewModels
                 : FormattableString.Invariant($"english/s12d{sector:00}.wav");
         }
 
-        private void Play(params string[] samples)
+        private void Play(Action<AudioService> playback)
         {
             if (_disposed || !IsEnabled || HasAudioError)
                 return;
@@ -117,7 +123,7 @@ namespace HitAnalyzer2.ViewModels
             try
             {
                 _audio ??= new AudioService();
-                _audio.PlaySequence(samples);
+                playback(_audio);
             }
             catch (Exception ex)
             {

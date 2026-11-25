@@ -15,6 +15,7 @@ namespace HitAnalyzer2.Services.Audio
         private readonly Dictionary<AudioSource, Queue<AudioClip>> _playbacks = new();
         private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromMilliseconds(10) };
         private bool _disposed;
+        private Queue<AudioClip>? _lastShot;
 
         public AudioService()
         {
@@ -44,11 +45,37 @@ namespace HitAnalyzer2.Services.Audio
         /// <summary>Plays the given WAVs in order, independently of other playbacks.</summary>
         public void PlaySequence(params string[] samples)
         {
+            StartSequence(samples);
+        }
+
+        internal void PlayShot(string[] samples) => _lastShot = StartSequence(samples);
+
+        internal void PlaySessionStart(string sample)
+        {
+            _lastShot = null;
+            Play(sample);
+        }
+
+        internal void PlayAfterLastShot(string sample)
+        {
+            if (_lastShot is { } clips)
+            {
+                clips.Enqueue(_clips[sample]);
+                _lastShot = null;
+            }
+            else
+            {
+                Play(sample);
+            }
+        }
+
+        private Queue<AudioClip>? StartSequence(string[] samples)
+        {
             Dispatcher.UIThread.VerifyAccess();
             ObjectDisposedException.ThrowIf(_disposed, this);
             ArgumentNullException.ThrowIfNull(samples);
             if (samples.Length == 0)
-                return;
+                return null;
 
             var clips = new Queue<AudioClip>(samples.Length);
             foreach (var sample in samples)
@@ -63,6 +90,7 @@ namespace HitAnalyzer2.Services.Audio
             source.Play(clips.Dequeue());
             _playbacks.Add(source, clips);
             _updateTimer.Start();
+            return clips;
         }
 
         private void Update(object? sender, EventArgs e)
@@ -79,6 +107,8 @@ namespace HitAnalyzer2.Services.Audio
                 }
                 else
                 {
+                    if (ReferenceEquals(_lastShot, clips))
+                        _lastShot = null;
                     source.Dispose();
                     _playbacks.Remove(source);
                 }
@@ -99,6 +129,7 @@ namespace HitAnalyzer2.Services.Audio
             _updateTimer.Tick -= Update;
             AudioContext.Deinitialize();
             _playbacks.Clear();
+            _lastShot = null;
             _clips.Clear();
         }
     }
