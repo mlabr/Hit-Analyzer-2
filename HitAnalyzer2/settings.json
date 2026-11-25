@@ -1,5 +1,5 @@
 {
-  "Theme": "Dark",
+  "Theme": "Light",
   "Shooting": {
     "Shooter": "",
     "IsHitLimitEnable": true,
@@ -53,7 +53,7 @@
   },
   "Audio": {
     "IsEnabled": true,
-    "Effect": "Spotter12Directions",
+    "Effect": "HitOnly",
     "EffectVolume": 50,
     "SGA": {
       "IsEnabled": true,
@@ -83,7 +83,7 @@
     "HorizontalForbiddenZoneSize": 50
   },
   "AppLink": {
-    "IsEnabled": true,
+    "IsEnabled": false,
     "ReceivePort": 45100,
     "DestinationPort": 45101,
     "LocalAddress": "127.0.0.1",
