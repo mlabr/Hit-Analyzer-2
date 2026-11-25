@@ -68,24 +68,23 @@ namespace HitAnalyzer2.ViewModels
             Play(audio =>
             {
                 if (running)
-                    audio.PlaySessionStart("english/shooting_started.wav");
+                    audio.PlaySessionStart(AudioSamples.SessionStarted);
                 else
-                    audio.PlayAfterLastShot("english/shooting_stop.wav");
+                    audio.PlayAfterLastShot(AudioSamples.SessionEnded);
             });
 
         internal void PlayHit(HitPosition? hit, TargetModel? target = null)
         {
-            const string hitSample = "default_gunshot.wav";
             var mode = SelectedEffect?.Mode ?? AudioEffectMode.HitOnly;
             if (mode == AudioEffectMode.HitOnly || hit is null)
             {
-                Play(audio => audio.PlayShot([hitSample]));
+                Play(audio => audio.PlayShot([AudioSamples.Gunshot]));
                 return;
             }
 
-            var clips = new List<string> { hitSample };
+            var clips = new List<string> { AudioSamples.Gunshot };
             if (hit.Score is >= 0 and <= 10)
-                clips.Add(FormattableString.Invariant($"english/{Math.Round(hit.Score, MidpointRounding.AwayFromZero):0}_points.wav"));
+                clips.Add(AudioSamples.Score(Math.Round(hit.Score, MidpointRounding.AwayFromZero)));
 
             int sectorCount = DirectionCount;
             if (sectorCount > 0)
@@ -104,15 +103,13 @@ namespace HitAnalyzer2.ViewModels
             if (distance == 0 ||
                 target?.MaxDiameter is > 0 and var diameter &&
                 target.Rings.Any(ring => ring.PointValue == 10 && distance <= ring.Radius / diameter))
-                return "english/center.wav";
+                return AudioSamples.Center;
 
             // Image Y increases downward. Measure clockwise from the top, centered on each sector.
             double angle = Math.Atan2(x, -y);
             int nearest = (int)Math.Floor(angle * sectorCount / Math.Tau + 0.5);
             int sector = (nearest + sectorCount - 1) % sectorCount + 1;
-            return sectorCount == 8
-                ? FormattableString.Invariant($"english/s8d{sector}.wav")
-                : FormattableString.Invariant($"english/s12d{sector:00}.wav");
+            return AudioSamples.Direction(sectorCount, sector);
         }
 
         private void Play(Action<AudioService> playback)
