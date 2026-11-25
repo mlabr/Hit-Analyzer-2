@@ -84,8 +84,8 @@ namespace HitAnalyzer2.ViewModels
                     AudioSettings.PlayHit(null);
                     await AppLink.SendMonoscopeHitAsync(position);
                 });
-            shootingSession.HitRecorded += hit =>
-                Dispatcher.UIThread.Post(() => AudioSettings.PlayHit(hit));
+            shootingSession.HitRecorded += (hit, target) =>
+                Dispatcher.UIThread.Post(() => AudioSettings.PlayHit(hit, target));
             shootingSession.SessionRunningChanged += running =>
                 Dispatcher.UIThread.Post(() => AudioSettings.PlaySessionState(running));
             TargetSettings.PropertyChanged += (_, e) =>

@@ -67,7 +67,7 @@ namespace HitAnalyzer2.ViewModels
         internal void PlaySessionState(bool running) =>
             Play(running ? "english/shooting_started.wav" : "english/shooting_stop.wav");
 
-        internal void PlayHit(HitPosition? hit)
+        internal void PlayHit(HitPosition? hit, TargetModel? target = null)
         {
             const string hitSample = "default_gunshot.wav";
             var mode = SelectedEffect?.Mode ?? AudioEffectMode.HitOnly;
@@ -86,15 +86,18 @@ namespace HitAnalyzer2.ViewModels
             {
                 double x = hit.X - TargetModel.Center.X;
                 double y = hit.Y - TargetModel.Center.Y;
-                clips.Add(GetDirectionSample(x, y, sectorCount));
+                clips.Add(GetDirectionSample(x, y, sectorCount, target));
             }
 
             Play(clips.ToArray());
         }
 
-        private static string GetDirectionSample(double x, double y, int sectorCount)
+        private static string GetDirectionSample(double x, double y, int sectorCount, TargetModel? target)
         {
-            if (x == 0 && y == 0)
+            double distance = double.Hypot(x, y);
+            if (distance == 0 ||
+                target?.MaxDiameter is > 0 and var diameter &&
+                target.Rings.Any(ring => ring.PointValue == 10 && distance <= ring.Radius / diameter))
                 return "english/center.wav";
 
             // Image Y increases downward. Measure clockwise from the top, centered on each sector.

@@ -60,7 +60,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         internal event Action? SessionStatusChanged;
         internal event Action<bool>? SessionRunningChanged;
-        internal event Action<HitPosition>? HitRecorded;
+        internal event Action<HitPosition, TargetModel>? HitRecorded;
         internal event Action? MonoscopeHitCountChanged;
         internal event Action<Position?>? MonoscopeHitEvaluated;
 
@@ -438,7 +438,7 @@ namespace HitAnalyzer2.Services.Shooting
                 if (hitRecord is not null && calibrationAtHit is not null &&
                     recording.TryAddNormalizedHitRecord(hitRecord, calibrationAtHit))
                 {
-                    HitRecorded?.Invoke(hitRecord.HitPosition);
+                    HitRecorded?.Invoke(hitRecord.HitPosition, calibrationAtHit);
                     if (_remainingHits is { } remainingHits && _sessionStartedAt is { } sessionStart)
                     {
                         _remainingHits = remainingHits - 1;
