@@ -320,11 +320,19 @@ namespace HitAnalyzer2.ViewModels
                 Position? liveOffsetAim = null;
                 double? previewScore = null;
                 double previewCaliberMm = showWeaponOffsets ? WeaponSettings.CaliberDiameterMm : caliberDiameterMm;
-                if (showWeaponOffsets && currentAim is { } weaponAim)
+                if (currentAim is { } aim)
                 {
-                    var laser = weaponAim.LaserPosition;
-                    liveAim = calibration.MapHit(laser.X / pixels.Width, laser.Y / pixels.Height);
-                    liveOffsetAim = calibration.MapHit(weaponAim.X / pixels.Width, weaponAim.Y / pixels.Height);
+                    var correctedAim = calibration.MapHit(aim.X / pixels.Width, aim.Y / pixels.Height);
+                    if (showWeaponOffsets)
+                    {
+                        var laser = aim.LaserPosition;
+                        liveAim = calibration.MapHit(laser.X / pixels.Width, laser.Y / pixels.Height);
+                        liveOffsetAim = correctedAim;
+                    }
+                    else
+                    {
+                        liveAim = correctedAim;
+                    }
                 }
 
                 if (showWeaponOffsets && lastHit is { } weaponHit)

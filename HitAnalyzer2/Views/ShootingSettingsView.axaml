@@ -59,18 +59,18 @@
                         DataContext="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CameraPreview}"
                         x:DataType="vm:CameraPreviewViewModel">
                 <StackPanel.Styles>
-                    <Style Selector="Ellipse.statusIndicator">
+                    <Style Selector="Ellipse.ReadinessIndicator">
                         <Setter Property="Fill" Value="{DynamicResource DetectionWaitingBrush}" />
                     </Style>
-                    <Style Selector="Ellipse.statusIndicator.ready">
+                    <Style Selector="Ellipse.ReadinessIndicator.ready">
                         <Setter Property="Fill" Value="{DynamicResource DetectionReadyBrush}" />
                     </Style>
-                    <Style Selector="Ellipse.statusIndicator.tracking">
+                    <Style Selector="Ellipse.ReadinessIndicator.tracking">
                         <Setter Property="Fill" Value="{DynamicResource DetectionTrackingBrush}" />
                     </Style>
                 </StackPanel.Styles>
                 <Grid ColumnDefinitions="19*,42*,19*">
-                    <Ellipse Grid.Column="1" Height="{Binding $self.Bounds.Width}" Classes="statusIndicator"
+                    <Ellipse Grid.Column="1" Height="{Binding $self.Bounds.Width}" Classes="ReadinessIndicator"
                              Classes.ready="{Binding IsDetectionReady}" Classes.tracking="{Binding IsDetectionTracking}" />
                 </Grid>
                 <TextBlock Text="{Binding DetectionReadiness}" HorizontalAlignment="Center" />

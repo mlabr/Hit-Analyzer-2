@@ -96,9 +96,9 @@
       "Type": "ha_weapon",
       "Name": "weapon1",
       "Caliber": 5,
-      "OffsetX": 0,
-      "OffsetY": 0,
-      "Trigger": "ExternalEvent",
+      "OffsetX": 51,
+      "OffsetY": -11,
+      "Trigger": "TimeOut",
       "NexDetectionInterval": 500
     }
   }
