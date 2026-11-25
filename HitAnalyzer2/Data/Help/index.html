@@ -23,6 +23,7 @@
         <li><a href="#quick-start">Record your first hit</a></li>
         <li><a href="#calibration">Calibrate the target</a></li>
         <li><a href="#settings">Settings reference</a></li>
+        <li><a href="#audio">Audio and sound guided aiming</a></li>
         <li><a href="#triggers">Trigger types</a></li>
         <li><a href="#troubleshooting">Troubleshooting</a></li>
       </ul>
@@ -34,7 +35,7 @@
         <li>Connect your webcam and point it at the target so the shooting area is visible in the preview.</li>
         <li>Open <strong>Camera</strong> and select the webcam. If it is missing from the list, click <strong>Refresh webcams</strong>. Choose a camera mode if the list is available, set the preview orientation, and click <strong>Save</strong>. On Linux, see <a href="#linux-camera-modes">camera mode detection</a> if the mode list is empty.</li>
         <li>Open <strong>Weapon</strong> and select a profile. Choose <strong>FirstSpot</strong> for a test with a short laser pulse.</li>
-        <li><a href="#calibration">Select and calibrate the target</a>. Then open <strong>Shooting</strong>, clear <strong>Show Target Preview</strong> to see the camera image, and click <strong>Reset shooting</strong> to start from zero.</li>
+        <li><a href="#calibration">Select and calibrate the target</a>. Then open <strong>Shooting</strong> and click <strong>Reset shooting</strong> to start from zero.</li>
         <li>Fire a test pulse at the target. A hit mapped to the calibrated target increases the <strong>Hits</strong> counter. If the counter stays at zero, follow the <a href="#missed-hits">missed hits checklist</a>.</li>
       </ol>
     </section>
@@ -46,17 +47,19 @@
         <li>Open <strong>Target</strong> and select the profile that matches the physical target. Profiles are loaded from JSON files in <code>Data/Targets</code> under the application folder. Click <strong>Reset calibration</strong> if you need a centered starting shape.</li>
         <li>Drag the center handle to move the entire guide. Drag the four corner handles until the projected circle follows the outer edge of the physical target and its center matches the bullseye. The guide is yellow when the geometry is valid. If it turns cyan, uncross the edges and spread out the corners until the circle returns.</li>
         <li>Click <strong>Save</strong> to save the calibration together with the current camera settings.</li>
-        <li>Return to <strong>Shooting</strong> and enable <strong>Show Target Preview</strong>. Test a hit at a known location and check where the marker appears.</li>
+        <li>Return to <strong>Shooting</strong>. Test a hit at a known location and check where the marker appears.</li>
       </ol>
       <p>The calibration scale is shown in millimeters per pixel when available. Check the calibration again after moving the camera or target. Changing the target profile, camera, camera mode, or flip resets the active calibration. Changes to the calibration geometry clear recorded hits.</p>
+      <p>Use <strong>Calibration zoom</strong> to inspect the calibration at 2×, 4× or 8×. <strong>Physical distance</strong> is the distance to the actual target. <strong>Simulated distance</strong> sets the distance represented by the target. A <strong>Monoscope</strong> profile uses a rectangular calibration and reports positions instead of ring scores.</p>
     </section>
 
     <section id="settings">
       <h2>Settings reference</h2>
       <h3>Shooting</h3>
-      <p>After a session, the cross marks the average location of all recorded hits. Both circles share that center. The solid <strong>CEP50 (R50)</strong> circle covers at least 50% of the hits, and the dashed <strong>CEP80 (R80)</strong> circle covers at least 80%. The legend shows each diameter in millimeters on the physical target and the number of covered hits.</p>
-      <p><strong>Reset shooting</strong> clears recorded hits, the last hit marker, and the aim paths. <strong>Show Target Preview</strong> replaces the camera image with a diagram of the selected target and marks the last mapped hit with a yellow cross while <strong>Shooting</strong> is open. Click <strong>Save</strong> to keep the preview choice.</p>
-      <p>In the camera image, the yellow cross marks the last hit after applying the weapon offset. When the offset moves the aim away from the laser spot, a blue X marks the detected spot. <strong>External Event</strong> can show the aim path before and after the hit. <strong>TimeOut</strong> shows the recorded aim path when a hit registers.</p>
+      <p><strong>Start Session</strong> starts a new session using the selected hit limit, time limit and countdown. <strong>Reset shooting</strong> clears recorded hits and aim paths. <strong>Show all hits</strong> displays the recorded hits on the target.</p>
+      <p>The target preview shows the current aim as a red cross with the weapon offset applied. The cross disappears when the camera loses the spot. <strong>TimeOut</strong> displays the saved path after a hit. <strong>External Event</strong> displays the path before the hit in yellow and the path after it in cyan.</p>
+      <p>The readiness circle above <strong>Save</strong> is gray for <strong>Waiting</strong>, orange for <strong>Tracking</strong>, and green for <strong>Ready</strong>. <strong>FirstSpot</strong> becomes ready after the detection interval. <strong>NewSpot</strong> also requires the previous spot to disappear. <strong>TimeOut</strong> shows Tracking while building the path and Ready once the path meets the duration and allowed-area requirements. <strong>External Event</strong> shows Tracking when a spot is visible and Ready while an accepted trigger press is active.</p>
+      <p>Session results show the mean point of impact and the <strong>CEP50 (R50)</strong> and <strong>CEP80 (R80)</strong> circles. Both are centered on the mean. <strong>Show smallest 80% circle</strong> adds the smallest circle covering at least 80% of the recorded hits when available.</p>
 
       <h3>Camera</h3>
       <p>Select a webcam, choose an available resolution and frame rate, and use the flip selector to orient the image. Click <strong>Save</strong> to keep your changes.</p>
@@ -88,8 +91,16 @@
         <dt>Next detection interval (ms)</dt>
         <dd>Set a delay of 100 to 5,000 milliseconds. See <a href="#triggers">Trigger types</a> for when the delay starts and how it applies.</dd>
         <dt>Weapon offset (px)</dt>
-        <dd>Adjust X and Y from −100 to +100 pixels to align the displayed aim with the point of aim. Positive X moves it right and positive Y moves it up. Click <strong>Reset</strong> to zero both offsets.</dd>
+        <dd>Adjust X and Y from −100 to +100 pixels to align the displayed aim with the point of aim. Positive X moves it right and positive Y moves it up. Click <strong>Reset</strong> to zero both offsets. The live red cross shows the detected laser spot. The cyan circle shows the same point after applying the weapon offset.</dd>
       </dl>
+      <h3 id="audio">Audio</h3>
+      <p>Use <strong>Enable audio</strong> to turn on sound. <strong>Hit sound effect</strong> selects a hit sound alone, spoken score, or spoken score with 8- or 12-direction spotter calls.</p>
+      <p><strong>Effect volume</strong> controls hit sounds, spotter calls and session start and end sounds. <strong>SGA volume</strong> independently controls sound guided aiming. Both range from 0 (muted) to 100. The default of 50 uses the normal playback level at the current system volume.</p>
+      <p><strong>Sound guided aiming</strong> (SGA) works with <strong>TimeOut</strong> and <strong>External Event</strong> on scored targets. The tone rises with the score and becomes quieter as the aim moves farther outside the scoring rings. Switching to another trigger turns SGA off.</p>
+      <p>With <strong>Stereo guidance</strong>, <strong>Focus on Aim</strong> makes the tone louder on the side of the detected aim and <strong>Focus on Target</strong> makes it louder toward the target center. Turning off stereo sends the same tone to both channels. The Audio preview shows the current SGA aim as a red cross and indicates the sound direction with speaker icons.</p>
+      <p>Click <strong>Save</strong> to keep your audio settings. Advanced tone settings are in <code>Audio.SGA</code> in <code>settings.json</code>. They include the three frequencies, two pulse periods, quiet-channel gain and duty cycle. Restart after editing the file.</p>
+      <h3>AppLink</h3>
+      <p>Use <strong>AppLink</strong> to connect compatible software through HIP. Set the receive and destination ports. <strong>Advanced settings</strong> exposes the local and destination addresses and application SID. Use <strong>Send test message</strong> to check the connection, then click <strong>Save</strong>. Monoscope hits are sent as target coordinates when HIP is enabled.</p>
     </section>
 
     <section id="triggers">
