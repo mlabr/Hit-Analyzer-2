@@ -255,11 +255,12 @@ namespace HitAnalyzer2
             if (settings is not { Camera: { } camera, Detection: { } detection })
                 throw new JsonException("Camera or detection settings are missing.");
 
-            if (settings.Audio is not { } audio || !Enum.IsDefined(audio.Effect))
+            if (settings.Audio is not { EffectVolume: >= 0 and <= 100 } audio || !Enum.IsDefined(audio.Effect))
                 throw new JsonException("Invalid audio settings.");
 
             if (audio.SGA is not
                 {
+                    Volume: >= 0 and <= 100,
                     OffTargetFrequencyHz: > 0 and < double.PositiveInfinity,
                     OnTargetMinimumFrequencyHz: > 0 and < double.PositiveInfinity,
                     OnTargetMaximumFrequencyHz: > 0 and < double.PositiveInfinity,

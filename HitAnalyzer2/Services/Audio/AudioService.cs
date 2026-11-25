@@ -17,7 +17,29 @@ namespace HitAnalyzer2.Services.Audio
         private bool _disposed;
         private Queue<AudioClip>? _lastShot;
         private AudioSource? _guidance;
+        private float _effectGain = 1;
+        private float _guidanceGain = 1;
         private const int SampleRate = 48000;
+
+        internal int EffectVolume
+        {
+            set
+            {
+                _effectGain = value / 50f;
+                foreach (var source in _playbacks.Keys)
+                    source.Volume = _effectGain;
+            }
+        }
+
+        internal int GuidanceVolume
+        {
+            set
+            {
+                _guidanceGain = value / 50f;
+                if (_guidance is not null)
+                    _guidance.Volume = _guidanceGain;
+            }
+        }
 
         public AudioService()
         {
@@ -62,6 +84,7 @@ namespace HitAnalyzer2.Services.Audio
                 generator.Render(new Span<float>(frames.Pointer.ToPointer(), checked((int)count * channels)),
                     channels, SampleRate);
             _guidance.Play();
+            _guidance.Volume = _guidanceGain;
         }
 
         internal void StopGuidance()
@@ -108,6 +131,7 @@ namespace HitAnalyzer2.Services.Audio
 
             var source = new AudioSource(1) { Spatial = false };
             source.Play(clips.Dequeue());
+            source.Volume = _effectGain;
             _playbacks.Add(source, clips);
             _updateTimer.Start();
             return clips;
@@ -124,6 +148,7 @@ namespace HitAnalyzer2.Services.Audio
                 if (clips.TryDequeue(out var next))
                 {
                     source.Play(next);
+                    source.Volume = _effectGain;
                 }
                 else
                 {

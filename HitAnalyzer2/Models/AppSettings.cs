@@ -29,6 +29,7 @@ namespace HitAnalyzer2
     {
         public bool IsEnabled { get; init; }
         public AudioEffectMode Effect { get; init; } = AudioEffectMode.HitOnly;
+        public int EffectVolume { get; init; } = 50;
         public SgaSettings SGA { get; init; } = new();
     }
 
@@ -37,6 +38,7 @@ namespace HitAnalyzer2
         public bool IsEnabled { get; init; }
         public bool IsStereo { get; init; } = true;
         public bool FocusOnTarget { get; init; }
+        public int Volume { get; init; } = 50;
         public double OffTargetFrequencyHz { get; init; } = 200;
         public double OnTargetMinimumFrequencyHz { get; init; } = 400;
         public double OnTargetMaximumFrequencyHz { get; init; } = 1200;

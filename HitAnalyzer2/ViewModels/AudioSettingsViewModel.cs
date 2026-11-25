@@ -35,6 +35,12 @@ namespace HitAnalyzer2.ViewModels
         private bool isSgaEnabled;
 
         [ObservableProperty]
+        private int effectVolume;
+
+        [ObservableProperty]
+        private int sgaVolume;
+
+        [ObservableProperty]
         private bool isSgaStereo;
 
         [ObservableProperty]
@@ -71,6 +77,8 @@ namespace HitAnalyzer2.ViewModels
         {
             isEnabled = settings.IsEnabled;
             _sgaSettings = settings.SGA;
+            effectVolume = settings.EffectVolume;
+            sgaVolume = _sgaSettings.Volume;
             _guidance = new SgaGenerator(_sgaSettings);
             isSgaEnabled = _sgaSettings.IsEnabled;
             isSgaStereo = _guidance.Stereo = _sgaSettings.IsStereo;
@@ -83,9 +91,11 @@ namespace HitAnalyzer2.ViewModels
         {
             IsEnabled = IsEnabled,
             Effect = SelectedEffect?.Mode ?? AudioEffectMode.HitOnly,
+            EffectVolume = EffectVolume,
             SGA = _sgaSettings with
             {
                 IsEnabled = IsSgaEnabled,
+                Volume = SgaVolume,
                 IsStereo = IsSgaStereo,
                 FocusOnTarget = IsSgaFocusOnTarget
             }
@@ -101,6 +111,18 @@ namespace HitAnalyzer2.ViewModels
         }
 
         partial void OnIsSgaEnabledChanged(bool value) => RefreshGuidance();
+
+        partial void OnEffectVolumeChanged(int value)
+        {
+            if (_audio is not null)
+                _audio.EffectVolume = value;
+        }
+
+        partial void OnSgaVolumeChanged(int value)
+        {
+            if (_audio is not null)
+                _audio.GuidanceVolume = value;
+        }
 
         partial void OnIsSgaStereoChanged(bool value) => _guidance.Stereo = value;
 
@@ -174,7 +196,7 @@ namespace HitAnalyzer2.ViewModels
 
             try
             {
-                _audio ??= new AudioService();
+                _audio ??= new AudioService { EffectVolume = EffectVolume, GuidanceVolume = SgaVolume };
                 playback(_audio);
             }
             catch (Exception ex)

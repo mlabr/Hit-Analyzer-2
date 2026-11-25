@@ -54,10 +54,12 @@
   "Audio": {
     "IsEnabled": true,
     "Effect": "Spotter12Directions",
+    "EffectVolume": 50,
     "SGA": {
-      "IsEnabled": false,
+      "IsEnabled": true,
       "IsStereo": true,
       "FocusOnTarget": true,
+      "Volume": 50,
       "OffTargetFrequencyHz": 200,
       "OnTargetMinimumFrequencyHz": 400,
       "OnTargetMaximumFrequencyHz": 1200,
@@ -96,7 +98,7 @@
       "Caliber": 5,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "ExternalEvent",
+      "Trigger": "NewSpot",
       "NexDetectionInterval": 500
     }
   }
