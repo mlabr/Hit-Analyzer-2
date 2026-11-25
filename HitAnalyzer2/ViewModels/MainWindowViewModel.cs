@@ -2,6 +2,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using HitAnalyzer2.Enums;
 using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Detection;
 using HitAnalyzer2.Services.Recording;
@@ -74,6 +75,12 @@ namespace HitAnalyzer2.ViewModels
             WeaponSettings = weaponSettings;
             TargetSettings = targetSettings;
             AudioSettings = new AudioSettingsViewModel(settings.Current.Audio);
+            WeaponSettings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(WeaponSettingsViewModel.SelectedTrigger) &&
+                    WeaponSettings.SelectedTrigger is not (TriggerTypeEnum.TimeOut or TriggerTypeEnum.ExternalEvent))
+                    AudioSettings.IsSgaEnabled = false;
+            };
             shootingSession.GuidanceAimEvaluated += AudioSettings.UpdateGuidance;
             AppLink = new AppLinkViewModel(settings.Current.AppLink ?? new AppLinkSettings());
             _shootingSession = shootingSession;

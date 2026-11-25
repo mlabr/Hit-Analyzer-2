@@ -56,7 +56,7 @@
     "Effect": "HitOnly",
     "EffectVolume": 50,
     "SGA": {
-      "IsEnabled": false,
+      "IsEnabled": true,
       "IsStereo": true,
       "FocusOnTarget": false,
       "Volume": 50,
