@@ -16,12 +16,14 @@ namespace HitAnalyzer2.Services.Audio
         private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromMilliseconds(10) };
         private bool _disposed;
         private Queue<AudioClip>? _lastShot;
+        private AudioSource? _guidance;
+        private const int SampleRate = 48000;
 
         public AudioService()
         {
             Dispatcher.UIThread.VerifyAccess();
             var directory = Path.Combine(AppContext.BaseDirectory, "Data", "Audio");
-            AudioContext.Initialize(48000, 2);
+            AudioContext.Initialize(SampleRate, 2);
             try
             {
                 foreach (var path in Directory.EnumerateFiles(directory, "*.wav", SearchOption.AllDirectories))
@@ -49,6 +51,24 @@ namespace HitAnalyzer2.Services.Audio
         }
 
         internal void PlayShot(string[] samples) => _lastShot = StartSequence(samples);
+
+        internal unsafe void StartGuidance(SgaGenerator generator)
+        {
+            if (_guidance is not null)
+                return;
+
+            _guidance = new AudioSource(1) { Spatial = false };
+            _guidance.Read += (frames, count, channels) =>
+                generator.Render(new Span<float>(frames.Pointer.ToPointer(), checked((int)count * channels)),
+                    channels, SampleRate);
+            _guidance.Play();
+        }
+
+        internal void StopGuidance()
+        {
+            _guidance?.Dispose();
+            _guidance = null;
+        }
 
         internal void PlaySessionStart(string sample)
         {
@@ -131,6 +151,7 @@ namespace HitAnalyzer2.Services.Audio
             _playbacks.Clear();
             _lastShot = null;
             _clips.Clear();
+            _guidance = null;
         }
     }
 }

@@ -53,7 +53,10 @@
   },
   "Audio": {
     "IsEnabled": true,
-    "Effect": "Spotter8Directions"
+    "Effect": "HitOnly",
+    "IsSgaEnabled": true,
+    "IsSgaStereo": true,
+    "IsSgaFocusOnTarget": false
   },
   "Detection": {
     "Method": "Blob",
@@ -84,7 +87,7 @@
       "Caliber": 5,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "FirstSpot",
+      "Trigger": "TimeOut",
       "NexDetectionInterval": 500
     }
   }

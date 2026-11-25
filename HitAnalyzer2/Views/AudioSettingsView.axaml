@@ -11,6 +11,14 @@
                   IsEnabled="{Binding IsEnabled}"
                   ItemsSource="{Binding Effects}"
                   SelectedItem="{Binding SelectedEffect, Mode=TwoWay}" />
+        <StackPanel Spacing="4" IsEnabled="{Binding IsEnabled}">
+            <CheckBox Content="Sound guided aiming" IsChecked="{Binding IsSgaEnabled}" />
+            <StackPanel Spacing="4" IsEnabled="{Binding IsSgaEnabled}">
+                <CheckBox Content="Stereo guidance" IsChecked="{Binding IsSgaStereo}" />
+                <CheckBox Content="Focus on target (reverse channels)" IsChecked="{Binding IsSgaFocusOnTarget}"
+                          IsEnabled="{Binding IsSgaStereo}" />
+            </StackPanel>
+        </StackPanel>
         <TextBlock Text="{Binding AudioError}" IsVisible="{Binding HasAudioError}" TextWrapping="Wrap" />
     </StackPanel>
 </UserControl>

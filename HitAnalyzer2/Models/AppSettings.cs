@@ -29,6 +29,9 @@ namespace HitAnalyzer2
     {
         public bool IsEnabled { get; init; }
         public AudioEffectMode Effect { get; init; } = AudioEffectMode.HitOnly;
+        public bool IsSgaEnabled { get; init; }
+        public bool IsSgaStereo { get; init; } = true;
+        public bool IsSgaFocusOnTarget { get; init; }
     }
 
     public enum AudioEffectMode

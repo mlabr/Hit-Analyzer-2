@@ -24,10 +24,20 @@ namespace HitAnalyzer2.ViewModels
         ];
 
         private AudioService? _audio;
+        private readonly SgaGenerator _guidance = new();
         private bool _disposed;
 
         [ObservableProperty]
         private bool isEnabled;
+
+        [ObservableProperty]
+        private bool isSgaEnabled;
+
+        [ObservableProperty]
+        private bool isSgaStereo;
+
+        [ObservableProperty]
+        private bool isSgaFocusOnTarget;
 
         [ObservableProperty]
         private EffectOption? selectedEffect;
@@ -48,13 +58,20 @@ namespace HitAnalyzer2.ViewModels
         internal AudioSettingsViewModel(AudioSettings settings)
         {
             isEnabled = settings.IsEnabled;
+            isSgaEnabled = settings.IsSgaEnabled;
+            isSgaStereo = _guidance.Stereo = settings.IsSgaStereo;
+            isSgaFocusOnTarget = _guidance.FocusOnTarget = settings.IsSgaFocusOnTarget;
             selectedEffect = Effects.First(option => option.Mode == settings.Effect);
+            RefreshGuidance();
         }
 
         internal AudioSettings GetConfiguration() => new()
         {
             IsEnabled = IsEnabled,
-            Effect = SelectedEffect?.Mode ?? AudioEffectMode.HitOnly
+            Effect = SelectedEffect?.Mode ?? AudioEffectMode.HitOnly,
+            IsSgaEnabled = IsSgaEnabled,
+            IsSgaStereo = IsSgaStereo,
+            IsSgaFocusOnTarget = IsSgaFocusOnTarget
         };
 
         partial void OnIsEnabledChanged(bool value)
@@ -62,6 +79,24 @@ namespace HitAnalyzer2.ViewModels
             AudioError = null;
             if (!value)
                 ReleaseAudio();
+            else
+                RefreshGuidance();
+        }
+
+        partial void OnIsSgaEnabledChanged(bool value) => RefreshGuidance();
+
+        partial void OnIsSgaStereoChanged(bool value) => _guidance.Stereo = value;
+
+        partial void OnIsSgaFocusOnTargetChanged(bool value) => _guidance.FocusOnTarget = value;
+
+        internal void UpdateGuidance(double score, double offset) => _guidance.UpdateAim(score, offset);
+
+        private void RefreshGuidance()
+        {
+            if (IsEnabled && IsSgaEnabled)
+                Play(audio => audio.StartGuidance(_guidance));
+            else
+                _audio?.StopGuidance();
         }
 
         internal void PlaySessionState(bool running) =>

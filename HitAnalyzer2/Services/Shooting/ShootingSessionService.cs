@@ -199,6 +199,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         // Raised on the capture thread. The target point is present only with a valid calibration.
         internal event Action<LaserPosition?, Position?, TimeSpan>? LaserPositionEvaluated;
+        internal event Action<double, double>? GuidanceAimEvaluated;
 
         internal void SetLaserDetector(ILaserDetector detector) => _laserDetector = detector;
 
@@ -332,14 +333,42 @@ namespace HitAnalyzer2.Services.Shooting
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                var reportGuidance = GuidanceAimEvaluated;
                 if (!CanDetectHits() || (_sessionStartedAt is { } startedAt && frameCapturedTimestampMs < startedAt))
+                {
+                    reportGuidance?.Invoke(double.NaN, 0);
                     return GetLastHitSnapshot();
+                }
 
                 bool isMonoscope = IsMonoscope;
                 if (isMonoscope && !_sessionStartedAt.HasValue)
+                {
+                    reportGuidance?.Invoke(double.NaN, 0);
                     return GetLastHitSnapshot();
+                }
 
                 position = _laserDetector.GetLaserPosition(frame, elapsed);
+                if (reportGuidance is not null)
+                {
+                    if (!isMonoscope && _trigger is (TriggerTypeEnum.TimeOut or TriggerTypeEnum.ExternalEvent)
+                        && position is { } laser)
+                    {
+                        var aim = aimPositionHandler.GetAimPosition(laser);
+                        if (calibration.MapHit(aim.X / frame.Width, aim.Y / frame.Height, out var target) is { } mapped
+                            && target.MaxDiameterMm is > 0)
+                        {
+                            reportGuidance(target.CalculateScore(mapped), mapped.X - TargetModel.Center.X);
+                        }
+                        else
+                        {
+                            reportGuidance(double.NaN, 0);
+                        }
+                    }
+                    else
+                    {
+                        reportGuidance(double.NaN, 0);
+                    }
+                }
                 bool startFollowPath = false;
                 HitRecord? hitRecord = null;
                 TargetPreviewModel? calibrationAtHit = null;

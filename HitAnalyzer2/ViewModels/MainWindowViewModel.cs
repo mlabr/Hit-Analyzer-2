@@ -74,6 +74,7 @@ namespace HitAnalyzer2.ViewModels
             WeaponSettings = weaponSettings;
             TargetSettings = targetSettings;
             AudioSettings = new AudioSettingsViewModel(settings.Current.Audio);
+            shootingSession.GuidanceAimEvaluated += AudioSettings.UpdateGuidance;
             AppLink = new AppLinkViewModel(settings.Current.AppLink ?? new AppLinkSettings());
             _shootingSession = shootingSession;
             _recording = recording;
@@ -98,6 +99,7 @@ namespace HitAnalyzer2.ViewModels
                 ProcessCameraFrameAsync,
                 () =>
                 {
+                    AudioSettings.UpdateGuidance(double.NaN, 0);
                     shootingSession.ClearAimPaths();
                     cameraCalibration.UpdatePreviewGeometry(0, 0);
                     CameraPreview.ClearPreview();
