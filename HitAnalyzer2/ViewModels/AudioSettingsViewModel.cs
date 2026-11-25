@@ -100,8 +100,10 @@ namespace HitAnalyzer2.ViewModels
 
         partial void OnIsSgaFocusOnTargetChanged(bool value) => _guidance.FocusOnTarget = value;
 
-        internal void UpdateGuidance(double score, double offset, double outsideDistanceInTargetRadii) =>
-            _guidance.UpdateAim(score, offset, outsideDistanceInTargetRadii);
+        internal void UpdateGuidance(double score, Position? position, double outsideDistanceInTargetRadii) =>
+            _guidance.UpdateAim(score, position, outsideDistanceInTargetRadii);
+
+        internal (double Left, double Right, Position? Aim) GetGuidancePreview() => _guidance.GetPreview();
 
         private void RefreshGuidance()
         {

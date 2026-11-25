@@ -99,7 +99,7 @@ namespace HitAnalyzer2.ViewModels
                 ProcessCameraFrameAsync,
                 () =>
                 {
-                    AudioSettings.UpdateGuidance(double.NaN, 0, 0);
+                    AudioSettings.UpdateGuidance(double.NaN, null, 0);
                     shootingSession.ClearAimPaths();
                     cameraCalibration.UpdatePreviewGeometry(0, 0);
                     CameraPreview.ClearPreview();
@@ -305,6 +305,7 @@ namespace HitAnalyzer2.ViewModels
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             if (showTargetPreview)
             {
+                var calibration = CameraSettings.Calibration;
                 int size = Math.Min(pixels.Rows, pixels.Cols);
                 using var target = new Mat(size, size, pixels.Type());
                 Position? originalTargetHit = null;
@@ -313,7 +314,6 @@ namespace HitAnalyzer2.ViewModels
                 if (showWeaponOffsets && lastHit is { } weaponHit)
                 {
                     var laser = weaponHit.LaserPosition;
-                    var calibration = CameraSettings.Calibration;
                     originalTargetHit = calibration.MapHit(laser.X / pixels.Width, laser.Y / pixels.Height);
                     lastTargetHit = calibration.MapHit(weaponHit.X / pixels.Width, weaponHit.Y / pixels.Height,
                         out var targetAtHit);
@@ -327,8 +327,16 @@ namespace HitAnalyzer2.ViewModels
                 var targetAimPath = !showWeaponOffsets && aimPath.Length > 0 && lastTargetHit is not null
                     ? _recording.GetLastHitRecord()?.AimPathBefore
                     : null;
-                TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings,
-                    previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit, aimPath: targetAimPath);
+                Func<double, double, Position?>? mapFollowPoint = null;
+                if (!showWeaponOffsets && followPath.Length > 1 && lastTargetHit is not null && lastHit is { } hitWithTrace)
+                {
+                    double offsetX = hitWithTrace.X - hitWithTrace.LaserPosition.X;
+                    double offsetY = hitWithTrace.Y - hitWithTrace.LaserPosition.Y;
+                    mapFollowPoint = (x, y) => calibration.MapHit((x + offsetX) / pixels.Width, (y + offsetY) / pixels.Height);
+                }
+                TargetRenderer.DrawTargetPreview(target, lastTargetHit, calibration.Settings,
+                    previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit, aimPath: targetAimPath,
+                    followPath: followPath, mapFollowPoint: mapFollowPoint);
                 await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore,
                     showWeaponOffsets ? lastTargetHit : null);
                 return;
@@ -354,7 +362,8 @@ namespace HitAnalyzer2.ViewModels
                 AimTraceRenderer.DrawHitAndTraceIntoFrame(pixels, hit, aimPath, followPath,
                     caliberDiameterMm / CameraSettings.Calibration.Settings.MmToPixel);
 
-            await CameraPreview.ShowFrameAsync(pixels, measuredFps, cancellationToken);
+            await CameraPreview.ShowFrameAsync(pixels, measuredFps, cancellationToken,
+                guidance: AudioSettings.GetGuidancePreview());
         }
     }
 }

@@ -199,7 +199,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         // Raised on the capture thread. The target point is present only with a valid calibration.
         internal event Action<LaserPosition?, Position?, TimeSpan>? LaserPositionEvaluated;
-        internal event Action<double, double, double>? GuidanceAimEvaluated;
+        internal event Action<double, Position?, double>? GuidanceAimEvaluated;
 
         internal void SetLaserDetector(ILaserDetector detector) => _laserDetector = detector;
 
@@ -336,14 +336,14 @@ namespace HitAnalyzer2.Services.Shooting
                 var reportGuidance = GuidanceAimEvaluated;
                 if (!CanDetectHits() || (_sessionStartedAt is { } startedAt && frameCapturedTimestampMs < startedAt))
                 {
-                    reportGuidance?.Invoke(double.NaN, 0, 0);
+                    reportGuidance?.Invoke(double.NaN, null, 0);
                     return GetLastHitSnapshot();
                 }
 
                 bool isMonoscope = IsMonoscope;
                 if (isMonoscope && !_sessionStartedAt.HasValue)
                 {
-                    reportGuidance?.Invoke(double.NaN, 0, 0);
+                    reportGuidance?.Invoke(double.NaN, null, 0);
                     return GetLastHitSnapshot();
                 }
 
@@ -361,16 +361,16 @@ namespace HitAnalyzer2.Services.Shooting
                             double offsetY = mapped.Y - TargetModel.Center.Y;
                             // Target coordinates are normalized by the outer ring diameter.
                             double outsideDistanceInTargetRadii = Math.Max(0, 2 * double.Hypot(offsetX, offsetY) - 1);
-                            reportGuidance(target.CalculateScore(mapped), offsetX, outsideDistanceInTargetRadii);
+                            reportGuidance(target.CalculateScore(mapped), mapped, outsideDistanceInTargetRadii);
                         }
                         else
                         {
-                            reportGuidance(double.NaN, 0, 0);
+                            reportGuidance(double.NaN, null, 0);
                         }
                     }
                     else
                     {
-                        reportGuidance(double.NaN, 0, 0);
+                        reportGuidance(double.NaN, null, 0);
                     }
                 }
                 bool startFollowPath = false;

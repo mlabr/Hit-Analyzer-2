@@ -7,6 +7,7 @@ using HitAnalyzer2.Models;
 using OpenCvSharp;
 using System.Threading;
 using System.Threading.Tasks;
+using Point = Avalonia.Point;
 
 namespace HitAnalyzer2.ViewModels
 {
@@ -23,10 +24,18 @@ namespace HitAnalyzer2.ViewModels
 
         [ObservableProperty]
         private double? weaponPreviewScore;
+        [ObservableProperty]
+        private double leftGuidanceLevel;
+        [ObservableProperty]
+        private double rightGuidanceLevel;
+        [ObservableProperty]
+        private Point? guidanceAim;
+
         internal Position? WeaponPreviewHit { get; private set; }
 
         internal async Task ShowFrameAsync(Mat pixels, string? measuredFps, CancellationToken cancellationToken,
-            double? previewScore = null, Position? weaponPreviewHit = null)
+            double? previewScore = null, Position? weaponPreviewHit = null,
+            (double Left, double Right, Position? Aim) guidance = default)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
@@ -45,6 +54,9 @@ namespace HitAnalyzer2.ViewModels
                     published = true;
                     WeaponPreviewScore = previewScore;
                     WeaponPreviewHit = weaponPreviewHit;
+                    LeftGuidanceLevel = guidance.Left;
+                    RightGuidanceLevel = guidance.Right;
+                    GuidanceAim = guidance.Aim is { } aim ? new Point(aim.X, aim.Y) : null;
                     WebcamImage = bitmap;
                     previous?.Dispose();
                     FpsText = measuredFps is null ? null : $"FPS: {measuredFps}";
@@ -70,6 +82,9 @@ namespace HitAnalyzer2.ViewModels
             FpsText = null;
             WeaponPreviewScore = null;
             WeaponPreviewHit = null;
+            LeftGuidanceLevel = 0;
+            RightGuidanceLevel = 0;
+            GuidanceAim = null;
         }
     }
 }

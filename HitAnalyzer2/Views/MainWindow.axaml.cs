@@ -92,7 +92,7 @@ namespace HitAnalyzer2.Views
             {
                 _previewViewModel?.AudioSettings.Dispose();
                 SetPreviewViewModel(null);
-                AudioTargetPreview.IsVisible = false;
+                AudioPreview.IsVisible = false;
                 UpdateAudioTargetPreview();
             };
             AddHandler(KeyDownEvent, (_, e) =>
@@ -158,14 +158,14 @@ namespace HitAnalyzer2.Views
 
         private void OnRecordedHitsChanged() => Dispatcher.UIThread.Post(() =>
         {
-            if (AudioTargetPreview.IsVisible)
+            if (AudioPreview.IsVisible)
                 UpdateAudioTargetPreview();
         }, DispatcherPriority.Background);
 
         private void UpdateAudioTargetPreview()
         {
             var previous = AudioTargetPreview.Source as Bitmap;
-            AudioTargetPreview.Source = AudioTargetPreview.IsVisible && DataContext is MainWindowViewModel viewModel
+            AudioTargetPreview.Source = AudioPreview.IsVisible && DataContext is MainWindowViewModel viewModel
                 ? viewModel.CreateAudioTargetPreview()
                 : null;
             previous?.Dispose();
@@ -245,7 +245,7 @@ namespace HitAnalyzer2.Views
             AudioSettings.IsVisible = view == AudioSettings;
             About.IsVisible = view == About;
             InformationPanel.IsVisible = About.IsVisible;
-            AudioTargetPreview.IsVisible = AudioSettings.IsVisible;
+            AudioPreview.IsVisible = AudioSettings.IsVisible;
             CameraPreview.IsVisible = !About.IsVisible && !AppLink.IsVisible && !AudioSettings.IsVisible;
             UpdateAudioTargetPreview();
             UpdateMinimumWindowSize();

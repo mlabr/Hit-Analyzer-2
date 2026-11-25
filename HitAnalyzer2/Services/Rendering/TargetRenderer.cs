@@ -30,7 +30,8 @@ namespace HitAnalyzer2.Services.Rendering
             double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null, bool isDarkTheme = false,
             Position? originalTargetHit = null, HitGroupCircle? cep50 = null,
             HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null, int directionCount = 0,
-            IReadOnlyList<LaserPosition>? aimPath = null)
+            IReadOnlyList<LaserPosition>? aimPath = null, IReadOnlyList<LaserPosition>? followPath = null,
+            Func<double, double, Position?>? mapFollowPoint = null)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -58,6 +59,11 @@ namespace HitAnalyzer2.Services.Rendering
             if (aimPath is not null)
                 AimTraceRenderer.DrawAimPath(preview, aimPath, AimTraceRenderer.AimPathBeforeColor,
                     default, oldestIsBrightest: false, project: (x, y) => ToTargetPixel(new Position(x, y)));
+
+            if (followPath is not null && mapFollowPoint is not null)
+                AimTraceRenderer.DrawAimPath(preview, followPath, AimTraceRenderer.AimPathAfterColor,
+                    default, oldestIsBrightest: true,
+                    project: (x, y) => mapFollowPoint(x, y) is { } point ? ToTargetPixel(point) : null);
 
             if (originalTargetHit is { } original && IsInsidePreview(original))
             {

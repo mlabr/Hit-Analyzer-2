@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using HitAnalyzer2.Models;
 
 namespace HitAnalyzer2.Services.Audio
 {
@@ -20,7 +21,10 @@ namespace HitAnalyzer2.Services.Audio
         private const double DutyCycle = 0.4;
         private static readonly SgaWaveform Waveform = SgaWaveform.Square;
 
-        private sealed record Aim(double Score, double HorizontalOffset, double OutsideDistanceInTargetRadii, long Time);
+        private sealed record Aim(double Score, Position Position, double OutsideDistanceInTargetRadii, long Time)
+        {
+            internal double HorizontalOffset => Position.X - TargetModel.Center.X;
+        }
         private Aim? _aim;
         private double _phase;
         private double _pulsePhase;
@@ -29,10 +33,32 @@ namespace HitAnalyzer2.Services.Audio
         internal volatile bool Stereo = true;
         internal volatile bool FocusOnTarget;
 
-        internal void UpdateAim(double score, double horizontalOffset, double outsideDistanceInTargetRadii) =>
-            Volatile.Write(ref _aim, double.IsFinite(score) && double.IsFinite(horizontalOffset) &&
+        internal (double Left, double Right, Position? Aim) GetPreview()
+        {
+            var aim = Volatile.Read(ref _aim);
+            if (aim is null || Environment.TickCount64 - aim.Time >= 250)
+                return default;
+
+            var (left, right) = GetChannelGains(aim.HorizontalOffset);
+            // Display the direction above the quiet-channel floor.
+            return ((left - QuietChannelGain) / (1 - QuietChannelGain),
+                (right - QuietChannelGain) / (1 - QuietChannelGain), aim.Position);
+        }
+
+        private (double Left, double Right) GetChannelGains(double horizontalOffset)
+        {
+            double balance = Stereo ? Math.Clamp(horizontalOffset / FullBalanceOffset, -1, 1) : 0;
+            if (FocusOnTarget)
+                balance = -balance;
+            return (1 - Math.Max(0, balance) * (1 - QuietChannelGain),
+                1 - Math.Max(0, -balance) * (1 - QuietChannelGain));
+        }
+
+        internal void UpdateAim(double score, Position? position, double outsideDistanceInTargetRadii) =>
+            Volatile.Write(ref _aim, double.IsFinite(score) && position is not null &&
+                double.IsFinite(position.X) && double.IsFinite(position.Y) &&
                 double.IsFinite(outsideDistanceInTargetRadii)
-                ? new Aim(Math.Clamp(score, 0, 10), horizontalOffset, outsideDistanceInTargetRadii, Environment.TickCount64)
+                ? new Aim(Math.Clamp(score, 0, 10), position, outsideDistanceInTargetRadii, Environment.TickCount64)
                 : null);
 
         internal void Render(Span<float> output, int channels, int sampleRate)
@@ -47,13 +73,7 @@ namespace HitAnalyzer2.Services.Audio
                 ? OnTargetMinimumFrequencyHz + (OnTargetMaximumFrequencyHz - OnTargetMinimumFrequencyHz) * normalized
                 : OffTargetFrequencyHz;
             double period = SlowPeriodSeconds + (FastPeriodSeconds - SlowPeriodSeconds) * normalized;
-            double balance = Stereo
-                ? Math.Clamp((aim?.HorizontalOffset ?? 0) / FullBalanceOffset, -1, 1)
-                : 0;
-            if (FocusOnTarget)
-                balance = -balance;
-            double left = 1 - Math.Max(0, balance) * (1 - QuietChannelGain);
-            double right = 1 - Math.Max(0, -balance) * (1 - QuietChannelGain);
+            var (left, right) = GetChannelGains(aim?.HorizontalOffset ?? 0);
             double ramp = 1.0 / (0.003 * sampleRate);
 
             for (int i = 0; i < output.Length; i += channels)
