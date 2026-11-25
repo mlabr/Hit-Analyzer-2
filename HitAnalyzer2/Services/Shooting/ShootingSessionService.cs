@@ -13,6 +13,8 @@ using HitAnalyzer2.Services.Target;
 
 namespace HitAnalyzer2.Services.Shooting
 {
+    public enum HitDetectionReadiness { Waiting, Tracking, Ready }
+
     internal sealed class ShootingSessionService(ILaserDetector laserDetector, AimPositionHandler aimPositionHandler,
         WeaponHandler weaponHandler, ShootingSettings shootingSettings, DetectionSettings detectionSettings, TargetCalibrationService calibration,
         RecordingService recording, long appStartedTimestampMs)
@@ -318,7 +320,7 @@ namespace HitAnalyzer2.Services.Shooting
         }
 
         internal (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
-            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim) ProcessFrame(
+            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim, HitDetectionReadiness Readiness) ProcessFrame(
             Mat frame, long frameCapturedTimestampMs, double detectedFps, CancellationToken cancellationToken)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(appStartedTimestampMs, frameCapturedTimestampMs);
@@ -330,6 +332,7 @@ namespace HitAnalyzer2.Services.Shooting
             Position? targetPoint = null;
             Position? lastTargetHit;
             double caliberDiameterMm;
+            HitDetectionReadiness readiness;
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -379,8 +382,7 @@ namespace HitAnalyzer2.Services.Shooting
                 if (_trigger == TriggerTypeEnum.TimeOut && position is null &&
                     aimPositionHandler.GetTimedOutAimPosition(elapsed) is { } timedOutPosition)
                 {
-                    if (aimPositionHandler.AimPathDuration >= _aimPathTimeoutMinimumDuration &&
-                        (isMonoscope || IsAimPositionInsideAllowedZone(aimPositionHandler.GetAimPosition(timedOutPosition), frame)))
+                    if (IsTimeOutPathReady(timedOutPosition, frame, isMonoscope))
                     {
                         registeredHit = timedOutPosition;
                         _lastHitAimPath = aimPositionHandler.GetAimPathSnapshot();
@@ -416,7 +418,8 @@ namespace HitAnalyzer2.Services.Shooting
                     if (registeredHit is { } monoscopeHit)
                         ProcessMonoscopeHit(monoscopeHit, frame.Width, frame.Height);
                     return (null, [], [], _lastTargetHit, 0,
-                        position is { } current ? aimPositionHandler.GetAimPosition(current) : null);
+                        position is { } current ? aimPositionHandler.GetAimPosition(current) : null,
+                        GetDetectionReadiness(frame, elapsed, isMonoscope));
                 }
 
                 if (registeredHit is { } registered)
@@ -488,6 +491,7 @@ namespace HitAnalyzer2.Services.Shooting
                 followPath = _lastHitFollowPath;
                 lastTargetHit = _lastTargetHit;
                 caliberDiameterMm = _lastHitCaliberDiameterMm;
+                readiness = GetDetectionReadiness(frame, elapsed, isMonoscope);
             }
 
             LaserPositionEvaluated?.Invoke(registeredHit, targetPoint, elapsed);
@@ -497,7 +501,7 @@ namespace HitAnalyzer2.Services.Shooting
 
             return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
                 aimPath, followPath, lastTargetHit, caliberDiameterMm,
-                position is { } currentPosition ? aimPositionHandler.GetAimPosition(currentPosition) : null);
+                position is { } currentPosition ? aimPositionHandler.GetAimPosition(currentPosition) : null, readiness);
         }
 
         private void ProcessMonoscopeHit(LaserPosition hit, int frameWidth, int frameHeight)
@@ -524,9 +528,28 @@ namespace HitAnalyzer2.Services.Shooting
         }
 
         private (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
-            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim) GetLastHitSnapshot() =>
+            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim, HitDetectionReadiness Readiness) GetLastHitSnapshot() =>
             (_lastHit is { } hit ? aimPositionHandler.GetAimPosition(hit) : null,
-                _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm, null);
+                _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm, null, HitDetectionReadiness.Waiting);
+
+        private HitDetectionReadiness GetDetectionReadiness(Mat frame, TimeSpan elapsed, bool isMonoscope)
+        {
+            if (_sessionEndedAt.HasValue)
+                return HitDetectionReadiness.Waiting;
+
+            if (_trigger == TriggerTypeEnum.FirstSpot && elapsed >= NextDetectionTimestamp)
+                return HitDetectionReadiness.Ready;
+
+            if (_trigger == TriggerTypeEnum.TimeOut && aimPositionHandler.LastAimPosition is { } lastAim)
+                return IsTimeOutPathReady(lastAim, frame, isMonoscope)
+                    ? HitDetectionReadiness.Ready : HitDetectionReadiness.Tracking;
+
+            return HitDetectionReadiness.Waiting;
+        }
+
+        private bool IsTimeOutPathReady(LaserPosition position, Mat frame, bool isMonoscope) =>
+            aimPositionHandler.AimPathDuration >= _aimPathTimeoutMinimumDuration &&
+            (isMonoscope || IsAimPositionInsideAllowedZone(aimPositionHandler.GetAimPosition(position), frame));
 
         private IReadOnlyList<LaserPosition> MapAimPath(LaserPosition[] path, double offsetX, double offsetY,
             int frameWidth, int frameHeight)

@@ -54,6 +54,29 @@
             <Button Content="Start Session" Command="{Binding StartSessionCommand}" HorizontalAlignment="Left" />
             <Button Grid.Column="1" Content="Reset shooting" Command="{Binding ResetCommand}" />
         </Grid>
+        <Border IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).WeaponSettings.ShowHitDetectionReadiness}"
+                Padding="0,4">
+            <StackPanel Spacing="4"
+                        DataContext="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).CameraPreview}"
+                        x:DataType="vm:CameraPreviewViewModel">
+                <StackPanel.Styles>
+                    <Style Selector="Ellipse.statusIndicator">
+                        <Setter Property="Fill" Value="{DynamicResource DetectionWaitingBrush}" />
+                    </Style>
+                    <Style Selector="Ellipse.statusIndicator.ready">
+                        <Setter Property="Fill" Value="{DynamicResource DetectionReadyBrush}" />
+                    </Style>
+                    <Style Selector="Ellipse.statusIndicator.tracking">
+                        <Setter Property="Fill" Value="{DynamicResource DetectionTrackingBrush}" />
+                    </Style>
+                </StackPanel.Styles>
+                <Grid ColumnDefinitions="19*,42*,19*">
+                    <Ellipse Grid.Column="1" Height="{Binding $self.Bounds.Width}" Classes="statusIndicator"
+                             Classes.ready="{Binding IsDetectionReady}" Classes.tracking="{Binding IsDetectionTracking}" />
+                </Grid>
+                <TextBlock Text="{Binding DetectionReadiness}" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
         <Button Content="Save" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />
     </StackPanel>
 

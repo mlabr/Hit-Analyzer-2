@@ -308,7 +308,7 @@ namespace HitAnalyzer2.ViewModels
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
             bool showTargetPreview = IsTargetPreviewActive;
             bool showWeaponOffsets = IsWeaponPreviewActive;
-            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim) =
+            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim, readiness) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
             if (showTargetPreview)
             {
@@ -354,7 +354,7 @@ namespace HitAnalyzer2.ViewModels
                     previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit, aimPath: targetAimPath,
                     followPath: followPath, mapFollowPoint: mapFollowPoint, liveAim: liveAim, liveOffsetAim: liveOffsetAim);
                 await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore,
-                    showWeaponOffsets ? lastTargetHit : null);
+                    showWeaponOffsets ? lastTargetHit : null, readiness: readiness);
                 return;
             }
 
@@ -379,7 +379,7 @@ namespace HitAnalyzer2.ViewModels
                     caliberDiameterMm / CameraSettings.Calibration.Settings.MmToPixel);
 
             await CameraPreview.ShowFrameAsync(pixels, measuredFps, cancellationToken,
-                guidance: AudioSettings.GetGuidancePreview());
+                guidance: AudioSettings.GetGuidancePreview(), readiness: readiness);
         }
     }
 }

@@ -1,5 +1,5 @@
 {
-  "Theme": "Light",
+  "Theme": "Dark",
   "Shooting": {
     "Shooter": "",
     "IsHitLimitEnable": true,
@@ -56,7 +56,7 @@
     "Effect": "HitOnly",
     "EffectVolume": 50,
     "SGA": {
-      "IsEnabled": true,
+      "IsEnabled": false,
       "IsStereo": true,
       "FocusOnTarget": false,
       "Volume": 50,

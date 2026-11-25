@@ -15,6 +15,9 @@
                     <SolidColorBrush x:Key="SmallestHitGroupBrush">#A34E11</SolidColorBrush>
                     <SolidColorBrush x:Key="SuccessSurfaceBrush">#DFEDE2</SolidColorBrush>
                     <SolidColorBrush x:Key="SuccessTextBrush">#396347</SolidColorBrush>
+                    <SolidColorBrush x:Key="DetectionWaitingBrush">#BCC3C4</SolidColorBrush>
+                    <SolidColorBrush x:Key="DetectionTrackingBrush">#F1BB76</SolidColorBrush>
+                    <SolidColorBrush x:Key="DetectionReadyBrush">#8FC99E</SolidColorBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="AppBackgroundBrush">#182528</SolidColorBrush>
@@ -36,6 +39,9 @@
                     <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed">#E3ECEB</SolidColorBrush>
                     <SolidColorBrush x:Key="SuccessSurfaceBrush">#2C4137</SolidColorBrush>
                     <SolidColorBrush x:Key="SuccessTextBrush">#B5D8BE</SolidColorBrush>
+                    <SolidColorBrush x:Key="DetectionWaitingBrush">#59666A</SolidColorBrush>
+                    <SolidColorBrush x:Key="DetectionTrackingBrush">#9D6935</SolidColorBrush>
+                    <SolidColorBrush x:Key="DetectionReadyBrush">#518462</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>

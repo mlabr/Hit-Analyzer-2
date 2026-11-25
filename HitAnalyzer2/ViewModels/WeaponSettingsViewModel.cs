@@ -81,7 +81,10 @@ namespace HitAnalyzer2.ViewModels
         private WeaponProfileItem? selectedWeapon;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ShowHitDetectionReadiness))]
         private TriggerTypeEnum selectedTrigger;
+
+        public bool ShowHitDetectionReadiness => SelectedTrigger is TriggerTypeEnum.FirstSpot or TriggerTypeEnum.TimeOut;
 
         [ObservableProperty]
         private string? settingsMessage;

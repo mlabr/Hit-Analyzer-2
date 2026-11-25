@@ -4,6 +4,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using HitAnalyzer2.Models;
+using HitAnalyzer2.Services.Shooting;
 using OpenCvSharp;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,11 +32,18 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private Point? guidanceAim;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsDetectionReady), nameof(IsDetectionTracking))]
+        private HitDetectionReadiness detectionReadiness;
+
+        public bool IsDetectionReady => DetectionReadiness == HitDetectionReadiness.Ready;
+        public bool IsDetectionTracking => DetectionReadiness == HitDetectionReadiness.Tracking;
+
         internal Position? WeaponPreviewHit { get; private set; }
 
         internal async Task ShowFrameAsync(Mat pixels, string? measuredFps, CancellationToken cancellationToken,
             double? previewScore = null, Position? weaponPreviewHit = null,
-            (double Left, double Right, Position? Aim) guidance = default)
+            (double Left, double Right, Position? Aim) guidance = default, HitDetectionReadiness readiness = default)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
@@ -57,6 +65,7 @@ namespace HitAnalyzer2.ViewModels
                     LeftGuidanceLevel = guidance.Left;
                     RightGuidanceLevel = guidance.Right;
                     GuidanceAim = guidance.Aim is { } aim ? new Point(aim.X, aim.Y) : null;
+                    DetectionReadiness = readiness;
                     WebcamImage = bitmap;
                     previous?.Dispose();
                     FpsText = measuredFps is null ? null : $"FPS: {measuredFps}";
@@ -85,6 +94,7 @@ namespace HitAnalyzer2.ViewModels
             LeftGuidanceLevel = 0;
             RightGuidanceLevel = 0;
             GuidanceAim = null;
+            DetectionReadiness = HitDetectionReadiness.Waiting;
         }
     }
 }
