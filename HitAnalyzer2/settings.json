@@ -87,7 +87,7 @@
       "Caliber": 5,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "ExternalEvent",
+      "Trigger": "TimeOut",
       "NexDetectionInterval": 500
     }
   }

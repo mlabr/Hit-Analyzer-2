@@ -99,7 +99,7 @@ namespace HitAnalyzer2.ViewModels
                 ProcessCameraFrameAsync,
                 () =>
                 {
-                    AudioSettings.UpdateGuidance(double.NaN, 0);
+                    AudioSettings.UpdateGuidance(double.NaN, 0, 0);
                     shootingSession.ClearAimPaths();
                     cameraCalibration.UpdatePreviewGeometry(0, 0);
                     CameraPreview.ClearPreview();
