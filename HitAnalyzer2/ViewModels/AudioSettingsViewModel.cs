@@ -24,7 +24,8 @@ namespace HitAnalyzer2.ViewModels
         ];
 
         private AudioService? _audio;
-        private readonly SgaGenerator _guidance = new();
+        private readonly SgaSettings _sgaSettings;
+        private readonly SgaGenerator _guidance;
         private bool _disposed;
 
         [ObservableProperty]
@@ -69,9 +70,11 @@ namespace HitAnalyzer2.ViewModels
         internal AudioSettingsViewModel(AudioSettings settings)
         {
             isEnabled = settings.IsEnabled;
-            isSgaEnabled = settings.IsSgaEnabled;
-            isSgaStereo = _guidance.Stereo = settings.IsSgaStereo;
-            isSgaFocusOnTarget = _guidance.FocusOnTarget = settings.IsSgaFocusOnTarget;
+            _sgaSettings = settings.SGA;
+            _guidance = new SgaGenerator(_sgaSettings);
+            isSgaEnabled = _sgaSettings.IsEnabled;
+            isSgaStereo = _guidance.Stereo = _sgaSettings.IsStereo;
+            isSgaFocusOnTarget = _guidance.FocusOnTarget = _sgaSettings.FocusOnTarget;
             selectedEffect = Effects.First(option => option.Mode == settings.Effect);
             RefreshGuidance();
         }
@@ -80,9 +83,12 @@ namespace HitAnalyzer2.ViewModels
         {
             IsEnabled = IsEnabled,
             Effect = SelectedEffect?.Mode ?? AudioEffectMode.HitOnly,
-            IsSgaEnabled = IsSgaEnabled,
-            IsSgaStereo = IsSgaStereo,
-            IsSgaFocusOnTarget = IsSgaFocusOnTarget
+            SGA = _sgaSettings with
+            {
+                IsEnabled = IsSgaEnabled,
+                IsStereo = IsSgaStereo,
+                FocusOnTarget = IsSgaFocusOnTarget
+            }
         };
 
         partial void OnIsEnabledChanged(bool value)

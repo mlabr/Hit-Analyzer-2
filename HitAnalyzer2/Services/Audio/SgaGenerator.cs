@@ -6,19 +6,12 @@ namespace HitAnalyzer2.Services.Audio
 {
     internal enum SgaWaveform { Square, Sine, Triangle }
 
-    internal sealed class SgaGenerator
+    internal sealed class SgaGenerator(SgaSettings settings)
     {
-        private const double OffTargetFrequencyHz = 200;
-        private const double OnTargetMinimumFrequencyHz = 400;
-        private const double OnTargetMaximumFrequencyHz = 1200;
-        private const double SlowPeriodSeconds = 0.40;
-        private const double FastPeriodSeconds = 0.10;
         private const double Volume = 0.2;
         private const double MinimumOffTargetVolumeScale = 0.4;
         private const double FullAttenuationDistanceInTargetRadii = 1.0;
-        private const double QuietChannelGain = 0.15;
         private const double FullBalanceOffset = 0.05;
-        private const double DutyCycle = 0.4;
         private static readonly SgaWaveform Waveform = SgaWaveform.Square;
 
         private sealed record Aim(double Score, Position Position, double OutsideDistanceInTargetRadii, long Time)
@@ -40,9 +33,13 @@ namespace HitAnalyzer2.Services.Audio
                 return default;
 
             var (left, right) = GetChannelGains(aim.HorizontalOffset);
+            double quietChannelGain = settings.QuietChannelGain;
+            if (quietChannelGain == 1)
+                return (1, 1, aim.Position);
+
             // Display the direction above the quiet-channel floor.
-            return ((left - QuietChannelGain) / (1 - QuietChannelGain),
-                (right - QuietChannelGain) / (1 - QuietChannelGain), aim.Position);
+            return ((left - quietChannelGain) / (1 - quietChannelGain),
+                (right - quietChannelGain) / (1 - quietChannelGain), aim.Position);
         }
 
         private (double Left, double Right) GetChannelGains(double horizontalOffset)
@@ -50,8 +47,8 @@ namespace HitAnalyzer2.Services.Audio
             double balance = Stereo ? Math.Clamp(horizontalOffset / FullBalanceOffset, -1, 1) : 0;
             if (FocusOnTarget)
                 balance = -balance;
-            return (1 - Math.Max(0, balance) * (1 - QuietChannelGain),
-                1 - Math.Max(0, -balance) * (1 - QuietChannelGain));
+            return (1 - Math.Max(0, balance) * (1 - settings.QuietChannelGain),
+                1 - Math.Max(0, -balance) * (1 - settings.QuietChannelGain));
         }
 
         internal void UpdateAim(double score, Position? position, double outsideDistanceInTargetRadii) =>
@@ -70,15 +67,16 @@ namespace HitAnalyzer2.Services.Audio
                 FullAttenuationDistanceInTargetRadii, 0, 1);
             double volume = Volume * (1 - (1 - MinimumOffTargetVolumeScale) * attenuation);
             double frequency = normalized > 0
-                ? OnTargetMinimumFrequencyHz + (OnTargetMaximumFrequencyHz - OnTargetMinimumFrequencyHz) * normalized
-                : OffTargetFrequencyHz;
-            double period = SlowPeriodSeconds + (FastPeriodSeconds - SlowPeriodSeconds) * normalized;
+                ? settings.OnTargetMinimumFrequencyHz +
+                    (settings.OnTargetMaximumFrequencyHz - settings.OnTargetMinimumFrequencyHz) * normalized
+                : settings.OffTargetFrequencyHz;
+            double period = settings.SlowPeriodSeconds + (settings.FastPeriodSeconds - settings.SlowPeriodSeconds) * normalized;
             var (left, right) = GetChannelGains(aim?.HorizontalOffset ?? 0);
             double ramp = 1.0 / (0.003 * sampleRate);
 
             for (int i = 0; i < output.Length; i += channels)
             {
-                bool audible = valid && (normalized == 1 || _pulsePhase < DutyCycle);
+                bool audible = valid && (normalized == 1 || _pulsePhase < settings.DutyCycle);
                 _gain = audible ? Math.Min(1, _gain + ramp) : Math.Max(0, _gain - ramp);
                 double wave = Waveform switch
                 {

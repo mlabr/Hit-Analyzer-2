@@ -66,6 +66,8 @@ namespace HitAnalyzer2
                 }
 
                 MigrateImageAdjustments(json as JsonObject);
+                if (json?[nameof(AppSettings.Audio)] is JsonObject audioSection)
+                    MigrateSgaSettings(audioSection);
                 if (json is JsonObject legacyRoot &&
                     legacyRoot.TryGetPropertyValue(nameof(TargetSettings.SelectedTargetFileName), out var legacyTargetFile))
                 {
@@ -226,6 +228,25 @@ namespace HitAnalyzer2
             }
         }
 
+        private static void MigrateSgaSettings(JsonObject audio)
+        {
+            if (!audio.ContainsKey(nameof(AudioSettings.SGA)))
+                audio[nameof(AudioSettings.SGA)] = new JsonObject();
+
+            if (audio[nameof(AudioSettings.SGA)] is not JsonObject sga)
+                return;
+
+            MoveLegacyFlag("IsSgaEnabled", nameof(SgaSettings.IsEnabled));
+            MoveLegacyFlag("IsSgaStereo", nameof(SgaSettings.IsStereo));
+            MoveLegacyFlag("IsSgaFocusOnTarget", nameof(SgaSettings.FocusOnTarget));
+
+            void MoveLegacyFlag(string oldName, string newName)
+            {
+                if (audio[oldName] is { } value && !sga.ContainsKey(newName))
+                    sga[newName] = value.DeepClone();
+            }
+        }
+
         private static void Validate(AppSettings? settings)
         {
             if (settings is not null && !Enum.IsDefined(settings.Theme))
@@ -236,6 +257,18 @@ namespace HitAnalyzer2
 
             if (settings.Audio is not { } audio || !Enum.IsDefined(audio.Effect))
                 throw new JsonException("Invalid audio settings.");
+
+            if (audio.SGA is not
+                {
+                    OffTargetFrequencyHz: > 0 and < double.PositiveInfinity,
+                    OnTargetMinimumFrequencyHz: > 0 and < double.PositiveInfinity,
+                    OnTargetMaximumFrequencyHz: > 0 and < double.PositiveInfinity,
+                    SlowPeriodSeconds: > 0 and < double.PositiveInfinity,
+                    FastPeriodSeconds: > 0 and < double.PositiveInfinity,
+                    QuietChannelGain: >= 0 and <= 1,
+                    DutyCycle: >= 0 and <= 1
+                })
+                throw new JsonException("Invalid SGA settings.");
 
             if (settings.Target is not { CalibrationZoom: 2 or 4 or 8, Calibration: not null })
                 throw new JsonException("Invalid target calibration zoom.");

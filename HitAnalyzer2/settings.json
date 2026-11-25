@@ -54,9 +54,18 @@
   "Audio": {
     "IsEnabled": true,
     "Effect": "Spotter12Directions",
-    "IsSgaEnabled": false,
-    "IsSgaStereo": true,
-    "IsSgaFocusOnTarget": true
+    "SGA": {
+      "IsEnabled": false,
+      "IsStereo": true,
+      "FocusOnTarget": true,
+      "OffTargetFrequencyHz": 200,
+      "OnTargetMinimumFrequencyHz": 400,
+      "OnTargetMaximumFrequencyHz": 1200,
+      "SlowPeriodSeconds": 0.4,
+      "FastPeriodSeconds": 0.1,
+      "QuietChannelGain": 0.15,
+      "DutyCycle": 0.4
+    }
   },
   "Detection": {
     "Method": "Blob",
