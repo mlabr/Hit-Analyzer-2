@@ -13,6 +13,7 @@ namespace HitAnalyzer2.Services.Audio
         private const double FastPeriodSeconds = 0.10;
         private const double Volume = 0.2;
         private const double QuietChannelGain = 0.15;
+        private const double FullBalanceOffset = 0.05;
         private const double DutyCycle = 0.4;
         private static readonly SgaWaveform Waveform = SgaWaveform.Square;
 
@@ -37,11 +38,13 @@ namespace HitAnalyzer2.Services.Audio
             double normalized = (aim?.Score ?? 0) / 10;
             double frequency = LowFrequency + (HighFrequency - LowFrequency) * normalized;
             double period = SlowPeriodSeconds + (FastPeriodSeconds - SlowPeriodSeconds) * normalized;
-            double side = Stereo ? Math.Sign(aim?.HorizontalOffset ?? 0) : 0;
+            double balance = Stereo
+                ? Math.Clamp((aim?.HorizontalOffset ?? 0) / FullBalanceOffset, -1, 1)
+                : 0;
             if (FocusOnTarget)
-                side = -side;
-            double left = side > 0 ? QuietChannelGain : 1;
-            double right = side < 0 ? QuietChannelGain : 1;
+                balance = -balance;
+            double left = 1 - Math.Max(0, balance) * (1 - QuietChannelGain);
+            double right = 1 - Math.Max(0, -balance) * (1 - QuietChannelGain);
             double ramp = 1.0 / (0.003 * sampleRate);
 
             for (int i = 0; i < output.Length; i += channels)

@@ -324,8 +324,11 @@ namespace HitAnalyzer2.ViewModels
                 var recordedHits = !showWeaponOffsets && !_shootingSession.IsMonoscope && ShootingSettings.ShowAllHits
                     ? _recording.GetNormalizedHitRecordList()
                     : null;
+                var targetAimPath = !showWeaponOffsets && aimPath.Length > 0 && lastTargetHit is not null
+                    ? _recording.GetLastHitRecord()?.AimPathBefore
+                    : null;
                 TargetRenderer.DrawTargetPreview(target, lastTargetHit, CameraSettings.Calibration.Settings,
-                    previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit);
+                    previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit, aimPath: targetAimPath);
                 await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore,
                     showWeaponOffsets ? lastTargetHit : null);
                 return;

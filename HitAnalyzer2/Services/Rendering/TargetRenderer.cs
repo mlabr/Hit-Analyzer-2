@@ -29,7 +29,8 @@ namespace HitAnalyzer2.Services.Rendering
         internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings,
             double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null, bool isDarkTheme = false,
             Position? originalTargetHit = null, HitGroupCircle? cep50 = null,
-            HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null, int directionCount = 0)
+            HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null, int directionCount = 0,
+            IReadOnlyList<LaserPosition>? aimPath = null)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -53,6 +54,10 @@ namespace HitAnalyzer2.Services.Rendering
 
             if (directionCount > 0)
                 DrawDirectionSectors(preview, center, diameterPixels / 2, directionCount, palette);
+
+            if (aimPath is not null)
+                AimTraceRenderer.DrawAimPath(preview, aimPath, AimTraceRenderer.AimPathBeforeColor,
+                    default, oldestIsBrightest: false, project: (x, y) => ToTargetPixel(new Position(x, y)));
 
             if (originalTargetHit is { } original && IsInsidePreview(original))
             {
