@@ -44,6 +44,8 @@
                                Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" />
                 </StackPanel>
             </Grid>
+            <Image x:Name="AudioTargetPreview" Grid.Row="1" Grid.Column="1"
+                   Stretch="Uniform" IsVisible="False" />
             <Grid x:Name="CameraPreview" Grid.Row="1" Grid.Column="1">
                 <Image x:Name="PreviewImage" Source="{Binding CameraPreview.WebcamImage}" Stretch="Uniform"
                        StretchDirection="Both" />

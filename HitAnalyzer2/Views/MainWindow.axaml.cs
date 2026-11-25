@@ -23,6 +23,7 @@ namespace HitAnalyzer2.Views
         private bool _stoppingCamera;
         private bool _cameraStopped;
         private CameraSettingsViewModel? _cameraSettingsViewModel;
+        private AudioSettingsViewModel? _audioSettingsViewModel;
         private Point? _zoomPointer;
         private (IPointer Pointer, Position Anchor, int OffsetX, int OffsetY)? _offsetDrag;
 
@@ -30,6 +31,7 @@ namespace HitAnalyzer2.Views
         {
             InitializeComponent();
             CameraPreview.Margin = PreviewMargin;
+            AudioTargetPreview.Margin = PreviewMargin;
             PreviewImage.PropertyChanged += OnPreviewImageChanged;
             CameraPreview.AddHandler(PointerMovedEvent, UpdateZoomPointer, RoutingStrategies.Tunnel, handledEventsToo: true);
             CameraPreview.PointerPressed += StartOffsetDrag;
@@ -66,6 +68,11 @@ namespace HitAnalyzer2.Views
                 _cameraSettingsViewModel = (DataContext as MainWindowViewModel)?.CameraSettings;
                 if (_cameraSettingsViewModel is { } current)
                     current.Calibration.CalibrationGeometryChanged += InvalidateCalibrationOverlay;
+                if (_audioSettingsViewModel is { } previousAudio)
+                    previousAudio.PropertyChanged -= OnAudioSettingsChanged;
+                _audioSettingsViewModel = (DataContext as MainWindowViewModel)?.AudioSettings;
+                if (_audioSettingsViewModel is { } currentAudio)
+                    currentAudio.PropertyChanged += OnAudioSettingsChanged;
                 UpdateCalibrationOverlay();
                 UpdatePreviewTheme();
             };
@@ -85,7 +92,16 @@ namespace HitAnalyzer2.Views
                     await viewModel.RefreshCamerasAsync();
             };
             Closing += StopCameraBeforeClosing;
-            Closed += (_, _) => (DataContext as MainWindowViewModel)?.AudioSettings.Dispose();
+            Closed += (_, _) =>
+            {
+                if (_audioSettingsViewModel is { } audio)
+                {
+                    audio.PropertyChanged -= OnAudioSettingsChanged;
+                    audio.Dispose();
+                }
+                AudioTargetPreview.IsVisible = false;
+                UpdateAudioTargetPreview();
+            };
             AddHandler(KeyDownEvent, (_, e) =>
             {
                 if (e.Key == Key.F1 && e.KeyModifiers == KeyModifiers.None)
@@ -115,6 +131,7 @@ namespace HitAnalyzer2.Views
             if (DataContext is MainWindowViewModel viewModel)
             {
                 viewModel.IsDarkTheme = ActualThemeVariant == ThemeVariant.Dark;
+                UpdateAudioTargetPreview();
                 if (viewModel.ShootingSettings.IsSessionComplete)
                     viewModel.RefreshSessionResults();
             }
@@ -123,6 +140,21 @@ namespace HitAnalyzer2.Views
         private void ShowCameraSettings(object? sender, RoutedEventArgs e) => ShowSettings(CameraSettings);
 
         private void ShowAudioSettings(object? sender, RoutedEventArgs e) => ShowSettings(AudioSettings);
+
+        private void OnAudioSettingsChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(AudioSettingsViewModel.SelectedEffect))
+                UpdateAudioTargetPreview();
+        }
+
+        private void UpdateAudioTargetPreview()
+        {
+            var previous = AudioTargetPreview.Source as Bitmap;
+            AudioTargetPreview.Source = AudioTargetPreview.IsVisible && DataContext is MainWindowViewModel viewModel
+                ? viewModel.CreateAudioTargetPreview()
+                : null;
+            previous?.Dispose();
+        }
 
         private void ShowDetectionSettings(object? sender, RoutedEventArgs e) => ShowSettings(DetectionSettings);
 
@@ -198,7 +230,9 @@ namespace HitAnalyzer2.Views
             AudioSettings.IsVisible = view == AudioSettings;
             About.IsVisible = view == About;
             InformationPanel.IsVisible = About.IsVisible;
-            CameraPreview.IsVisible = !About.IsVisible && !AppLink.IsVisible;
+            AudioTargetPreview.IsVisible = AudioSettings.IsVisible;
+            CameraPreview.IsVisible = !About.IsVisible && !AppLink.IsVisible && !AudioSettings.IsVisible;
+            UpdateAudioTargetPreview();
             UpdateMinimumWindowSize();
             _zoomPointer = null;
             UpdateWeaponOffsetCursor(null);

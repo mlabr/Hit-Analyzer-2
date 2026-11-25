@@ -38,6 +38,13 @@ namespace HitAnalyzer2.ViewModels
 
         public bool HasAudioError => AudioError is not null;
 
+        internal int DirectionCount => SelectedEffect?.Mode switch
+        {
+            AudioEffectMode.Spotter8Directions => 8,
+            AudioEffectMode.Spotter12Directions => 12,
+            _ => 0
+        };
+
         internal AudioSettingsViewModel(AudioSettings settings)
         {
             isEnabled = settings.IsEnabled;
@@ -74,9 +81,9 @@ namespace HitAnalyzer2.ViewModels
             if (hit.Score is >= 0 and <= 10)
                 clips.Add(FormattableString.Invariant($"english/{Math.Round(hit.Score, MidpointRounding.AwayFromZero):0}_points.wav"));
 
-            if (mode is AudioEffectMode.Spotter8Directions or AudioEffectMode.Spotter12Directions)
+            int sectorCount = DirectionCount;
+            if (sectorCount > 0)
             {
-                int sectorCount = mode == AudioEffectMode.Spotter8Directions ? 8 : 12;
                 double x = hit.X - TargetModel.Center.X;
                 double y = hit.Y - TargetModel.Center.Y;
                 clips.Add(GetDirectionSample(x, y, sectorCount));

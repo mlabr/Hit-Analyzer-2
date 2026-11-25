@@ -29,7 +29,7 @@ namespace HitAnalyzer2.Services.Rendering
         internal static void DrawTargetPreview(Mat preview, Position? lastTargetHit, TargetModel settings,
             double caliberDiameterMm, IReadOnlyList<HitRecord>? recordedHits = null, bool isDarkTheme = false,
             Position? originalTargetHit = null, HitGroupCircle? cep50 = null,
-            HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null)
+            HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null, int directionCount = 0)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -50,6 +50,9 @@ namespace HitAnalyzer2.Services.Rendering
                 DrawMonoscope(preview, ToTargetPixel(new Position(0, 0)), ToTargetPixel(new Position(1, 1)));
             else
                 DrawTargetRings(preview, center, diameterPixels, settings, palette);
+
+            if (directionCount > 0)
+                DrawDirectionSectors(preview, center, diameterPixels / 2, directionCount, palette);
 
             if (originalTargetHit is { } original && IsInsidePreview(original))
             {
@@ -104,6 +107,32 @@ namespace HitAnalyzer2.Services.Rendering
             Point ToTargetPixel(Position point) =>
                 new(Math.Round((size - 1) * 0.5 + (point.X - 0.5) * width),
                     Math.Round((size - 1) * 0.5 + (point.Y - 0.5) * height));
+        }
+
+        private static void DrawDirectionSectors(Mat preview, Point center, double radius, int count,
+            PreviewPalette palette)
+        {
+            const HersheyFonts font = HersheyFonts.HersheySimplex;
+            double labelScale = Math.Max(0.4, radius / 155);
+            double sectorAngle = Math.Tau / count;
+            for (int i = 0; i < count; i++)
+            {
+                double boundaryAngle = (i + 0.5) * sectorAngle;
+                // Extend past the square so OpenCV clips the ray at the preview edge.
+                var edge = At(boundaryAngle, Math.Min(preview.Width, preview.Height));
+                Cv2.Line(preview, center, edge, palette.Background, 3, LineTypes.AntiAlias);
+                Cv2.Line(preview, center, edge, palette.Text, 1, LineTypes.AntiAlias);
+
+                string label = (i == 0 ? count : i).ToString(CultureInfo.InvariantCulture);
+                var labelCenter = At(i * sectorAngle, radius * 1.15);
+                var textSize = Cv2.GetTextSize(label, font, labelScale, 2, out _);
+                var origin = new Point(labelCenter.X - textSize.Width / 2, labelCenter.Y + textSize.Height / 2);
+                Cv2.PutText(preview, label, origin, font, labelScale, palette.Text, 2, LineTypes.AntiAlias);
+            }
+
+            Point At(double angle, double distance) =>
+                new(center.X + Math.Round(Math.Sin(angle) * distance),
+                    center.Y - Math.Round(Math.Cos(angle) * distance));
         }
 
         private static void DrawMonoscope(Mat preview, Point topLeft, Point bottomRight)

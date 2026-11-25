@@ -238,6 +238,15 @@ namespace HitAnalyzer2.ViewModels
 
         internal Task StopCameraAsync() => CameraSettings.StopCameraAsync();
 
+        internal Bitmap CreateAudioTargetPreview()
+        {
+            const int size = 768;
+            using var image = new Mat(size, size, MatType.CV_8UC4);
+            TargetRenderer.DrawTargetPreview(image, null, CameraSettings.Calibration.Settings, 0,
+                isDarkTheme: IsDarkTheme, directionCount: AudioSettings.DirectionCount);
+            return CameraPreviewViewModel.CreateBitmap(image);
+        }
+
         [RelayCommand]
         private void SaveConfiguration()
         {
