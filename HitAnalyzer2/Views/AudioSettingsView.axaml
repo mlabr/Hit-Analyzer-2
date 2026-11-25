@@ -15,8 +15,14 @@
             <CheckBox Content="Sound guided aiming" IsChecked="{Binding IsSgaEnabled}" />
             <StackPanel Spacing="4" IsEnabled="{Binding IsSgaEnabled}">
                 <CheckBox Content="Stereo guidance" IsChecked="{Binding IsSgaStereo}" />
-                <CheckBox Content="Focus on target (reverse channels)" IsChecked="{Binding IsSgaFocusOnTarget}"
-                          IsEnabled="{Binding IsSgaStereo}" />
+                <StackPanel Orientation="Horizontal" Spacing="8" IsEnabled="{Binding IsSgaStereo}">
+                    <TextBlock Text="Focus on:" VerticalAlignment="Center" />
+                    <ComboBox AutomationProperties.Name="Focus on"
+                              SelectedIndex="{Binding SgaFocusIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="Target" />
+                        <ComboBoxItem Content="Aim" />
+                    </ComboBox>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
         <TextBlock Text="{Binding AudioError}" IsVisible="{Binding HasAudioError}" TextWrapping="Wrap" />

@@ -33,30 +33,30 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.3125,
-          "Y": 0.2708
+          "X": 0.3156,
+          "Y": 0.2854
         },
         "TopRight": {
-          "X": 0.6969,
-          "Y": 0.2750
+          "X": 0.7000,
+          "Y": 0.2896
         },
         "BottomRight": {
-          "X": 0.7203,
-          "Y": 0.7854
+          "X": 0.7234,
+          "Y": 0.8000
         },
         "BottomLeft": {
-          "X": 0.2703,
-          "Y": 0.7771
+          "X": 0.2734,
+          "Y": 0.7917
         }
       }
     }
   },
   "Audio": {
     "IsEnabled": true,
-    "Effect": "HitOnly",
-    "IsSgaEnabled": true,
+    "Effect": "Spotter12Directions",
+    "IsSgaEnabled": false,
     "IsSgaStereo": true,
-    "IsSgaFocusOnTarget": false
+    "IsSgaFocusOnTarget": true
   },
   "Detection": {
     "Method": "Blob",
@@ -87,7 +87,7 @@
       "Caliber": 5,
       "OffsetX": 0,
       "OffsetY": 0,
-      "Trigger": "TimeOut",
+      "Trigger": "ExternalEvent",
       "NexDetectionInterval": 500
     }
   }

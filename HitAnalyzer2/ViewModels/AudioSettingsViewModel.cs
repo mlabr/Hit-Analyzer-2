@@ -37,7 +37,18 @@ namespace HitAnalyzer2.ViewModels
         private bool isSgaStereo;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(SgaFocusIndex))]
         private bool isSgaFocusOnTarget;
+
+        public int SgaFocusIndex
+        {
+            get => IsSgaFocusOnTarget ? 0 : 1;
+            set
+            {
+                if (value is 0 or 1)
+                    IsSgaFocusOnTarget = value == 0;
+            }
+        }
 
         [ObservableProperty]
         private EffectOption? selectedEffect;

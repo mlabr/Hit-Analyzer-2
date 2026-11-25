@@ -10,7 +10,7 @@ namespace HitAnalyzer2.Services.Audio
         private const double OffTargetFrequencyHz = 200;
         private const double OnTargetMinimumFrequencyHz = 400;
         private const double OnTargetMaximumFrequencyHz = 1200;
-        private const double SlowPeriodSeconds = 0.45;
+        private const double SlowPeriodSeconds = 0.40;
         private const double FastPeriodSeconds = 0.10;
         private const double Volume = 0.2;
         private const double MinimumOffTargetVolumeScale = 0.4;
