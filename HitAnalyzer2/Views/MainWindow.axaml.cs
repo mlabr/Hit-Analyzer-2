@@ -23,7 +23,7 @@ namespace HitAnalyzer2.Views
         private bool _stoppingCamera;
         private bool _cameraStopped;
         private CameraSettingsViewModel? _cameraSettingsViewModel;
-        private AudioSettingsViewModel? _audioSettingsViewModel;
+        private MainWindowViewModel? _previewViewModel;
         private Point? _zoomPointer;
         private (IPointer Pointer, Position Anchor, int OffsetX, int OffsetY)? _offsetDrag;
 
@@ -68,11 +68,7 @@ namespace HitAnalyzer2.Views
                 _cameraSettingsViewModel = (DataContext as MainWindowViewModel)?.CameraSettings;
                 if (_cameraSettingsViewModel is { } current)
                     current.Calibration.CalibrationGeometryChanged += InvalidateCalibrationOverlay;
-                if (_audioSettingsViewModel is { } previousAudio)
-                    previousAudio.PropertyChanged -= OnAudioSettingsChanged;
-                _audioSettingsViewModel = (DataContext as MainWindowViewModel)?.AudioSettings;
-                if (_audioSettingsViewModel is { } currentAudio)
-                    currentAudio.PropertyChanged += OnAudioSettingsChanged;
+                SetPreviewViewModel(DataContext as MainWindowViewModel);
                 UpdateCalibrationOverlay();
                 UpdatePreviewTheme();
             };
@@ -94,11 +90,8 @@ namespace HitAnalyzer2.Views
             Closing += StopCameraBeforeClosing;
             Closed += (_, _) =>
             {
-                if (_audioSettingsViewModel is { } audio)
-                {
-                    audio.PropertyChanged -= OnAudioSettingsChanged;
-                    audio.Dispose();
-                }
+                _previewViewModel?.AudioSettings.Dispose();
+                SetPreviewViewModel(null);
                 AudioTargetPreview.IsVisible = false;
                 UpdateAudioTargetPreview();
             };
@@ -146,6 +139,28 @@ namespace HitAnalyzer2.Views
             if (e.PropertyName == nameof(AudioSettingsViewModel.SelectedEffect))
                 UpdateAudioTargetPreview();
         }
+
+        private void SetPreviewViewModel(MainWindowViewModel? viewModel)
+        {
+            if (_previewViewModel is { } previous)
+            {
+                previous.AudioSettings.PropertyChanged -= OnAudioSettingsChanged;
+                previous.RecordedHitsChanged -= OnRecordedHitsChanged;
+            }
+
+            _previewViewModel = viewModel;
+            if (viewModel is not null)
+            {
+                viewModel.AudioSettings.PropertyChanged += OnAudioSettingsChanged;
+                viewModel.RecordedHitsChanged += OnRecordedHitsChanged;
+            }
+        }
+
+        private void OnRecordedHitsChanged() => Dispatcher.UIThread.Post(() =>
+        {
+            if (AudioTargetPreview.IsVisible)
+                UpdateAudioTargetPreview();
+        }, DispatcherPriority.Background);
 
         private void UpdateAudioTargetPreview()
         {

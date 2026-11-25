@@ -238,11 +238,19 @@ namespace HitAnalyzer2.ViewModels
 
         internal Task StopCameraAsync() => CameraSettings.StopCameraAsync();
 
+        internal event Action? RecordedHitsChanged
+        {
+            add => _recording.HitCountChanged += value;
+            remove => _recording.HitCountChanged -= value;
+        }
+
         internal Bitmap CreateAudioTargetPreview()
         {
             const int size = 768;
             using var image = new Mat(size, size, MatType.CV_8UC4);
-            TargetRenderer.DrawTargetPreview(image, null, CameraSettings.Calibration.Settings, 0,
+            var caliber = _shootingSession.GetSessionStatus().LastHitCaliberMm;
+            var hit = _recording.GetLastHitRecord()?.HitPosition;
+            TargetRenderer.DrawTargetPreview(image, hit, CameraSettings.Calibration.Settings, caliber,
                 isDarkTheme: IsDarkTheme, directionCount: AudioSettings.DirectionCount);
             return CameraPreviewViewModel.CreateBitmap(image);
         }
