@@ -26,7 +26,7 @@ namespace HitAnalyzer2.Services.Audio
         internal volatile bool Stereo = true;
         internal volatile bool FocusOnTarget;
 
-        internal (double Left, double Right, Position? Aim) GetPreview()
+        internal (double Left, double Right) GetPreview()
         {
             var aim = Volatile.Read(ref _aim);
             if (aim is null || Environment.TickCount64 - aim.Time >= 250)
@@ -35,11 +35,11 @@ namespace HitAnalyzer2.Services.Audio
             var (left, right) = GetChannelGains(aim.HorizontalOffset);
             double quietChannelGain = settings.QuietChannelGain;
             if (quietChannelGain == 1)
-                return (1, 1, aim.Position);
+                return (1, 1);
 
             // Display the direction above the quiet-channel floor.
             return ((left - quietChannelGain) / (1 - quietChannelGain),
-                (right - quietChannelGain) / (1 - quietChannelGain), aim.Position);
+                (right - quietChannelGain) / (1 - quietChannelGain));
         }
 
         private (double Left, double Right) GetChannelGains(double horizontalOffset)

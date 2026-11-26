@@ -48,15 +48,9 @@
             </Grid>
             <Grid x:Name="AudioPreview" Grid.Row="1" Grid.Column="1" RowDefinitions="*,Auto" IsVisible="False">
                 <Image x:Name="AudioTargetPreview" Stretch="Uniform" />
-                <views:AudioAimOverlay Aim="{Binding CameraPreview.GuidanceAim}"
-                                       Margin="{Binding #AudioTargetPreview.Margin}" IsHitTestVisible="False">
-                    <views:AudioAimOverlay.IsVisible>
-                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                            <Binding Path="AudioSettings.IsEnabled" />
-                            <Binding Path="AudioSettings.IsSgaEnabled" />
-                        </MultiBinding>
-                    </views:AudioAimOverlay.IsVisible>
-                </views:AudioAimOverlay>
+                <views:AimOverlay Aim="{Binding CameraPreview.AudioAim}"
+                                  SourceSize="{Binding #AudioTargetPreview.Source.Size}"
+                                  Margin="{Binding #AudioTargetPreview.Margin}" IsHitTestVisible="False" />
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="96" HorizontalAlignment="Center"
                             Margin="0,4,0,6" IsHitTestVisible="False">
                     <StackPanel.IsVisible>
@@ -90,6 +84,9 @@
                            Margin="10" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Top"
                            IsVisible="{Binding CameraPreview.FpsText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 <views:CameraCalibrationOverlay x:Name="CalibrationOverlay" IsVisible="False" />
+                <views:AimOverlay Aim="{Binding CameraPreview.PreviewAim}"
+                                  SourceSize="{Binding #PreviewImage.Source.Size}"
+                                  StretchDirection="{Binding #PreviewImage.StretchDirection}" IsHitTestVisible="False" />
                 <Grid x:Name="SessionStartOverlay" RowDefinitions="*,Auto" IsHitTestVisible="False">
                     <Border Grid.RowSpan="2" Background="{DynamicResource AppBackgroundBrush}"
                             IsVisible="{Binding ShootingSettings.ShowScoredSessionResults}" />

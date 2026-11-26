@@ -30,7 +30,10 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private double rightGuidanceLevel;
         [ObservableProperty]
-        private Point? guidanceAim;
+        private Point? previewAim;
+
+        [ObservableProperty]
+        private Point? audioAim;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsDetectionReady), nameof(IsDetectionTracking))]
@@ -43,7 +46,8 @@ namespace HitAnalyzer2.ViewModels
 
         internal async Task ShowFrameAsync(Mat pixels, string? measuredFps, CancellationToken cancellationToken,
             double? previewScore = null, Position? weaponPreviewHit = null,
-            (double Left, double Right, Position? Aim) guidance = default, HitDetectionReadiness readiness = default)
+            (double Left, double Right) guidance = default, HitDetectionReadiness readiness = default,
+            Position? previewAim = null, Position? audioAim = null)
         {
             if (cancellationToken.IsCancellationRequested)
                 return;
@@ -64,7 +68,8 @@ namespace HitAnalyzer2.ViewModels
                     WeaponPreviewHit = weaponPreviewHit;
                     LeftGuidanceLevel = guidance.Left;
                     RightGuidanceLevel = guidance.Right;
-                    GuidanceAim = guidance.Aim is { } aim ? new Point(aim.X, aim.Y) : null;
+                    PreviewAim = previewAim is { } aim ? new Point(aim.X, aim.Y) : null;
+                    AudioAim = audioAim is { } targetAim ? new Point(targetAim.X, targetAim.Y) : null;
                     DetectionReadiness = readiness;
                     WebcamImage = bitmap;
                     previous?.Dispose();
@@ -93,7 +98,8 @@ namespace HitAnalyzer2.ViewModels
             WeaponPreviewHit = null;
             LeftGuidanceLevel = 0;
             RightGuidanceLevel = 0;
-            GuidanceAim = null;
+            PreviewAim = null;
+            AudioAim = null;
             DetectionReadiness = HitDetectionReadiness.Waiting;
         }
     }
