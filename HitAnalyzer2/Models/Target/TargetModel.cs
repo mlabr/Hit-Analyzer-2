@@ -17,7 +17,7 @@ namespace HitAnalyzer2.Models
         internal IReadOnlyList<TargetRingModel> Rings { get; init; } = [];
         internal double? MarkedRingPoints { get; init; }
         internal double? MaxDiameter => Rings.Count == 0 ? null : Rings.Max(ring => ring.Diameter);
-        private double MillimetersPerUnit => TargetType == TargetTypeEnum.CircleImperial ? 25.4 : 1;
+        internal double MillimetersPerUnit => TargetType == TargetTypeEnum.CircleImperial ? 25.4 : 1;
         internal double? MaxDiameterMm => MaxDiameter * MillimetersPerUnit;
 
         internal double? GetDistanceFromCenterMm(Position hitPosition) =>

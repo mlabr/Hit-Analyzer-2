@@ -20,6 +20,10 @@ namespace HitAnalyzer2.Services.Shooting
         RecordingService recording, long appStartedTimestampMs)
     {
         internal enum SessionEndReason { TimeLimit, HitLimit }
+        internal sealed record SessionInfo(string Shooter, string? Weapon, decimal RealRange, decimal SimulatedRange);
+        internal sealed record CompletedSession(SessionInfo Info, DateTimeOffset StartedAt, TimeSpan HitTimeOrigin,
+            TimeSpan Elapsed, TimeSpan? TimeLimit, int? HitLimit, SessionEndReason EndReason,
+            double CaliberMm, TargetModel Target, IReadOnlyList<HitRecord> Hits);
 
         internal const int NextDetectionMinimumInterval = 100;
         internal const int NextDetectionMaximumInterval = 5000;
@@ -50,6 +54,9 @@ namespace HitAnalyzer2.Services.Shooting
         private long? _externalPressedAt;
         private long _externalReleasedAt;
         private long? _sessionStartedAt;
+        private DateTimeOffset _sessionStartedAtLocal;
+        private SessionInfo? _sessionInfo;
+        private int? _sessionHitLimit;
         private int _startCountdown;
         private TimeSpan? _sessionEndedAt;
         private SessionEndReason? _sessionEndReason;
@@ -61,6 +68,7 @@ namespace HitAnalyzer2.Services.Shooting
         private TimeSpan NextDetectionTimestamp { get; set; }
 
         internal event Action? SessionStatusChanged;
+        internal event Action<CompletedSession>? SessionCompleted;
         internal event Action<bool>? SessionRunningChanged;
         internal event Action<HitPosition, TargetModel>? HitRecorded;
         internal event Action? MonoscopeHitCountChanged;
@@ -85,7 +93,7 @@ namespace HitAnalyzer2.Services.Shooting
             }
         }
 
-        internal void StartSession()
+        internal void StartSession(SessionInfo info)
         {
             lock (_hitGate)
             {
@@ -100,7 +108,9 @@ namespace HitAnalyzer2.Services.Shooting
                     return;
                 }
 
-                _remainingHits = SessionLimits.IsHitLimitEnabled ? SessionLimits.HitCountInitial : null;
+                _sessionInfo = info;
+                _sessionHitLimit = SessionLimits.IsHitLimitEnabled ? SessionLimits.HitCountInitial : null;
+                _remainingHits = _sessionHitLimit;
                 _sessionTimeLimit = SessionLimits.IsTimeLimitEnabled
                     ? TimeSpan.FromSeconds(SessionLimits.TimeLimitSecondsInitial)
                     : null;
@@ -128,6 +138,7 @@ namespace HitAnalyzer2.Services.Shooting
                         {
                             long startedAt = Stopwatch.GetTimestamp();
                             _sessionStartedAt = startedAt;
+                            _sessionStartedAtLocal = DateTimeOffset.Now;
                             SessionRunningChanged?.Invoke(true);
                             if (_remainingHits == 0)
                             {
@@ -188,6 +199,14 @@ namespace HitAnalyzer2.Services.Shooting
             _sessionEndReason = reason;
             StopSessionTimeout();
             CompleteRecordingFollowPath();
+            if (_sessionInfo is { } info && _sessionStartedAt is { } startedAt)
+            {
+                var (target, hits) = recording.GetSnapshot();
+                double caliber = hits.Count == 0 ? (double)weaponHandler.CaliberDiameterMm : _lastHitCaliberDiameterMm;
+                SessionCompleted?.Invoke(new(info, _sessionStartedAtLocal,
+                    Stopwatch.GetElapsedTime(appStartedTimestampMs, startedAt), elapsed,
+                    _sessionTimeLimit, _sessionHitLimit, reason, caliber, target, hits));
+            }
             SessionRunningChanged?.Invoke(false);
             SessionStatusChanged?.Invoke();
         }
@@ -287,6 +306,8 @@ namespace HitAnalyzer2.Services.Shooting
                 StopSessionTimeout();
                 _startCountdown = 0;
                 _sessionStartedAt = null;
+                _sessionInfo = null;
+                _sessionHitLimit = null;
                 _sessionEndedAt = null;
                 _sessionEndReason = null;
                 _sessionTimeLimit = null;

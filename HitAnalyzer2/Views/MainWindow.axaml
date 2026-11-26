@@ -37,6 +37,8 @@
                     <TextBlock Text="Session complete" FontWeight="SemiBold"
                                Foreground="{DynamicResource AccentTextBrush}" />
                     <TextBlock Text="{Binding ShootingSettings.SessionCompletionReason}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding ExportError}" TextWrapping="Wrap"
+                               IsVisible="{Binding ExportError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="Time:" FontSize="32" />

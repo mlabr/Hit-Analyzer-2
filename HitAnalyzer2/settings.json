@@ -1,5 +1,5 @@
 {
-  "Theme": "Dark",
+  "Theme": "Light",
   "Shooting": {
     "Shooter": "",
     "IsHitLimitEnable": true,
@@ -7,14 +7,14 @@
     "IsTimeLimitEnable": false,
     "Countdown": true,
     "ShowSmallestHitGroup": true,
-    "TimeLimitSeconds": 10,
+    "TimeLimitSeconds": 5,
     "AimPathTimeLimit": 15,
     "AimPathTimeoutMs": 400,
     "AimPathTimeoutMinimumDuration": 1.5,
     "AimPathAfterTimeLimit": 4
   },
   "Camera": {
-    "DeviceId": "\\\\?\\usb#vid_045e\u0026pid_0779\u0026mi_00#6\u002682e33e7\u00261\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
+    "DeviceId": "\\\\?\\usb#vid_1e2f\u0026pid_9801\u0026mi_00#6\u00261a040c39\u00261\u00260000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\global",
     "DeviceIndex": null,
     "Mode": {
       "Width": 640,
@@ -33,33 +33,33 @@
     "Calibration": {
       "Corners": {
         "TopLeft": {
-          "X": 0.3156,
-          "Y": 0.2854
+          "X": 0.3094,
+          "Y": 0.2542
         },
         "TopRight": {
-          "X": 0.7000,
-          "Y": 0.2896
+          "X": 0.7047,
+          "Y": 0.2458
         },
         "BottomRight": {
-          "X": 0.7234,
-          "Y": 0.8000
+          "X": 0.7094,
+          "Y": 0.7750
         },
         "BottomLeft": {
-          "X": 0.2734,
-          "Y": 0.7917
+          "X": 0.2922,
+          "Y": 0.7562
         }
       }
     }
   },
   "Audio": {
-    "IsEnabled": true,
-    "Effect": "HitOnly",
+    "IsEnabled": false,
+    "Effect": "Spotter12Directions",
     "EffectVolume": 50,
     "SGA": {
       "IsEnabled": false,
       "IsStereo": true,
-      "FocusOnTarget": false,
-      "Volume": 50,
+      "FocusOnTarget": true,
+      "Volume": 81,
       "OffTargetFrequencyHz": 200,
       "OnTargetMinimumFrequencyHz": 400,
       "OnTargetMaximumFrequencyHz": 1200,
@@ -98,7 +98,7 @@
       "Caliber": 5,
       "OffsetX": 51,
       "OffsetY": -11,
-      "Trigger": "TimeOut",
+      "Trigger": "NewSpot",
       "NexDetectionInterval": 500
     }
   }

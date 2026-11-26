@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Enums;
 using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Exporting;
 using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Rendering;
 using HitAnalyzer2.Services.Shooting;
@@ -52,6 +53,8 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private string? configurationMessage;
         [ObservableProperty]
+        private string? exportError;
+        [ObservableProperty]
         private Bitmap? sessionResultsImage;
         [ObservableProperty]
         private string? meanHitGroupText;
@@ -85,7 +88,9 @@ namespace HitAnalyzer2.ViewModels
             AppLink = new AppLinkViewModel(settings.Current.AppLink ?? new AppLinkSettings());
             _shootingSession = shootingSession;
             _recording = recording;
-            ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration);
+            ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration,
+                () => WeaponSettings.SelectedWeapon?.Name ?? WeaponSettings.SelectedWeapon?.FileName);
+            shootingSession.SessionCompleted += session => _ = Task.Run(() => ExportSession(session));
             shootingSession.MonoscopeHitEvaluated += position =>
                 Dispatcher.UIThread.Post(async () =>
                 {
@@ -120,6 +125,19 @@ namespace HitAnalyzer2.ViewModels
                     nameof(ShootingSettingsViewModel.ShowSmallestHitGroup))
                     RefreshSessionResults();
             };
+        }
+
+        private void ExportSession(ShootingSessionService.CompletedSession session)
+        {
+            try
+            {
+                ShootLogExportService.Export(session);
+                Dispatcher.UIThread.Post(() => ExportError = null);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                Dispatcher.UIThread.Post(() => ExportError = $"Could not export session. {ex.Message}");
+            }
         }
 
         internal void RefreshSessionResults()
