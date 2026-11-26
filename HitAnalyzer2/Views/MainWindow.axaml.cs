@@ -320,10 +320,11 @@ namespace HitAnalyzer2.Views
                 return;
 
             var weapon = vm.WeaponSettings;
-            weapon.OffsetX = (int)Math.Clamp(Math.Round(drag.OffsetX + cursor.X - drag.Anchor.X),
+            int offsetX = (int)Math.Clamp(Math.Round(drag.OffsetX + cursor.X - drag.Anchor.X),
                 weapon.MinimumOffset, weapon.MaximumOffset);
-            weapon.OffsetY = (int)Math.Clamp(Math.Round(drag.OffsetY + cursor.Y - drag.Anchor.Y),
+            int offsetY = (int)Math.Clamp(Math.Round(drag.OffsetY + cursor.Y - drag.Anchor.Y),
                 weapon.MinimumOffset, weapon.MaximumOffset);
+            weapon.SetOffset(offsetX, offsetY);
             e.Handled = true;
         }
 

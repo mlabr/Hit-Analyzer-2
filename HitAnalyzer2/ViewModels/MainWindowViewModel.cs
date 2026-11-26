@@ -88,8 +88,7 @@ namespace HitAnalyzer2.ViewModels
             AppLink = new AppLinkViewModel(settings.Current.AppLink ?? new AppLinkSettings());
             _shootingSession = shootingSession;
             _recording = recording;
-            ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration,
-                () => WeaponSettings.SelectedWeapon?.Name ?? WeaponSettings.SelectedWeapon?.FileName);
+            ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration);
             shootingSession.SessionCompleted += session => _ = Task.Run(() => ExportSession(session));
             shootingSession.MonoscopeHitEvaluated += position =>
                 Dispatcher.UIThread.Post(async () =>
@@ -288,7 +287,8 @@ namespace HitAnalyzer2.ViewModels
             var current = _settings.Current;
             var camera = CameraSettings.GetConfiguration(current.Camera);
             var detection = DetectionSettings.GetConfiguration(current.Detection);
-            var weapon = WeaponSettings.GetSelectedProfile();
+            var activeWeapon = WeaponSettings.ActiveWeapon;
+            var weapon = activeWeapon.GetSelectedProfile();
             var configuration = current with
             {
                 Theme = ShootingSettings.SelectedTheme,
@@ -299,7 +299,7 @@ namespace HitAnalyzer2.ViewModels
                 Detection = detection,
                 SelectedWeapon = weapon ?? current.SelectedWeapon,
                 LegacyWeapon = weapon is null && current.SelectedWeapon is null
-                    ? WeaponSettings.GetConfiguration(current.LegacyWeapon ?? new WeaponSettings())
+                    ? activeWeapon.Settings
                     : null
             };
 
@@ -326,7 +326,7 @@ namespace HitAnalyzer2.ViewModels
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
             bool showTargetPreview = IsTargetPreviewActive;
             bool showWeaponOffsets = IsWeaponPreviewActive;
-            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim, readiness) =
+            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim, readiness, weaponCaliberMm) =
                 _shootingSession.ProcessFrame(pixels, capturedAt, cancellationToken);
             var calibration = CameraSettings.Calibration;
             var targetSettings = calibration.Settings;
@@ -344,7 +344,7 @@ namespace HitAnalyzer2.ViewModels
                 Position? originalTargetHit = null;
                 Position? liveLaser = null;
                 double? previewScore = null;
-                double previewCaliberMm = showWeaponOffsets ? WeaponSettings.CaliberDiameterMm : caliberDiameterMm;
+                double previewCaliberMm = showWeaponOffsets ? weaponCaliberMm : caliberDiameterMm;
                 if (showWeaponOffsets && currentAim is { } weaponAim &&
                     (weaponAim.X != weaponAim.LaserPosition.X || weaponAim.Y != weaponAim.LaserPosition.Y))
                 {

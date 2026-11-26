@@ -3,7 +3,6 @@ using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Video;
 using OpenCvSharp;
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -100,7 +99,7 @@ namespace HitAnalyzer2
         public int AimPathAfterTimeLimit { get; init; } = 4;
     }
 
-    internal sealed record SavedWeaponProfile(string FileName, WeaponProfile Profile);
+    internal sealed record SavedWeaponProfile(string FileName, WeaponProfileModel Profile);
 
     internal record WeaponSettings
     {
@@ -108,16 +107,6 @@ namespace HitAnalyzer2
         public int OffsetY { get; init; }
         public TriggerTypeEnum Trigger { get; init; } = TriggerTypeEnum.FirstSpot;
         public int NexDetectionInterval { get; init; } = ShootingSessionService.NextDetectionMinimumInterval;
-    }
-
-    internal sealed record WeaponProfile : WeaponSettings
-    {
-        public required string Type { get; init; }
-        public required string Name { get; init; }
-        public decimal Caliber { get; init; }
-
-        [JsonExtensionData]
-        public Dictionary<string, JsonElement>? AdditionalProperties { get; init; }
     }
 
     internal sealed record CameraSettings

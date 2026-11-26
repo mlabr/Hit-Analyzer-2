@@ -40,7 +40,6 @@ namespace HitAnalyzer2.Services.Shooting
 
         private readonly object _hitGate = new();
         private volatile ILaserDetector _laserDetector = laserDetector;
-        private volatile int _nextDetectionInterval = NextDetectionMinimumInterval;
         private LaserPosition? _lastHit;
         private double _lastHitCaliberDiameterMm;
         private Position? _lastTargetHit;
@@ -48,7 +47,6 @@ namespace HitAnalyzer2.Services.Shooting
         private LaserPosition[] _lastHitFollowPath = Array.Empty<LaserPosition>();
         private (HitRecord Record, List<LaserPosition> Path, double OffsetX, double OffsetY,
             TargetPreviewModel Calibration)? _recordingFollowPath;
-        private TriggerTypeEnum _trigger = TriggerTypeEnum.FirstSpot;
         private bool _spotWasVisible;
         private long? _lastAcceptedExternalTriggerEventTimestamp;
         private long? _externalPressedAt;
@@ -93,7 +91,7 @@ namespace HitAnalyzer2.Services.Shooting
             }
         }
 
-        internal void StartSession(SessionInfo info)
+        internal void StartSession(string shooter, decimal realRange, decimal simulatedRange)
         {
             lock (_hitGate)
             {
@@ -108,7 +106,7 @@ namespace HitAnalyzer2.Services.Shooting
                     return;
                 }
 
-                _sessionInfo = info;
+                _sessionInfo = new(shooter, weaponHandler.Current.Name, realRange, simulatedRange);
                 _sessionHitLimit = SessionLimits.IsHitLimitEnabled ? SessionLimits.HitCountInitial : null;
                 _remainingHits = _sessionHitLimit;
                 _sessionTimeLimit = SessionLimits.IsTimeLimitEnabled
@@ -202,7 +200,7 @@ namespace HitAnalyzer2.Services.Shooting
             if (_sessionInfo is { } info && _sessionStartedAt is { } startedAt)
             {
                 var (target, hits) = recording.GetSnapshot();
-                double caliber = hits.Count == 0 ? (double)weaponHandler.CaliberDiameterMm : _lastHitCaliberDiameterMm;
+                double caliber = hits.Count == 0 ? (double)weaponHandler.Current.CaliberDiameterMm : _lastHitCaliberDiameterMm;
                 SessionCompleted?.Invoke(new(info, _sessionStartedAtLocal,
                     Stopwatch.GetElapsedTime(appStartedTimestampMs, startedAt), elapsed,
                     _sessionTimeLimit, _sessionHitLimit, reason, caliber, target, hits));
@@ -228,20 +226,41 @@ namespace HitAnalyzer2.Services.Shooting
         {
             lock (_hitGate)
             {
-                bool resetTimeoutPath = _trigger == TriggerTypeEnum.TimeOut || trigger == TriggerTypeEnum.TimeOut;
-                if (resetTimeoutPath)
-                    aimPositionHandler.ClearAimPaths();
+                var previous = weaponHandler.Current.Settings.Trigger;
+                if (previous == trigger)
+                    return;
 
-                _trigger = trigger;
-                _spotWasVisible = false;
-                _externalPressedAt = null;
-                if (trigger != TriggerTypeEnum.ExternalEvent || resetTimeoutPath)
-                {
-                    _lastHitAimPath = Array.Empty<LaserPosition>();
-                    _lastHitFollowPath = Array.Empty<LaserPosition>();
-                    CompleteRecordingFollowPath();
-                    aimPositionHandler.ClearFollowPath();
-                }
+                weaponHandler.SetTrigger(trigger);
+                ResetTriggerState(previous, trigger);
+            }
+        }
+
+        internal void SelectWeapon(string? fileName, WeaponProfileModel? profile)
+        {
+            lock (_hitGate)
+            {
+                var previous = weaponHandler.Current.Settings.Trigger;
+                weaponHandler.Select(fileName, profile);
+                var trigger = weaponHandler.Current.Settings.Trigger;
+                if (previous != trigger)
+                    ResetTriggerState(previous, trigger);
+            }
+        }
+
+        private void ResetTriggerState(TriggerTypeEnum previous, TriggerTypeEnum trigger)
+        {
+            bool resetTimeoutPath = previous == TriggerTypeEnum.TimeOut || trigger == TriggerTypeEnum.TimeOut;
+            if (resetTimeoutPath)
+                aimPositionHandler.ClearAimPaths();
+
+            _spotWasVisible = false;
+            _externalPressedAt = null;
+            if (trigger != TriggerTypeEnum.ExternalEvent || resetTimeoutPath)
+            {
+                _lastHitAimPath = Array.Empty<LaserPosition>();
+                _lastHitFollowPath = Array.Empty<LaserPosition>();
+                CompleteRecordingFollowPath();
+                aimPositionHandler.ClearFollowPath();
             }
         }
 
@@ -255,10 +274,11 @@ namespace HitAnalyzer2.Services.Shooting
 
                 if (isPressed)
                 {
-                    if (_trigger == TriggerTypeEnum.ExternalEvent &&
+                    var settings = weaponHandler.Current.Settings;
+                    if (settings.Trigger == TriggerTypeEnum.ExternalEvent &&
                         (_lastAcceptedExternalTriggerEventTimestamp is not { } previousPress ||
                          Stopwatch.GetElapsedTime(previousPress, timestamp) >=
-                         TimeSpan.FromMilliseconds(NexDetectionInterval)))
+                         TimeSpan.FromMilliseconds(settings.NexDetectionInterval)))
                     {
                         _lastAcceptedExternalTriggerEventTimestamp = timestamp;
                         _externalPressedAt = timestamp;
@@ -270,12 +290,6 @@ namespace HitAnalyzer2.Services.Shooting
                     _externalReleasedAt = timestamp;
                 }
             }
-        }
-
-        internal int NexDetectionInterval
-        {
-            get => _nextDetectionInterval;
-            set => _nextDetectionInterval = Math.Clamp(value, NextDetectionMinimumInterval, NextDetectionMaximumInterval);
         }
 
         internal void ClearAimPaths()
@@ -341,7 +355,7 @@ namespace HitAnalyzer2.Services.Shooting
         }
 
         internal (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
-            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim, HitDetectionReadiness Readiness) ProcessFrame(
+            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim, HitDetectionReadiness Readiness, double WeaponCaliberMm) ProcessFrame(
             Mat frame, long frameCapturedTimestampMs, CancellationToken cancellationToken)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(appStartedTimestampMs, frameCapturedTimestampMs);
@@ -354,30 +368,33 @@ namespace HitAnalyzer2.Services.Shooting
             Position? lastTargetHit;
             double caliberDiameterMm;
             HitDetectionReadiness readiness;
+            ActiveWeapon weapon;
             lock (_hitGate)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                weapon = weaponHandler.Current;
+                var settings = weapon.Settings;
                 var reportGuidance = GuidanceAimEvaluated;
                 if (!CanDetectHits() || (_sessionStartedAt is { } startedAt && frameCapturedTimestampMs < startedAt))
                 {
                     reportGuidance?.Invoke(double.NaN, null, 0);
-                    return GetLastHitSnapshot();
+                    return GetLastHitSnapshot(weapon);
                 }
 
                 bool isMonoscope = IsMonoscope;
                 if (isMonoscope && !_sessionStartedAt.HasValue)
                 {
                     reportGuidance?.Invoke(double.NaN, null, 0);
-                    return GetLastHitSnapshot();
+                    return GetLastHitSnapshot(weapon);
                 }
 
                 position = _laserDetector.GetLaserPosition(frame, elapsed);
                 if (reportGuidance is not null)
                 {
-                    if (!isMonoscope && _trigger is (TriggerTypeEnum.TimeOut or TriggerTypeEnum.ExternalEvent)
+                    if (!isMonoscope && settings.Trigger is (TriggerTypeEnum.TimeOut or TriggerTypeEnum.ExternalEvent)
                         && position is { } laser)
                     {
-                        var aim = aimPositionHandler.GetAimPosition(laser);
+                        var aim = weapon.GetAimPosition(laser);
                         if (calibration.MapHit(aim.X / frame.Width, aim.Y / frame.Height, out var target) is { } mapped
                             && target.MaxDiameterMm is > 0)
                         {
@@ -400,10 +417,10 @@ namespace HitAnalyzer2.Services.Shooting
                 bool startFollowPath = false;
                 HitRecord? hitRecord = null;
                 TargetPreviewModel? calibrationAtHit = null;
-                if (_trigger == TriggerTypeEnum.TimeOut && position is null &&
+                if (settings.Trigger == TriggerTypeEnum.TimeOut && position is null &&
                     aimPositionHandler.GetTimedOutAimPosition(elapsed) is { } timedOutPosition)
                 {
-                    if (IsTimeOutPathReady(timedOutPosition, frame, isMonoscope))
+                    if (IsTimeOutPathReady(timedOutPosition, frame, isMonoscope, weapon))
                     {
                         registeredHit = timedOutPosition;
                         _lastHitAimPath = aimPositionHandler.GetAimPathSnapshot();
@@ -414,11 +431,11 @@ namespace HitAnalyzer2.Services.Shooting
                 else
                 {
                     aimPositionHandler.UpdateAimPath(position, elapsed);
-                    if (_trigger != TriggerTypeEnum.TimeOut &&
-                        IsTriggered(position, frameCapturedTimestampMs, elapsed >= NextDetectionTimestamp))
+                    if (settings.Trigger != TriggerTypeEnum.TimeOut &&
+                        IsTriggered(settings.Trigger, position, frameCapturedTimestampMs, elapsed >= NextDetectionTimestamp))
                     {
                         registeredHit = position;
-                        if (_trigger == TriggerTypeEnum.ExternalEvent)
+                        if (settings.Trigger == TriggerTypeEnum.ExternalEvent)
                         {
                             _externalPressedAt = null;
                             _lastHitAimPath = aimPositionHandler.GetAimPathSnapshot();
@@ -426,28 +443,28 @@ namespace HitAnalyzer2.Services.Shooting
                         }
                         else
                         {
-                            NextDetectionTimestamp = elapsed + TimeSpan.FromMilliseconds(NexDetectionInterval);
+                            NextDetectionTimestamp = elapsed + TimeSpan.FromMilliseconds(settings.NexDetectionInterval);
                         }
                     }
                 }
 
                 if (registeredHit is not null && !CanDetectHits())
-                    return GetLastHitSnapshot();
+                    return GetLastHitSnapshot(weapon);
 
                 if (isMonoscope)
                 {
                     if (registeredHit is { } monoscopeHit)
                         ProcessMonoscopeHit(monoscopeHit, frame.Width, frame.Height);
                     return (null, [], [], _lastTargetHit, 0,
-                        position is { } current ? aimPositionHandler.GetAimPosition(current) : null,
-                        GetDetectionReadiness(frame, elapsed, frameCapturedTimestampMs, isMonoscope, position));
+                        position is { } current ? weapon.GetAimPosition(current) : null,
+                        GetDetectionReadiness(frame, elapsed, frameCapturedTimestampMs, isMonoscope, position, weapon), (double)weapon.CaliberDiameterMm);
                 }
 
                 if (registeredHit is { } registered)
                 {
                     _lastHit = registeredHit;
-                    _lastHitCaliberDiameterMm = (double)weaponHandler.CaliberDiameterMm;
-                    var aim = aimPositionHandler.GetAimPosition(registered);
+                    _lastHitCaliberDiameterMm = (double)weapon.CaliberDiameterMm;
+                    var aim = weapon.GetAimPosition(registered);
                     targetPoint = calibration.MapHit(aim.X / frame.Width, aim.Y / frame.Height, out calibrationAtHit);
                     _lastTargetHit = targetPoint;
                     double offsetX = aim.X - registered.X;
@@ -512,7 +529,7 @@ namespace HitAnalyzer2.Services.Shooting
                 followPath = _lastHitFollowPath;
                 lastTargetHit = _lastTargetHit;
                 caliberDiameterMm = _lastHitCaliberDiameterMm;
-                readiness = GetDetectionReadiness(frame, elapsed, frameCapturedTimestampMs, isMonoscope, position);
+                readiness = GetDetectionReadiness(frame, elapsed, frameCapturedTimestampMs, isMonoscope, position, weapon);
             }
 
             LaserPositionEvaluated?.Invoke(registeredHit, targetPoint, elapsed);
@@ -520,9 +537,9 @@ namespace HitAnalyzer2.Services.Shooting
             if (registeredHit is { } hit)
                 Console.WriteLine($"Laser detected at ({hit.X}, {hit.Y})");
 
-            return (lastHit is { } lastPosition ? aimPositionHandler.GetAimPosition(lastPosition) : null,
+            return (lastHit is { } lastPosition ? weapon.GetAimPosition(lastPosition) : null,
                 aimPath, followPath, lastTargetHit, caliberDiameterMm,
-                position is { } currentPosition ? aimPositionHandler.GetAimPosition(currentPosition) : null, readiness);
+                position is { } currentPosition ? weapon.GetAimPosition(currentPosition) : null, readiness, (double)weapon.CaliberDiameterMm);
         }
 
         private void ProcessMonoscopeHit(LaserPosition hit, int frameWidth, int frameHeight)
@@ -549,23 +566,25 @@ namespace HitAnalyzer2.Services.Shooting
         }
 
         private (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
-            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim, HitDetectionReadiness Readiness) GetLastHitSnapshot() =>
-            (_lastHit is { } hit ? aimPositionHandler.GetAimPosition(hit) : null,
-                _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm, null, HitDetectionReadiness.Waiting);
+            Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim, HitDetectionReadiness Readiness, double WeaponCaliberMm) GetLastHitSnapshot(ActiveWeapon weapon) =>
+            (_lastHit is { } hit ? weapon.GetAimPosition(hit) : null,
+                _lastHitAimPath, _lastHitFollowPath, _lastTargetHit, _lastHitCaliberDiameterMm, null, HitDetectionReadiness.Waiting,
+                (double)weapon.CaliberDiameterMm);
 
         private static readonly TimeSpan TrackingIndicatorMinimumDuration = TimeSpan.FromMilliseconds(100);
 
         private HitDetectionReadiness GetDetectionReadiness(Mat frame, TimeSpan elapsed, long capturedAt,
-            bool isMonoscope, LaserPosition? position)
+            bool isMonoscope, LaserPosition? position, ActiveWeapon weapon)
         {
+            var trigger = weapon.Settings.Trigger;
             if (_sessionEndedAt.HasValue)
                 return HitDetectionReadiness.Waiting;
 
             if (elapsed >= NextDetectionTimestamp &&
-                (_trigger == TriggerTypeEnum.FirstSpot || (_trigger == TriggerTypeEnum.NewSpot && !_spotWasVisible)))
+                (trigger == TriggerTypeEnum.FirstSpot || (trigger == TriggerTypeEnum.NewSpot && !_spotWasVisible)))
                 return HitDetectionReadiness.Ready;
 
-            if (_trigger == TriggerTypeEnum.ExternalEvent)
+            if (trigger == TriggerTypeEnum.ExternalEvent)
             {
                 if (IsExternalTriggerActive(capturedAt))
                     return HitDetectionReadiness.Ready;
@@ -573,9 +592,9 @@ namespace HitAnalyzer2.Services.Shooting
                 return position is not null ? HitDetectionReadiness.Tracking : HitDetectionReadiness.Waiting;
             }
 
-            if (_trigger == TriggerTypeEnum.TimeOut && aimPositionHandler.LastAimPosition is { } lastAim)
+            if (trigger == TriggerTypeEnum.TimeOut && aimPositionHandler.LastAimPosition is { } lastAim)
             {
-                if (IsTimeOutPathReady(lastAim, frame, isMonoscope))
+                if (IsTimeOutPathReady(lastAim, frame, isMonoscope, weapon))
                     return HitDetectionReadiness.Ready;
 
                 if (aimPositionHandler.AimPathDuration >= TrackingIndicatorMinimumDuration)
@@ -585,9 +604,9 @@ namespace HitAnalyzer2.Services.Shooting
             return HitDetectionReadiness.Waiting;
         }
 
-        private bool IsTimeOutPathReady(LaserPosition position, Mat frame, bool isMonoscope) =>
+        private bool IsTimeOutPathReady(LaserPosition position, Mat frame, bool isMonoscope, ActiveWeapon weapon) =>
             aimPositionHandler.AimPathDuration >= _aimPathTimeoutMinimumDuration &&
-            (isMonoscope || IsAimPositionInsideAllowedZone(aimPositionHandler.GetAimPosition(position), frame));
+            (isMonoscope || IsAimPositionInsideAllowedZone(weapon.GetAimPosition(position), frame));
 
         private IReadOnlyList<LaserPosition> MapAimPath(LaserPosition[] path, double offsetX, double offsetY,
             int frameWidth, int frameHeight)
@@ -618,15 +637,15 @@ namespace HitAnalyzer2.Services.Shooting
                 position.Y >= allowedArea.Top && position.Y < allowedArea.Bottom;
         }
 
-        private bool IsTriggered(LaserPosition? position, long capturedAt, bool intervalElapsed)
+        private bool IsTriggered(TriggerTypeEnum trigger, LaserPosition? position, long capturedAt, bool intervalElapsed)
         {
-            if (_trigger == TriggerTypeEnum.ExternalEvent)
+            if (trigger == TriggerTypeEnum.ExternalEvent)
             {
                 // Compare against capture time, even if the frame is processed after key-up.
                 return position is not null && IsExternalTriggerActive(capturedAt);
             }
 
-            if (_trigger == TriggerTypeEnum.FirstSpot)
+            if (trigger == TriggerTypeEnum.FirstSpot)
                 return position is not null && intervalElapsed;
 
             // Observe every frame so a spot that appeared during the interval is not a new spot afterward.

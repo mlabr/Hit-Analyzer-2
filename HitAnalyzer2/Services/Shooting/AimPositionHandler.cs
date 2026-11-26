@@ -11,14 +11,12 @@ namespace HitAnalyzer2.Services.Shooting
 
     internal sealed class AimPositionHandler(ShootingSettings settings)
     {
-        private readonly object _offsetGate = new();
         private readonly List<LaserPosition> AimPositionList = new();
         private readonly List<LaserPosition> _aimPositionAfterList = new();
         private readonly TimeSpan _aimPathTimeLimit = TimeSpan.FromSeconds(settings.AimPathTimeLimit);
         private readonly TimeSpan _aimPathTimeoutMs = TimeSpan.FromMilliseconds(settings.AimPathTimeoutMs);
         private readonly TimeSpan _aimPathAfterTimeLimit = TimeSpan.FromSeconds(settings.AimPathAfterTimeLimit);
         private TimeSpan _followEndsAt;
-        private (double X, double Y) _offset;
 
         internal LaserPosition? LastAimPosition => AimPositionList.Count > 0 ? AimPositionList[^1] : null;
 
@@ -90,16 +88,5 @@ namespace HitAnalyzer2.Services.Shooting
 
         internal void ClearFollowPath() => _aimPositionAfterList.Clear();
 
-        internal void SetOffset(double x, double y)
-        {
-            lock (_offsetGate)
-                _offset = (x, y);
-        }
-
-        internal AimPosition GetAimPosition(LaserPosition position)
-        {
-            lock (_offsetGate)
-                return new AimPosition(position.X + _offset.X, position.Y + _offset.Y, position);
-        }
     }
 }

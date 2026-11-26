@@ -12,7 +12,6 @@ namespace HitAnalyzer2.ViewModels
         private readonly ShootingSessionService _shootingSession;
         private readonly RecordingService _recording;
         private readonly Action _saveConfiguration;
-        private readonly Func<string?> _getWeaponName;
         private readonly DispatcherTimer _sessionDisplayTimer = new() { Interval = TimeSpan.FromSeconds(1) };
         private readonly DispatcherTimer _sessionCompleteTimer = new() { Interval = TimeSpan.FromSeconds(1.5) };
         private decimal _realDistanceMeters;
@@ -185,12 +184,11 @@ namespace HitAnalyzer2.ViewModels
             : "Last hit distance from center: —";
 
         internal ShootingSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
-            RecordingService recording, Action saveConfiguration, Func<string?> getWeaponName)
+            RecordingService recording, Action saveConfiguration)
         {
             _shootingSession = shootingSession;
             _recording = recording;
             _saveConfiguration = saveConfiguration;
-            _getWeaponName = getWeaponName;
             selectedThemeIndex = (int)settings.Current.Theme;
             countdown = settings.Current.Shooting.Countdown;
             shooter = settings.Current.Shooting.Shooter ?? string.Empty;
@@ -235,7 +233,7 @@ namespace HitAnalyzer2.ViewModels
         [RelayCommand(CanExecute = nameof(CanStartSession))]
         private void StartSession()
         {
-            _shootingSession.StartSession(new(Shooter, _getWeaponName(), RealDistanceMeters, SimulatedDistanceMeters));
+            _shootingSession.StartSession(Shooter, RealDistanceMeters, SimulatedDistanceMeters);
             RefreshSessionStatus();
         }
 

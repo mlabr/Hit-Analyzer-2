@@ -39,7 +39,7 @@ namespace HitAnalyzer2
                 }
 
                 var aimPositionHandler = new AimPositionHandler(settings.Current.Shooting);
-                var weaponHandler = new WeaponHandler(settings.InitialWeapon, aimPositionHandler);
+                var weaponHandler = new WeaponHandler(settings.InitialWeapon);
                 var cameraCalibration = new TargetCalibrationService(settings.Current.Target.Calibration);
                 var targetFiles = new TargetFileRepository(Path.Combine(AppContext.BaseDirectory, "Data", "Targets"));
                 var targetSettings = new TargetSettingsViewModel(targetFiles, cameraCalibration,
