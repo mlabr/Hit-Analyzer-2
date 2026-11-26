@@ -98,7 +98,7 @@
       "Caliber": 5,
       "OffsetX": 51,
       "OffsetY": -11,
-      "Trigger": "NewSpot",
+      "Trigger": "TimeOut",
       "NexDetectionInterval": 500
     }
   }

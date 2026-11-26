@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace HitAnalyzer2.Services.Video
 {
     internal sealed class CameraCaptureSession(
-        Func<Mat, long, double, string, CancellationToken, Task> processFrame,
+        Func<Mat, long, string, CancellationToken, Task> processFrame,
         Action clearPreview, Action<string?> showStatus)
     {
         private static readonly TimeSpan CaptureStopTimeout = TimeSpan.FromSeconds(1);
@@ -161,12 +161,11 @@ namespace HitAnalyzer2.Services.Video
         {
             try
             {
-                double detectedFps = mode?.FramesPerSecond ?? 0;
                 await _videoHandler.CaptureAsync(camera, mode,
                     (frame, capturedAt, measuredFps) =>
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        return processFrame(frame, capturedAt, detectedFps, measuredFps, cancellationToken);
+                        return processFrame(frame, capturedAt, measuredFps, cancellationToken);
                     }, cancellationToken, flip);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

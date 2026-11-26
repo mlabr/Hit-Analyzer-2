@@ -342,7 +342,7 @@ namespace HitAnalyzer2.Services.Shooting
 
         internal (AimPosition? Hit, LaserPosition[] AimPath, LaserPosition[] FollowPath,
             Position? LastTargetHit, double CaliberDiameterMm, AimPosition? CurrentAim, HitDetectionReadiness Readiness) ProcessFrame(
-            Mat frame, long frameCapturedTimestampMs, double detectedFps, CancellationToken cancellationToken)
+            Mat frame, long frameCapturedTimestampMs, CancellationToken cancellationToken)
         {
             TimeSpan elapsed = Stopwatch.GetElapsedTime(appStartedTimestampMs, frameCapturedTimestampMs);
             LaserPosition? registeredHit = null;
@@ -413,7 +413,7 @@ namespace HitAnalyzer2.Services.Shooting
                 }
                 else
                 {
-                    aimPositionHandler.UpdateAimPath(position, elapsed, detectedFps);
+                    aimPositionHandler.UpdateAimPath(position, elapsed);
                     if (_trigger != TriggerTypeEnum.TimeOut &&
                         IsTriggered(position, frameCapturedTimestampMs, elapsed >= NextDetectionTimestamp))
                     {
@@ -469,7 +469,7 @@ namespace HitAnalyzer2.Services.Shooting
                 lastHit = _lastHit;
                 aimPath = _lastHitAimPath;
                 var (updatedFollowPath, addedPoint, isCollecting) =
-                    aimPositionHandler.UpdateFollowPath(position, elapsed, detectedFps, startFollowPath);
+                    aimPositionHandler.UpdateFollowPath(position, elapsed, startFollowPath);
                 if (startFollowPath || updatedFollowPath.Length > 0)
                     _lastHitFollowPath = updatedFollowPath;
 

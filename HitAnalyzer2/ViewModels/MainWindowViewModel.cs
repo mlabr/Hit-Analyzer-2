@@ -316,7 +316,7 @@ namespace HitAnalyzer2.ViewModels
             }
         }
 
-        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double detectedFps, string measuredFps,
+        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, string measuredFps,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -327,7 +327,7 @@ namespace HitAnalyzer2.ViewModels
             bool showTargetPreview = IsTargetPreviewActive;
             bool showWeaponOffsets = IsWeaponPreviewActive;
             var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim, readiness) =
-                _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
+                _shootingSession.ProcessFrame(pixels, capturedAt, cancellationToken);
             var calibration = CameraSettings.Calibration;
             var targetSettings = calibration.Settings;
             Position? correctedTargetAim = currentAim is { } aim

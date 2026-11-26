@@ -14,6 +14,7 @@ namespace HitAnalyzer2.Services.Shooting
         private readonly object _offsetGate = new();
         private readonly List<LaserPosition> AimPositionList = new();
         private readonly List<LaserPosition> _aimPositionAfterList = new();
+        private readonly TimeSpan _aimPathTimeLimit = TimeSpan.FromSeconds(settings.AimPathTimeLimit);
         private readonly TimeSpan _aimPathTimeoutMs = TimeSpan.FromMilliseconds(settings.AimPathTimeoutMs);
         private readonly TimeSpan _aimPathAfterTimeLimit = TimeSpan.FromSeconds(settings.AimPathAfterTimeLimit);
         private TimeSpan _followEndsAt;
@@ -31,16 +32,24 @@ namespace HitAnalyzer2.Services.Shooting
                 : null;
 
         // Path operations are serialized by the shooting session.
-        internal void UpdateAimPath(LaserPosition? position, TimeSpan elapsed, double detectedFps)
+        internal void UpdateAimPath(LaserPosition? position, TimeSpan elapsed)
         {
             if (HasExpired(AimPositionList, elapsed))
                 ClearAimPath();
 
-            AppendPosition(AimPositionList, position, settings.AimPathTimeLimit * detectedFps);
+            var cutoff = elapsed - _aimPathTimeLimit;
+            int expiredCount = 0;
+            while (expiredCount < AimPositionList.Count && AimPositionList[expiredCount].Time < cutoff)
+                expiredCount++;
+            if (expiredCount > 0)
+                AimPositionList.RemoveRange(0, expiredCount);
+
+            if (position is not null && _aimPathTimeLimit > TimeSpan.Zero)
+                AimPositionList.Add(position);
         }
 
         internal (LaserPosition[] Path, LaserPosition? AddedPoint, bool IsCollecting) UpdateFollowPath(
-            LaserPosition? position, TimeSpan elapsed, double detectedFps,
+            LaserPosition? position, TimeSpan elapsed,
             bool externalHit)
         {
             if (externalHit)
@@ -56,8 +65,11 @@ namespace HitAnalyzer2.Services.Shooting
             // Once the last point expires, a new external hit is needed to start tracking again.
             LaserPosition? addedPoint = null;
             if ((externalHit || _aimPositionAfterList.Count > 0) && elapsed <= _followEndsAt &&
-                AppendPosition(_aimPositionAfterList, position, settings.AimPathAfterTimeLimit * detectedFps))
+                position is not null && _aimPathAfterTimeLimit > TimeSpan.Zero)
+            {
+                _aimPositionAfterList.Add(position);
                 addedPoint = position;
+            }
 
             bool isCollecting = _aimPositionAfterList.Count > 0 && elapsed <= _followEndsAt;
             return (_aimPositionAfterList.ToArray(), addedPoint, isCollecting);
@@ -65,20 +77,6 @@ namespace HitAnalyzer2.Services.Shooting
 
         private bool HasExpired(List<LaserPosition> path, TimeSpan elapsed) =>
             path.Count > 0 && elapsed - path[^1].Time > _aimPathTimeoutMs;
-
-        private static bool AppendPosition(List<LaserPosition> path, LaserPosition? position, double capacity)
-        {
-            int maxCount = (int)Math.Clamp(capacity, 0, int.MaxValue);
-            int pointsToKeep = position is not null && maxCount > 0 ? maxCount - 1 : maxCount;
-            if (path.Count > pointsToKeep)
-                path.RemoveRange(0, path.Count - pointsToKeep);
-
-            if (position is null || maxCount == 0)
-                return false;
-
-            path.Add(position);
-            return true;
-        }
 
         internal LaserPosition[] GetAimPathSnapshot() => AimPositionList.ToArray();
 
