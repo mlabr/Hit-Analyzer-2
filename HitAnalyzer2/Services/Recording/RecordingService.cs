@@ -100,10 +100,12 @@ namespace HitAnalyzer2.Services.Recording
 			HitCountChanged?.Invoke();
 		}
 
-		public IReadOnlyList<HitRecord> GetNormalizedHitRecordList()
+		public IReadOnlyList<HitRecord> GetNormalizedHitRecordList() => GetSnapshot().Hits;
+
+		internal (TargetModel Target, IReadOnlyList<HitRecord> Hits) GetSnapshot()
 		{
 			lock (_recordsGate)
-				return Array.AsReadOnly(hitRecordNormalizedList.ToArray());
+				return (_target, Array.AsReadOnly(hitRecordNormalizedList.ToArray()));
 		}
 
 

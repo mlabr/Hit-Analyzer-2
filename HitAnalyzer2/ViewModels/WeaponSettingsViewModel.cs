@@ -19,12 +19,12 @@ namespace HitAnalyzer2.ViewModels
 
         public int MinimumOffset => WeaponHandler.MinimumOffset;
         public int MaximumOffset => WeaponHandler.MaximumOffset;
-        internal double CaliberDiameterMm => (double)_weaponHandler.CaliberDiameterMm;
+        internal ActiveWeapon ActiveWeapon => _weaponHandler.Current;
         public string CaliberText
         {
             get
             {
-                decimal diameterMm = _weaponHandler.CaliberDiameterMm;
+                decimal diameterMm = ActiveWeapon.CaliberDiameterMm;
                 decimal displayedDiameter = _showCaliberInInches ? diameterMm / MillimetersPerInch : diameterMm;
                 return displayedDiameter.ToString("0.############################", CultureInfo.CurrentCulture);
             }
@@ -32,12 +32,17 @@ namespace HitAnalyzer2.ViewModels
 
         public string CaliberUnit => _showCaliberInInches ? "in" : "mm";
 
-        [ObservableProperty]
-        private int offsetX;
+        public int OffsetX
+        {
+            get => ActiveWeapon.Settings.OffsetX;
+            set => SetOffset(value, OffsetY);
+        }
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(DisplayOffsetY))]
-        private int offsetY;
+        public int OffsetY
+        {
+            get => ActiveWeapon.Settings.OffsetY;
+            set => SetOffset(OffsetX, value);
+        }
 
         public int DisplayOffsetY => -OffsetY;
 
@@ -46,11 +51,6 @@ namespace HitAnalyzer2.ViewModels
         {
             _shootingSession = shootingSession;
             _weaponHandler = weaponHandler;
-            (offsetX, offsetY) = weaponHandler.Offset;
-            var weapon = settings.InitialWeapon;
-            selectedTrigger = weapon.Trigger;
-            _shootingSession.SetTrigger(weapon.Trigger);
-            _shootingSession.NexDetectionInterval = weapon.NexDetectionInterval;
             var profiles = weaponProfiles.LoadProfileList(out var loadError);
             Weapons = Array.AsReadOnly(profiles
                 .Select(profile => new WeaponProfileItem(profile.FileName, profile.Profile))
@@ -80,53 +80,52 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private WeaponProfileItem? selectedWeapon;
 
-        [ObservableProperty]
-        private TriggerTypeEnum selectedTrigger;
+        public TriggerTypeEnum SelectedTrigger
+        {
+            get => ActiveWeapon.Settings.Trigger;
+            set
+            {
+                if (value == SelectedTrigger)
+                    return;
+
+                _shootingSession.SetTrigger(value);
+                OnPropertyChanged();
+                SettingsMessage = null;
+            }
+        }
 
         [ObservableProperty]
         private string? settingsMessage;
 
         partial void OnSelectedWeaponChanged(WeaponProfileItem? value)
         {
-            _weaponHandler.SetCaliber(value?.Profile.Caliber ?? 0);
+            _shootingSession.SelectWeapon(value?.FileName, value?.Profile);
             _showCaliberInInches = false;
             OnPropertyChanged(nameof(CaliberText));
             OnPropertyChanged(nameof(CaliberUnit));
             if (value is null)
                 return;
 
-            var profile = value.Profile;
-            SelectedTrigger = profile.Trigger;
-            NexDetectionInterval = profile.NexDetectionInterval;
-            OffsetX = profile.OffsetX;
-            OffsetY = profile.OffsetY;
-            SettingsMessage = null;
-        }
-
-        partial void OnSelectedTriggerChanged(TriggerTypeEnum value)
-        {
-            _shootingSession.SetTrigger(value);
+            OnPropertyChanged(nameof(SelectedTrigger));
+            OnPropertyChanged(nameof(NexDetectionInterval));
+            NotifyOffsetChanged();
             SettingsMessage = null;
         }
 
         public int NexDetectionInterval
         {
-            get => _shootingSession.NexDetectionInterval;
+            get => ActiveWeapon.Settings.NexDetectionInterval;
             set
             {
-                int previous = _shootingSession.NexDetectionInterval;
-                _shootingSession.NexDetectionInterval = value;
-                if (previous != _shootingSession.NexDetectionInterval)
+                int previous = NexDetectionInterval;
+                _weaponHandler.SetDetectionInterval(value);
+                if (previous != NexDetectionInterval)
                 {
                     OnPropertyChanged();
                     SettingsMessage = null;
                 }
             }
         }
-
-        partial void OnOffsetXChanged(int value) => ApplyOffset();
-
-        partial void OnOffsetYChanged(int value) => ApplyOffset();
 
         internal void CommitCaliber(string? text)
         {
@@ -141,16 +140,27 @@ namespace HitAnalyzer2.ViewModels
                 bool enteredInInches = diameter < 1;
                 decimal diameterMm = enteredInInches ? diameter * MillimetersPerInch : diameter;
                 _weaponHandler.SetCaliber(diameterMm);
-                _showCaliberInInches = enteredInInches && _weaponHandler.CaliberDiameterMm == diameterMm;
+                _showCaliberInInches = enteredInInches && ActiveWeapon.CaliberDiameterMm == diameterMm;
                 OnPropertyChanged(nameof(CaliberUnit));
             }
 
             OnPropertyChanged(nameof(CaliberText));
         }
 
-        private void ApplyOffset()
+        internal void SetOffset(int x, int y)
         {
-            _weaponHandler.SetOffset(OffsetX, OffsetY);
+            if (x == OffsetX && y == OffsetY)
+                return;
+
+            _weaponHandler.SetOffset(x, y);
+            NotifyOffsetChanged();
+        }
+
+        private void NotifyOffsetChanged()
+        {
+            OnPropertyChanged(nameof(OffsetX));
+            OnPropertyChanged(nameof(OffsetY));
+            OnPropertyChanged(nameof(DisplayOffsetY));
         }
 
         [RelayCommand]
@@ -174,35 +184,13 @@ namespace HitAnalyzer2.ViewModels
         }
 
         [RelayCommand]
-        private void ResetOffset()
-        {
-            OffsetX = 0;
-            OffsetY = 0;
-        }
+        private void ResetOffset() => SetOffset(0, 0);
 
         [RelayCommand]
         private void ToCenter()
         {
             if (_shootingSession.GetOffsetToCenterLastHit() is { } offset)
-            {
-                OffsetX = offset.X;
-                OffsetY = offset.Y;
-            }
+                SetOffset(offset.X, offset.Y);
         }
-
-        internal SavedWeaponProfile? GetSelectedProfile() => SelectedWeapon is { } weapon
-            ? new(weapon.FileName, ((WeaponProfile)GetConfiguration(weapon.Profile)) with
-            {
-                Caliber = _weaponHandler.CaliberDiameterMm
-            })
-            : null;
-
-        internal WeaponSettings GetConfiguration(WeaponSettings current) => current with
-        {
-            Trigger = SelectedTrigger,
-            NexDetectionInterval = NexDetectionInterval,
-            OffsetX = OffsetX,
-            OffsetY = OffsetY
-        };
     }
 }

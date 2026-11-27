@@ -3,7 +3,7 @@ namespace HitAnalyzer2.Models
     internal sealed record TargetPreviewModel : TargetModel
     {
         internal const double PreviewMargin = 0.25;
-        private const double PreviewSpan = 1 + 2 * PreviewMargin;
+        internal const double PreviewSpan = 1 + 2 * PreviewMargin;
 
         public TargetPreviewModel() { }
 

@@ -1,8 +1,10 @@
+using HitAnalyzer2.Models;
+
 namespace HitAnalyzer2.ViewModels
 {
     public sealed class WeaponProfileItem
     {
-        internal WeaponProfileItem(string fileName, WeaponProfile profile)
+        internal WeaponProfileItem(string fileName, WeaponProfileModel profile)
         {
             FileName = fileName;
             Profile = profile;
@@ -11,6 +13,6 @@ namespace HitAnalyzer2.ViewModels
         public string? Name => Profile.Name;
         public string Label => $"{Name} ({FileName})";
         internal string FileName { get; }
-        internal WeaponProfile Profile { get; set; }
+        internal WeaponProfileModel Profile { get; set; }
     }
 }

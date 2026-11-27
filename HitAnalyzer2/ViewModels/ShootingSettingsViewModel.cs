@@ -233,7 +233,7 @@ namespace HitAnalyzer2.ViewModels
         [RelayCommand(CanExecute = nameof(CanStartSession))]
         private void StartSession()
         {
-            _shootingSession.StartSession();
+            _shootingSession.StartSession(Shooter, RealDistanceMeters, SimulatedDistanceMeters);
             RefreshSessionStatus();
         }
 

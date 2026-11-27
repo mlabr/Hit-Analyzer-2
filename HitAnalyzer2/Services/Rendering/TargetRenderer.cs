@@ -31,7 +31,7 @@ namespace HitAnalyzer2.Services.Rendering
             Position? originalTargetHit = null, HitGroupCircle? cep50 = null,
             HitGroupCircle? cep80 = null, HitGroupCircle? smallestCircle = null, int directionCount = 0,
             IReadOnlyList<LaserPosition>? aimPath = null, IReadOnlyList<LaserPosition>? followPath = null,
-            Func<double, double, Position?>? mapFollowPoint = null, Position? liveAim = null, Position? liveOffsetAim = null)
+            Func<double, double, Position?>? mapFollowPoint = null, Position? liveLaser = null)
         {
             var palette = isDarkTheme ? DarkPalette : LightPalette;
             preview.SetTo(palette.Background);
@@ -43,10 +43,6 @@ namespace HitAnalyzer2.Services.Rendering
             int markerSize = Math.Max(1, (int)Math.Round(size * AimTraceRenderer.MarkerSizeRatio));
             var guide = palette.Outline;
             Cv2.Rectangle(preview, default(Point), new Point(size - 1, size - 1), guide);
-            double width = settings.IsMonoscope && settings.Width < settings.Height
-                ? diameterPixels * settings.Width / settings.Height : diameterPixels;
-            double height = settings.IsMonoscope && settings.Height < settings.Width
-                ? diameterPixels * settings.Height / settings.Width : diameterPixels;
             var center = ToTargetPixel(TargetModel.Center);
             if (settings.IsMonoscope)
                 DrawMonoscope(preview, ToTargetPixel(new Position(0, 0)), ToTargetPixel(new Position(1, 1)));
@@ -80,12 +76,9 @@ namespace HitAnalyzer2.Services.Rendering
             else if (lastTargetHit is { } hit)
                 DrawHit(hit);
 
-            if (liveAim is { } aim && IsInsidePreview(aim))
-                Cv2.DrawMarker(preview, ToTargetPixel(aim), new Scalar(0, 0, 255, 255), MarkerTypes.Cross, 12, 2, LineTypes.AntiAlias);
-
-            if (liveOffsetAim is { } offsetAim && IsInsidePreview(offsetAim))
+            if (liveLaser is { } laser && IsInsidePreview(laser))
             {
-                var point = ToTargetPixel(offsetAim);
+                var point = ToTargetPixel(laser);
                 Cv2.Circle(preview, point, 8, palette.HitOutline, 4, LineTypes.AntiAlias);
                 Cv2.Circle(preview, point, 8, AimTraceRenderer.AimPathAfterColor, 2, LineTypes.AntiAlias);
             }
@@ -125,9 +118,24 @@ namespace HitAnalyzer2.Services.Rendering
                     palette.Hit, projectileDiameterPixels, palette.HitOutline);
             }
 
-            Point ToTargetPixel(Position point) =>
-                new(Math.Round((size - 1) * 0.5 + (point.X - 0.5) * width),
-                    Math.Round((size - 1) * 0.5 + (point.Y - 0.5) * height));
+            Point ToTargetPixel(Position point)
+            {
+                var previewPoint = GetPreviewPosition(point, settings);
+                return new Point(Math.Round(previewPoint.X * (size - 1)), Math.Round(previewPoint.Y * (size - 1)));
+            }
+        }
+
+        internal static Position GetPreviewPosition(Position point, TargetModel target)
+        {
+            double width = 1 / TargetPreviewModel.PreviewSpan;
+            double height = width;
+            if (target.IsMonoscope && target.Width > 0 && target.Height > 0)
+            {
+                width *= (double)target.Width / Math.Max(target.Width, target.Height);
+                height *= (double)target.Height / Math.Max(target.Width, target.Height);
+            }
+
+            return new Position(0.5 + (point.X - 0.5) * width, 0.5 + (point.Y - 0.5) * height);
         }
 
         private static void DrawDirectionSectors(Mat preview, Point center, double radius, int count,

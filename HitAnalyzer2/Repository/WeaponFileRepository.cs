@@ -1,3 +1,4 @@
+using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Shooting;
 using System;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace HitAnalyzer2.Repository
                 try
                 {
                     using var stream = File.OpenRead(path);
-                    var profile = JsonSerializer.Deserialize<WeaponProfile>(stream, JsonOptions);
+                    var profile = JsonSerializer.Deserialize<WeaponProfileModel>(stream, JsonOptions);
                     ValidateProfile(profile);
                     profiles.Add(new SavedWeaponProfile(Path.GetFileName(path), profile));
                 }
@@ -118,7 +119,7 @@ namespace HitAnalyzer2.Repository
             return Path.Combine(directory, fileName);
         }
 
-        internal static void ValidateProfile([NotNull] WeaponProfile? profile)
+        internal static void ValidateProfile([NotNull] WeaponProfileModel? profile)
         {
             if (profile is not { Type: "ha_weapon" } || string.IsNullOrWhiteSpace(profile.Name))
                 throw new JsonException("Invalid weapon profile type or name.");

@@ -131,7 +131,7 @@ namespace HitAnalyzer2.ViewModels
         internal void UpdateGuidance(double score, Position? position, double outsideDistanceInTargetRadii) =>
             _guidance.UpdateAim(score, position, outsideDistanceInTargetRadii);
 
-        internal (double Left, double Right, Position? Aim) GetGuidancePreview() => _guidance.GetPreview();
+        internal (double Left, double Right) GetGuidancePreview() => _guidance.GetPreview();
 
         private void RefreshGuidance()
         {

@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Enums;
 using HitAnalyzer2.Models;
 using HitAnalyzer2.Services.Detection;
+using HitAnalyzer2.Services.Exporting;
 using HitAnalyzer2.Services.Recording;
 using HitAnalyzer2.Services.Rendering;
 using HitAnalyzer2.Services.Shooting;
@@ -52,6 +53,8 @@ namespace HitAnalyzer2.ViewModels
         [ObservableProperty]
         private string? configurationMessage;
         [ObservableProperty]
+        private string? exportError;
+        [ObservableProperty]
         private Bitmap? sessionResultsImage;
         [ObservableProperty]
         private string? meanHitGroupText;
@@ -86,6 +89,7 @@ namespace HitAnalyzer2.ViewModels
             _shootingSession = shootingSession;
             _recording = recording;
             ShootingSettings = new ShootingSettingsViewModel(settings, shootingSession, recording, SaveConfiguration);
+            shootingSession.SessionCompleted += session => _ = Task.Run(() => ExportSession(session));
             shootingSession.MonoscopeHitEvaluated += position =>
                 Dispatcher.UIThread.Post(async () =>
                 {
@@ -120,6 +124,19 @@ namespace HitAnalyzer2.ViewModels
                     nameof(ShootingSettingsViewModel.ShowSmallestHitGroup))
                     RefreshSessionResults();
             };
+        }
+
+        private void ExportSession(ShootingSessionService.CompletedSession session)
+        {
+            try
+            {
+                ShootLogExportService.Export(session);
+                Dispatcher.UIThread.Post(() => ExportError = null);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                Dispatcher.UIThread.Post(() => ExportError = $"Could not export session. {ex.Message}");
+            }
         }
 
         internal void RefreshSessionResults()
@@ -270,7 +287,8 @@ namespace HitAnalyzer2.ViewModels
             var current = _settings.Current;
             var camera = CameraSettings.GetConfiguration(current.Camera);
             var detection = DetectionSettings.GetConfiguration(current.Detection);
-            var weapon = WeaponSettings.GetSelectedProfile();
+            var activeWeapon = WeaponSettings.ActiveWeapon;
+            var weapon = activeWeapon.GetSelectedProfile();
             var configuration = current with
             {
                 Theme = ShootingSettings.SelectedTheme,
@@ -281,7 +299,7 @@ namespace HitAnalyzer2.ViewModels
                 Detection = detection,
                 SelectedWeapon = weapon ?? current.SelectedWeapon,
                 LegacyWeapon = weapon is null && current.SelectedWeapon is null
-                    ? WeaponSettings.GetConfiguration(current.LegacyWeapon ?? new WeaponSettings())
+                    ? activeWeapon.Settings
                     : null
             };
 
@@ -298,7 +316,7 @@ namespace HitAnalyzer2.ViewModels
             }
         }
 
-        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, double detectedFps, string measuredFps,
+        private async Task ProcessCameraFrameAsync(Mat frame, long capturedAt, string measuredFps,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -308,31 +326,30 @@ namespace HitAnalyzer2.ViewModels
                 DetectionSettings.ContrastPercent, DetectionSettings.SaturationPercent);
             bool showTargetPreview = IsTargetPreviewActive;
             bool showWeaponOffsets = IsWeaponPreviewActive;
-            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim, readiness) =
-                _shootingSession.ProcessFrame(pixels, capturedAt, detectedFps, cancellationToken);
+            var (lastHit, aimPath, followPath, lastTargetHit, caliberDiameterMm, currentAim, readiness, weaponCaliberMm) =
+                _shootingSession.ProcessFrame(pixels, capturedAt, cancellationToken);
+            var calibration = CameraSettings.Calibration;
+            var targetSettings = calibration.Settings;
+            Position? correctedTargetAim = currentAim is { } aim
+                ? calibration.MapHit(aim.X / pixels.Width, aim.Y / pixels.Height, out targetSettings)
+                : null;
+            var targetPreviewAim = correctedTargetAim is { } targetAim
+                ? TargetRenderer.GetPreviewPosition(targetAim, targetSettings)
+                : null;
+
             if (showTargetPreview)
             {
-                var calibration = CameraSettings.Calibration;
                 int size = Math.Min(pixels.Rows, pixels.Cols);
                 using var target = new Mat(size, size, pixels.Type());
                 Position? originalTargetHit = null;
-                Position? liveAim = null;
-                Position? liveOffsetAim = null;
+                Position? liveLaser = null;
                 double? previewScore = null;
-                double previewCaliberMm = showWeaponOffsets ? WeaponSettings.CaliberDiameterMm : caliberDiameterMm;
-                if (currentAim is { } aim)
+                double previewCaliberMm = showWeaponOffsets ? weaponCaliberMm : caliberDiameterMm;
+                if (showWeaponOffsets && currentAim is { } weaponAim &&
+                    (weaponAim.X != weaponAim.LaserPosition.X || weaponAim.Y != weaponAim.LaserPosition.Y))
                 {
-                    var correctedAim = calibration.MapHit(aim.X / pixels.Width, aim.Y / pixels.Height);
-                    if (showWeaponOffsets)
-                    {
-                        var laser = aim.LaserPosition;
-                        liveAim = calibration.MapHit(laser.X / pixels.Width, laser.Y / pixels.Height);
-                        liveOffsetAim = correctedAim;
-                    }
-                    else
-                    {
-                        liveAim = correctedAim;
-                    }
+                    var laser = weaponAim.LaserPosition;
+                    liveLaser = calibration.MapHit(laser.X / pixels.Width, laser.Y / pixels.Height);
                 }
 
                 if (showWeaponOffsets && lastHit is { } weaponHit)
@@ -358,11 +375,12 @@ namespace HitAnalyzer2.ViewModels
                     double offsetY = hitWithTrace.Y - hitWithTrace.LaserPosition.Y;
                     mapFollowPoint = (x, y) => calibration.MapHit((x + offsetX) / pixels.Width, (y + offsetY) / pixels.Height);
                 }
-                TargetRenderer.DrawTargetPreview(target, lastTargetHit, calibration.Settings,
+                TargetRenderer.DrawTargetPreview(target, lastTargetHit, targetSettings,
                     previewCaliberMm, recordedHits, IsDarkTheme, originalTargetHit, aimPath: targetAimPath,
-                    followPath: followPath, mapFollowPoint: mapFollowPoint, liveAim: liveAim, liveOffsetAim: liveOffsetAim);
+                    followPath: followPath, mapFollowPoint: mapFollowPoint, liveLaser: liveLaser);
                 await CameraPreview.ShowFrameAsync(target, null, cancellationToken, previewScore,
-                    showWeaponOffsets ? lastTargetHit : null, readiness: readiness);
+                    showWeaponOffsets ? lastTargetHit : null, readiness: readiness,
+                    previewAim: targetPreviewAim, audioAim: targetPreviewAim);
                 return;
             }
 
@@ -386,8 +404,12 @@ namespace HitAnalyzer2.ViewModels
                 AimTraceRenderer.DrawHitAndTraceIntoFrame(pixels, hit, aimPath, followPath,
                     caliberDiameterMm / CameraSettings.Calibration.Settings.MmToPixel);
 
+            Position? cameraAim = currentAim is { } liveAim
+                ? new Position(liveAim.X / pixels.Width, liveAim.Y / pixels.Height)
+                : null;
             await CameraPreview.ShowFrameAsync(pixels, measuredFps, cancellationToken,
-                guidance: AudioSettings.GetGuidancePreview(), readiness: readiness);
+                guidance: AudioSettings.GetGuidancePreview(), readiness: readiness,
+                previewAim: cameraAim, audioAim: targetPreviewAim);
         }
     }
 }
