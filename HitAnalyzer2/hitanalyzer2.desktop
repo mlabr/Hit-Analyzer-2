@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Hit Analyzer 2
+Exec=HitAnalyzer2
+Icon=hitanalyzer2
+Terminal=false
+Categories=Utility;
+StartupWMClass=HitAnalyzer2
