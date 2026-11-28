@@ -4,7 +4,7 @@
              x:Class="HitAnalyzer2.Views.AppLinkView"
              x:DataType="vm:AppLinkViewModel">
     <StackPanel Spacing="4">
-        <CheckBox Content="Enable HIP" IsChecked="{Binding IsEnabled}" />
+        <CheckBox Content="Enable HIP communication" IsChecked="{Binding IsEnabled}" />
         <TextBlock Text="Receive port" />
         <TextBox Text="{Binding ReceivePort}" AutomationProperties.Name="Receive port" />
         <TextBlock Text="Destination port" />
@@ -18,7 +18,8 @@
             <TextBlock Text="Application SID" />
             <TextBox Text="{Binding Sid}" MaxLength="8" AutomationProperties.Name="Application SID" />
         </StackPanel>
-        <Button Content="Send test message" Command="{Binding SendTestCommand}" IsEnabled="{Binding IsEnabled}" />
+        <Button Content="Send test message" Margin="0,8,0,0"
+                Command="{Binding SendTestCommand}" IsEnabled="{Binding IsEnabled}" />
         <TextBlock Text="{Binding TestStatus}" TextWrapping="Wrap" />
         <Button Content="Save"
                 Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SaveConfigurationCommand}" />

@@ -229,14 +229,14 @@ namespace HitAnalyzer2.ViewModels
             Cep50Text = FormatGroup("CEP50 (R50)", statistics.Cep50);
             MeanHitGroupText = FormatGroup("CEP80 (R80)", statistics.Cep80);
             SmallestHitGroupText = _hitGroupCalculation is not null
-                ? "Enhanced R80: calculating…"
+                ? "Enhanced R80 calculating…"
                 : FormatGroup("Enhanced R80", smallest);
             if (statistics.MeanPointOfImpact is { } mpi)
             {
                 double xMm = Math.Round(mpi.XMm, 1);
                 double yMm = Math.Round(mpi.YMm, 1);
                 MeanPointOfImpactText =
-                    $"MPI: {mpi.DistanceMm:0.0} mm (X {xMm:+0.0;-0.0;0.0} mm, Y {yMm:+0.0;-0.0;0.0} mm)";
+                    $"MPI {mpi.DistanceMm:0.0} mm (X {xMm:+0.0;-0.0;0.0} mm, Y {yMm:+0.0;-0.0;0.0} mm)";
             }
             else
                 MeanPointOfImpactText = null;

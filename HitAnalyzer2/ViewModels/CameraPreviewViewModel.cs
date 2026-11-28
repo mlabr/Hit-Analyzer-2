@@ -73,7 +73,7 @@ namespace HitAnalyzer2.ViewModels
                     DetectionReadiness = readiness;
                     WebcamImage = bitmap;
                     previous?.Dispose();
-                    FpsText = measuredFps is null ? null : $"FPS: {measuredFps}";
+                    FpsText = measuredFps is null ? null : $"FPS {measuredFps}";
                     StatusMessage = null;
                 }, DispatcherPriority.Background);
             }

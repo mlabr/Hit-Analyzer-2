@@ -19,13 +19,14 @@
     </UserControl.Styles>
 
     <StackPanel Spacing="4">
+        <TextBlock Text="Detection type" FontWeight="SemiBold" />
         <ComboBox HorizontalAlignment="Stretch"
                   AutomationProperties.Name="Detection method"
                   ItemsSource="{Binding Methods}"
                   SelectedItem="{Binding SelectedMethod, Mode=TwoWay}" />
       
         <Grid Classes="detectionAdjustment" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="6" RowSpacing="4">
-            <TextBlock Grid.ColumnSpan="2" Text="Sensitiviy:" />
+            <TextBlock Grid.ColumnSpan="2" Text="Sensitivity" />
             <Slider Grid.Row="1" Minimum="1" Maximum="99" TickFrequency="1" SmallChange="1"
                     IsSnapToTickEnabled="True" VerticalAlignment="Center"
                     Value="{Binding DetectionSensitivity, Mode=TwoWay}"

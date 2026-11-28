@@ -4,17 +4,20 @@
              x:Class="HitAnalyzer2.Views.CameraSettingsView"
              x:DataType="vm:CameraSettingsViewModel">
     <StackPanel Spacing="4">
+        <TextBlock Text="Select Camera" FontWeight="SemiBold" />
         <ComboBox PlaceholderText="Select camera" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding Cameras}" SelectedItem="{Binding SelectedCamera, Mode=TwoWay}"
                   IsEnabled="{Binding !IsDiscoveringCameras}"
-                  AutomationProperties.Name="CamSelected" />
+                  AutomationProperties.Name="Select Camera" />
+        <TextBlock Text="Resolution and frame rate" />
         <ComboBox PlaceholderText="{Binding CameraModePlaceholder}" HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CameraModes}" SelectedItem="{Binding SelectedCameraMode, Mode=TwoWay}"
                   IsEnabled="{Binding CanSelectCameraMode}"
                   AutomationProperties.Name="Resolution and frame rate" />
+        <TextBlock Text="Image flip" />
         <ComboBox HorizontalAlignment="Stretch"
                   ItemsSource="{Binding CameraFlipOptions}" SelectedItem="{Binding SelectedCameraFlip, Mode=TwoWay}"
-                  AutomationProperties.Name="Camera View Flip" />
+                  AutomationProperties.Name="Image flip" />
         <Button Content="Refresh webcams" Command="{Binding RefreshCamerasCommand}"
                  IsEnabled="{Binding !IsDiscoveringCameras}" />
 

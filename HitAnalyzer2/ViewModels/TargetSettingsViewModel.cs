@@ -70,7 +70,7 @@ namespace HitAnalyzer2.ViewModels
                 double? scale = _shootingSettings is { } shooting
                     ? _calibration.Settings.MmToPixel * ((double)shooting.SimulatedDistanceMeters / (double)shooting.RealDistanceMeters)
                     : null;
-                return $"Scale at simulated distance: {FormatScale(scale)}";
+                return $"Scale at simulated distance {FormatScale(scale)}";
             }
         }
 

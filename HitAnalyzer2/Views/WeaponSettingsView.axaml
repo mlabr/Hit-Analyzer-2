@@ -6,7 +6,7 @@
              x:Class="HitAnalyzer2.Views.WeaponSettingsView"
              x:DataType="vm:WeaponSettingsViewModel">
     <StackPanel Spacing="4">
-        <TextBlock Text="Weapon" />
+        <TextBlock Text="Select Weapon" FontWeight="SemiBold" />
         <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Weapon"
                   PlaceholderText="Select a weapon" ItemsSource="{Binding Weapons}"
                   SelectedItem="{Binding SelectedWeapon, Mode=TwoWay}">
@@ -22,7 +22,7 @@
                      KeyDown="CommitCaliberOnEnter" AutomationProperties.Name="Caliber" />
             <TextBlock Grid.Column="1" Text="{Binding CaliberUnit}" VerticalAlignment="Center" Margin="8,0,0,0" />
         </Grid>
-        <TextBlock Text="Trigger type:" />
+        <TextBlock Text="Trigger type" />
         <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="Trigger type"
                   ItemsSource="{Binding Triggers}"
                   SelectedItem="{Binding SelectedTrigger, Mode=TwoWay}">
@@ -40,7 +40,30 @@
         <TextBlock Text="{Binding SettingsMessage}" TextWrapping="Wrap"
                    IsVisible="{Binding SettingsMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         <StackPanel Spacing="4">
-            <TextBlock Text="Weapon offset (px)" />
+            <TextBlock Text="Weapon offset" />
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="4" ColumnDefinitions="Auto,32,Auto,Auto,Auto,*" ColumnSpacing="4">
+                <TextBlock Text="X" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="{Binding OffsetX}" VerticalAlignment="Center" />
+                <RepeatButton Grid.Column="2" Classes="settingsButton" Content="←" Command="{Binding NudgeOffsetCommand}" CommandParameter="Left"
+                              AutomationProperties.Name="Move offset left one pixel" />
+                <RepeatButton Grid.Column="3" Classes="settingsButton" Content="→" Command="{Binding NudgeOffsetCommand}" CommandParameter="Right"
+                              AutomationProperties.Name="Move offset right one pixel" />
+                <TextBlock Grid.Column="4" VerticalAlignment="Center" IsVisible="False"
+                           Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TargetSettings.OffsetStepText}" />
+                <TextBlock Grid.Column="5" Text="{Binding OffsetXMmText}" VerticalAlignment="Center"
+                           HorizontalAlignment="Right" AutomationProperties.Name="Total horizontal offset in millimeters" />
+                <TextBlock Grid.Row="1" Text="Y" VerticalAlignment="Center" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DisplayOffsetY}" VerticalAlignment="Center" />
+                <RepeatButton Grid.Row="1" Grid.Column="2" Classes="settingsButton" Content="↑" Command="{Binding NudgeOffsetCommand}" CommandParameter="Up"
+                              AutomationProperties.Name="Move offset up one pixel" />
+                <RepeatButton Grid.Row="1" Grid.Column="3" Classes="settingsButton" Content="↓" Command="{Binding NudgeOffsetCommand}" CommandParameter="Down"
+                              AutomationProperties.Name="Move offset down one pixel" />
+                <TextBlock Grid.Row="1" Grid.Column="4" VerticalAlignment="Center" IsVisible="False"
+                           Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TargetSettings.OffsetStepText}" />
+                <TextBlock Grid.Row="1" Grid.Column="5" Text="{Binding OffsetYMmText}" VerticalAlignment="Center"
+                           HorizontalAlignment="Right" AutomationProperties.Name="Total vertical offset in millimeters" />
+            </Grid>
+            <views:CalibrationZoomView x:Name="OffsetZoomPreview" Height="180" IsHitTestVisible="False" />
             <Grid ColumnDefinitions="Auto,64" ColumnSpacing="8">
                 <TextBlock Text="Offset zoom" VerticalAlignment="Center" />
                 <ComboBox x:Name="OffsetZoomSelector" Grid.Column="1" SelectedIndex="0" MinWidth="0"
@@ -50,27 +73,8 @@
                     <ComboBoxItem Content="8×" />
                 </ComboBox>
             </Grid>
-            <views:CalibrationZoomView x:Name="OffsetZoomPreview" Height="180" IsHitTestVisible="False" />
-            <Grid RowDefinitions="Auto,Auto" RowSpacing="4" ColumnDefinitions="Auto,32,Auto,Auto,Auto" ColumnSpacing="4">
-                <TextBlock Text="X" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1" Text="{Binding OffsetX}" VerticalAlignment="Center" />
-                <RepeatButton Grid.Column="2" Classes="settingsButton" Content="←" Command="{Binding NudgeOffsetCommand}" CommandParameter="Left"
-                              AutomationProperties.Name="Move offset left one pixel" />
-                <RepeatButton Grid.Column="3" Classes="settingsButton" Content="→" Command="{Binding NudgeOffsetCommand}" CommandParameter="Right"
-                              AutomationProperties.Name="Move offset right one pixel" />
-                <TextBlock Grid.Column="4" VerticalAlignment="Center"
-                           Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TargetSettings.OffsetStepText}" />
-                <TextBlock Grid.Row="1" Text="Y" VerticalAlignment="Center" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DisplayOffsetY}" VerticalAlignment="Center" />
-                <RepeatButton Grid.Row="1" Grid.Column="2" Classes="settingsButton" Content="↑" Command="{Binding NudgeOffsetCommand}" CommandParameter="Up"
-                              AutomationProperties.Name="Move offset up one pixel" />
-                <RepeatButton Grid.Row="1" Grid.Column="3" Classes="settingsButton" Content="↓" Command="{Binding NudgeOffsetCommand}" CommandParameter="Down"
-                              AutomationProperties.Name="Move offset down one pixel" />
-                <TextBlock Grid.Row="1" Grid.Column="4" VerticalAlignment="Center"
-                           Text="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).TargetSettings.OffsetStepText}" />
-            </Grid>
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Button Content="ToCenter" Command="{Binding ToCenterCommand}" HorizontalAlignment="Left" />
+                <Button Content="To center" Command="{Binding ToCenterCommand}" HorizontalAlignment="Left" />
                 <Button Grid.Column="1" Content="Reset" Command="{Binding ResetOffsetCommand}"
                         AutomationProperties.Name="Reset weapon offset" HorizontalAlignment="Right" />
             </Grid>

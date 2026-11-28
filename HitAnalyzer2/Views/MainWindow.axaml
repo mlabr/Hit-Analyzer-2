@@ -41,7 +41,7 @@
                                IsVisible="{Binding ExportError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Time:" FontSize="32" />
+                    <TextBlock Text="Time" FontSize="32" />
                     <TextBlock Text="{Binding ShootingSettings.SessionElapsedText}"
                                Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" />
                 </StackPanel>
@@ -174,15 +174,15 @@
                 <views:HelpView x:Name="HelpContent" IsVisible="False" />
             </Grid>
             <StackPanel x:Name="HitCounter" Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="10,0,10,10">
-                    <TextBlock Text="Score:" FontSize="32" />
+                    <TextBlock Text="Score" FontSize="32" />
                     <TextBlock x:Name="RecordedScore" Text="{Binding ShootingSettings.LastHitScore}"
                                Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
                     <TextBlock x:Name="WeaponPreviewScore" Text="{Binding CameraPreview.WeaponPreviewScore, TargetNullValue='0'}"
                                Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0"
                                IsVisible="False" />
-                    <TextBlock Text="Hits:" FontSize="32" />
+                    <TextBlock Text="Hits" FontSize="32" />
                     <TextBlock Text="{Binding ShootingSettings.HitCount}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" Margin="0,0,76,0" />
-                    <TextBlock Text="Total:" FontSize="32" />
+                    <TextBlock Text="Total" FontSize="32" />
                     <TextBlock Text="{Binding ShootingSettings.TotalScore}" Foreground="{DynamicResource HitTextBrush}" FontSize="32" FontWeight="SemiBold" MinWidth="72" />
             </StackPanel>
             <Border x:Name="SettingsPanel" Grid.RowSpan="3" Width="280" BorderThickness="0,0,1,0"

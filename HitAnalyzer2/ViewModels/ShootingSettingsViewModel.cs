@@ -180,8 +180,8 @@ namespace HitAnalyzer2.ViewModels
         public double LastHitScore => _recording.GetLastHitScore();
         public double TotalScore => _recording.GetTotalScore();
         public string LastHitDistanceText => _recording.GetLastHitDistanceFromCenterMm() is { } distance
-            ? $"Last hit distance from center: {distance:F2} mm"
-            : "Last hit distance from center: —";
+            ? $"Last hit distance from center {distance:F2} mm"
+            : "Last hit distance from center —";
 
         internal ShootingSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
             RecordingService recording, Action saveConfiguration)

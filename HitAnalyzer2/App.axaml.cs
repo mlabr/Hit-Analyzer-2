@@ -50,7 +50,8 @@ namespace HitAnalyzer2
                     settings.Current.Shooting, detection, cameraCalibration, recording, Program.StartedAt);
                 var detectionSettings = new DetectionSettingsViewModel(settings,
                     (method, sensitivity) => shootingSession.SetLaserDetector(CreateDetector(method, sensitivity)));
-                var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler, weaponProfiles);
+                var weaponSettings = new WeaponSettingsViewModel(settings, shootingSession, weaponHandler, weaponProfiles,
+                    cameraCalibration);
                 var mainWindow = new MainWindow
                 {
                     DataContext = new MainWindowViewModel(settings, detectionSettings, weaponSettings,

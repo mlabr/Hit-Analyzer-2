@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using HitAnalyzer2.Repository;
 using HitAnalyzer2.Services.Shooting;
+using HitAnalyzer2.Services.Target;
+using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,6 +16,7 @@ namespace HitAnalyzer2.ViewModels
         private readonly ShootingSessionService _shootingSession;
 
         private readonly WeaponHandler _weaponHandler;
+        private readonly TargetCalibrationService _calibration;
         private const decimal MillimetersPerInch = 25.4m;
         private bool _showCaliberInInches;
 
@@ -45,12 +48,20 @@ namespace HitAnalyzer2.ViewModels
         }
 
         public int DisplayOffsetY => -OffsetY;
+        public string OffsetXMmText => FormatOffsetMm(OffsetX);
+        public string OffsetYMmText => FormatOffsetMm(DisplayOffsetY);
+
+        private string FormatOffsetMm(int offset) => _calibration.Settings.MmToPixel is { } scale
+            ? $"{offset * scale:F2} mm"
+            : "— mm";
 
         internal WeaponSettingsViewModel(SettingsService settings, ShootingSessionService shootingSession,
-            WeaponHandler weaponHandler, WeaponFileRepository weaponProfiles)
+            WeaponHandler weaponHandler, WeaponFileRepository weaponProfiles, TargetCalibrationService calibration)
         {
             _shootingSession = shootingSession;
             _weaponHandler = weaponHandler;
+            _calibration = calibration;
+            calibration.CalibrationGeometryChanged += RefreshOffsetScale;
             var profiles = weaponProfiles.LoadProfileList(out var loadError);
             Weapons = Array.AsReadOnly(profiles
                 .Select(profile => new WeaponProfileItem(profile.FileName, profile.Profile))
@@ -161,6 +172,19 @@ namespace HitAnalyzer2.ViewModels
             OnPropertyChanged(nameof(OffsetX));
             OnPropertyChanged(nameof(OffsetY));
             OnPropertyChanged(nameof(DisplayOffsetY));
+            RefreshOffsetScale();
+        }
+
+        private void RefreshOffsetScale()
+        {
+            if (!Dispatcher.UIThread.CheckAccess())
+            {
+                Dispatcher.UIThread.Post(RefreshOffsetScale);
+                return;
+            }
+
+            OnPropertyChanged(nameof(OffsetXMmText));
+            OnPropertyChanged(nameof(OffsetYMmText));
         }
 
         [RelayCommand]

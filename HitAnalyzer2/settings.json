@@ -31,24 +31,7 @@
     "RealDistanceMeters": 5,
     "SimulatedDistanceMeters": 10,
     "Calibration": {
-      "Corners": {
-        "TopLeft": {
-          "X": 0.2000,
-          "Y": 0.1000
-        },
-        "TopRight": {
-          "X": 0.8000,
-          "Y": 0.1000
-        },
-        "BottomRight": {
-          "X": 0.8000,
-          "Y": 0.9000
-        },
-        "BottomLeft": {
-          "X": 0.2000,
-          "Y": 0.9000
-        }
-      }
+      "Corners": null
     }
   },
   "Audio": {
@@ -96,8 +79,8 @@
       "Type": "ha_weapon",
       "Name": "weapon1",
       "Caliber": 20,
-      "OffsetX": 45,
-      "OffsetY": -35,
+      "OffsetX": 0,
+      "OffsetY": 0,
       "Trigger": "FirstSpot",
       "NexDetectionInterval": 500
     }
